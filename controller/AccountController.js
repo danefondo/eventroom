@@ -1,10 +1,11 @@
 
-
+const User = require('../models/UserModel')
+const JWT = require('jsonwebtoken');
 
 const AccountController = {
 	async verifyToken(req, res, next) {
 		const { verificationToken } = req.params;
-		User.findOne({ verificationToken }, (verifyError, user) => { 
+		User.findOne({ verificationToken }, (verifyError, user) => {
 			if (verifyError) {
 				console.log('DB error', verifyError);
 				return res.status(500).send({ message: "verification.error-occurred" });
@@ -17,7 +18,7 @@ const AccountController = {
 			user.verifiedStatus = true;
 			user.save((err, savedUser) => {
 				const tokenUser = { username: savedUser.username, _id: savedUser._id }
-				const token = jwt.sign({ user: tokenUser }, process.env.SECRET, {
+				const token = JWT.sign({ user: tokenUser }, process.env.SECRET, {
 					expiresIn: '1d',
 				});
 				return res.json({ user: user, token, message: "verification.verified" });

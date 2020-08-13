@@ -3,10 +3,6 @@ const EventController = require('../../controller/EventController');
 
 const router = Express.Router();
 
-router.use(function(req, res, next) {
-    console.log("testing");
-    next();
-})
 
 router.get('/getAllEvents', EventController.getAllEvents);
 

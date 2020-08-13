@@ -33,7 +33,7 @@ const LoginRegisterController = {
 			
             await newUser.save();
             
-            const link = `${req.protocol}://${req.get('host')}/verify/${verificationToken}`;
+            const link = `${req.protocol}://${req.get('host')}/api/accounts/verify/${verificationToken}`;
             MailUtilities.sendVerificationMail(email, link);
             
             const user = { username: newUser.username, _id: newUser._id}

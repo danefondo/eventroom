@@ -32,23 +32,12 @@ export default {
   methods: {
     async getEvent() {
       try {
-        console.log("event", `/api/events/getEvent/${this.$route.params.id}`)
 
         const {data} = await axios.get(
           `/api/events/getEvent/${this.$route.params.id}`
         );
-        let data2 = axios.get(`/api/events/getEvent/${this.$route.params.id}`)
-          .then(function(response) {
-            console.log("RESPONSE:: ", response)
-          })
-
-        console.log(data2)
-        let self = this
         this.eventNotFound = false;
-        this.$set(self, 'event', data.event)
-        console.log("test", data);
-        console.log("test2", data.event)
-        console.log("test3", typeof(data))
+        this.$set(this, 'event', data.event)
       } catch (error) {
         console.log("event", error);
         this.eventNotFound = true;

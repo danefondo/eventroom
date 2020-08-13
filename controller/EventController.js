@@ -47,7 +47,6 @@ const EventController = {
 
       async createEvent(req, res) {
         try {
-          console.log ("terre olen siin");
           let event = new Event();
           let eventData = req.body;
     

@@ -1,5 +1,7 @@
 <template>
-  <Success v-if="success" />
+  <div v-if="success" >
+    <SuccessPage />
+  </div>
   <div v-else class="registrationBlock__registerPage">
     <div class="titleBlock__registerPage">
       <h1 class="title__registerPage">{{ $t("register.join-title")}}</h1>
@@ -98,12 +100,12 @@
 
 <script>
 import axios from "axios";
-import Success from "./Success";
+import SuccessPage from "./SuccessPage";
 
 export default {
   name: "RegisterPage",
   components: {
-    Success,
+    SuccessPage,
   },
   data() {
     return {

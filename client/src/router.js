@@ -11,6 +11,8 @@ import RegisterPage from "./pages/AuthPages/RegisterPage";
 import VerificationPage from './pages/AuthPages/VerificationPage';
 import SuccessPage from './pages/AuthPages/SuccessPage';
 
+// TODO: requireVerification
+
 const routes = [
   { path: "/", component: HomePage },
   { path: "/login", component: LoginPage, name: "LoginPage" },
@@ -42,15 +44,15 @@ const router = new VueRouter({
   routes,
 });
 
-const noReAuth = ["Login", "Register", "ForgotPassword"];
+const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 router.beforeEach((to, from, next) => {
   if (to.meta.requireAuthentication && !auth.isAuthenticated()) {
-    next({ name: "Login" });
+    next({ name: "LoginPage" });
   } else if (noReAuth.includes(to.name) && auth.isAuthenticated()) {
     next("/");
   } else {
     next();
   }
-});
+}); 
 
 export default router;

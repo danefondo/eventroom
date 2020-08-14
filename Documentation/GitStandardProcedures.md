@@ -9,7 +9,7 @@ The core philosopy is to always keep a functional version or copy of the code in
 2. Upon the completion of work, commit your work in that branch ("git add ." & "git commit -m "explanatory message"). 
 3. Checkout to the core (git checkout < core-branch >), master branch and perform a pull request (git pulll / git pull origin master) to make sure your master branch is up to date and has the latest updates.
 4. Once your master branch is up to date and in sync with the latest version, then do final tests to make sure everything works.
-5. Now merge branches (git merge), make sure you're still in the core or master branch, and then push to Github or wherever your code is stored.
+5. Now make sure you're in the core or master branch and now merge the new worked on branch with the master branch by doing (git merge < new-branch >), and then push to Github or wherever your code is stored (git push origin master).
 
 ## Other good practices
 1. Make clean, single-purpose commits -- one bug at a time.

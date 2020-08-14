@@ -36,7 +36,7 @@ const LoginRegisterController = {
             const link = `${req.protocol}://${hostname}/verify/${verificationToken}`;
             MailUtilities.sendVerificationMail(email, link);
             
-            const user = { username: newUser.username, _id: newUser._id, isVerified: user.verifiedStatus };
+            const user = { username: newUser.username, _id: newUser._id, isVerified: false };
 			const token = JWT.sign({ user: user }, process.env.SECRET, {
 				expiresIn: '1d',
 			});

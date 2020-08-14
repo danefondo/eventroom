@@ -1,4 +1,4 @@
-const { validationResult } = require('express-validator');
+const { validationResult, check } = require('express-validator');
 const AccountUtilities = require('../utils/AccountUtilities')
 const MailUtilities = require('../utils/MailUtilities');
 const JWT = require('jsonwebtoken');
@@ -8,7 +8,13 @@ const User = require('../models/UserModel');
 const LoginRegisterController = {
 
 	async register(req, res) {
+		console.log("start here!");
+		console.log("---------------------------------");
+		//console.log("req: ", req);
 		const errors = validationResult(req);
+		console.log("Errors: ", errors);
+		console.log(req.errors);
+		console.log("---------------------------------");
 		if (!errors.isEmpty()) {
 			console.log('errors', errors)
 			return res.status(422).json({ errors: errors.array() });
@@ -18,7 +24,7 @@ const LoginRegisterController = {
 		const password = req.body.password;
 		const dateCreated = new Date();
 		const hostname = req.body.hostname;
-
+		console.log("username: ", username, "password: ", password);
 		try {
             const verificationToken = await AccountUtilities.generateToken();
             const hashedPass = await AccountUtilities.hashPassword(password);
@@ -46,7 +52,22 @@ const LoginRegisterController = {
 			console.log(err);
 		}
     },
-    
+	
+	/*
+	Validates the registration
+	*/
+	async validateRegistration(req, res, next) {
+		console.log("here11");
+		check('username').trim()
+			.not().isEmail().withMessage("Username cannot be an email address");
+		check('email').trim()
+			.isEmail();
+		check('password').trim()
+			.isLength({min: 8, max: 80});
+
+		next();
+	},
+
 	async login(req, res, next) {
         Passport.authenticate('local', { session: false }, function (err, user, info) {
 			console.log("user", user);

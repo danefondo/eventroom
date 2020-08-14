@@ -1,6 +1,8 @@
 const Crypto = require('crypto');
 const Bcrypt = require('bcryptjs');
 
+const User = require('../models/UserModel');
+
 const AccountUtilities = {
 	generateToken() {
 		return new Promise(function(resolve, reject) {

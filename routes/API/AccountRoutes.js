@@ -9,7 +9,8 @@ const router = Express.Router();
 // router.post('/register', AccountUtilities.usernameToLowerCase, AccountUtilities.emailToLowerCase,  DataValidator.register, LoginRegisterController.register);
 router.get('/verify/:verificationToken', AccountController.verifyToken);
 
-router.post('/register', AccountUtilities.usernameToLowerCase, AccountUtilities.emailToLowerCase,  LoginRegisterController.register);
+// router.post('/register', AccountUtilities.usernameToLowerCase, AccountUtilities.emailToLowerCase, DataValidator.register, LoginRegisterController.register);
+router.post('/register', DataValidator.register, LoginRegisterController.register);
 
 router.post('/login', AccountUtilities.usernameToLowerCase, LoginRegisterController.login);
 

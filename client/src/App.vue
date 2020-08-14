@@ -7,7 +7,6 @@
 <script>
 import { setAuth } from "./config/axios";
 import auth from "./config/auth";
-import axios from "axios";
 
 export default {
   name: "App",
@@ -21,7 +20,6 @@ export default {
     if (auth.isAuthenticated()) {
       this.user = auth.isAuthenticated();
       this.isAuthenticated = true;
-      this.yo();
     }
   },
   methods: {
@@ -31,12 +29,6 @@ export default {
         this.isAuthenticated = true;
       }
       this.user = details.user;
-    },
-    async yo() {
-      const data = await axios.get(
-        `/api/events/getEvent/5f3561f876f06b1e098ae709`
-      );
-      console.log("ddd", data);
     },
   },
 };

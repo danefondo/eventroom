@@ -68,6 +68,62 @@ require("./config/PassportConfig")(Passport);
 //- Passport middleware
 app.use(Passport.initialize());
 
+/* ====== SOCKET.IO SETUP ====== */
+
+IO.on("connection", function (socket) {
+  console.log('this user is connected')
+  // io.emit('test', 'lsdkfja');
+  // socket.broadcast.emit("message", "whadaaaaap");
+  // socket.on('message', function(msg){
+  //   io.emit('message', msg);
+  // });
+  socket.on("joinRoom", function(data) {
+    console.log("roomId: ", data.room_id);
+    socket.join(data.room_id);
+  });
+
+  // socket.on("message", function (data) {
+  //   console.log('news data', data);
+  //   var message = data + " world";
+  //   io.emit("test", message);
+  // });
+
+  socket.on("play", function (data) {
+    console.log("yo made here", data);
+    socket.broadcast.to(data.room_id).emit("playVideo", data);
+  });
+
+  socket.on("pause", function (data) {
+    console.log("yo made pause");
+    socket.broadcast.to(data.room_id).emit("pauseVideo", "pause");
+  });
+
+  socket.on("reset", function (data) {
+    console.log("yo made reset");
+    socket.broadcast.to(data.room_id).emit("resetVideo", "reset");
+  });
+
+  socket.on("setTime", function (data) {
+    console.log("yo made time", data);
+    socket.broadcast.to(data.room_id).emit("setVideoTime", data);
+  });
+
+  // socket.on("buffering", function (data) {
+  //   console.log("yo made buffer");
+  //   socket.broadcast.emit("bufferingVideo", "buffer");
+  // });
+
+  socket.on("updateUrl", function (data) {
+    console.log("yo made updatevid");
+    socket.broadcast.to(data.room_id).emit("reloadVideo", "reload");
+  });
+
+  // socket.on("ended", function (data) {
+  //   console.log("yo made ended");
+  //   socket.broadcast.emit("endedVideo", "end");
+  // });
+});
+
 
 /* ====== ROUTES SETUP ====== */
 

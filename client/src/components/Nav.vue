@@ -1,7 +1,7 @@
 <template>
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
     <div class="navbar">
-      <div class="nav-logo">Oveno</div>
+      <router-link to="/" class="nav-logo">Oveno</router-link>
       <div v-if="isAuthenticated" @click="logout" class="nav-button">
         Logout
       </div>
@@ -20,20 +20,32 @@ import auth from "../config/auth";
 
 export default {
   name: "Nav",
-  props: {
-    isAuthenticated: {
-      type: Boolean,
-      required: true,
-    },
-    isVerified: {
-      type: Boolean,
-      required: true,
-    },
-    user: {
-      type: Object,
-      required: true,
+  
+  data() {
+    return {
+      isAuthenticated: false,
+      isVerified: false,
+      user: {},
+    };
+  },
+
+// not sure if needed
+  watch: {
+    isAuthenticated: function(newVal, oldVal) {
+      if (!newVal) this.logout(); 
+      console.log(oldVal);
     },
   },
+
+  mounted() {
+    let authenticationResult = auth.isAuthenticated();
+    if (authenticationResult) {
+      this.user = authenticationResult;
+      this.isVerified = authenticationResult.isVerified;
+      this.isAuthenticated = true;
+    }
+  },
+
   methods: {
     logout() {
       auth.logout();

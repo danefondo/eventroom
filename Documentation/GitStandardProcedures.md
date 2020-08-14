@@ -18,3 +18,6 @@ The core philosopy is to always keep a functional version or copy of the code in
 
 ## Good to know
 - To see all branches and which branch you're currently on, use 'git branch'
+- To delete a local branch, use 'git branch -d < branch-name >.
+- To force delete a local branch, use capital -D instead: 'git branch -D < branch-name >
+- To delete remote branch (branch in for example Github), use 'git push origin --delete < branch-name >', 'origin' being the < remote > name.

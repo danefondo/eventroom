@@ -1,6 +1,10 @@
 <template>
     <div v-if="verified">
-        Verified! 
+        <p> Verified! </p> 
+        <br/>
+        <p> For security purposes, you'll need to sign in.</p>
+        <router-link to="/login"> Sign in </router-link>
+
     </div>
     <div v-else-if="verifying"> Verifying... </div>
     <div v-else> 
@@ -11,6 +15,7 @@
 
 <script>
 import axios from 'axios';
+import auth from '../../config/auth';
 
 export default {
     name: "VerificationPage",
@@ -36,6 +41,7 @@ export default {
                 );
                 if (data.message === "verification.verified") {
                     this.verified = true;
+                    auth.logout();
                 } else {
                     this.verified = false;
                     this.error_message = "Verification unsuccessful"

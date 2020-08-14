@@ -55,6 +55,11 @@ a {
   text-decoration: none;
 }
 
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
 /* body {
   font-family: 'Trebuchet MS', sans-serif;
 } */

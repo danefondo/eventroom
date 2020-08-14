@@ -25,8 +25,8 @@
     "register": {
         "create": "Create account",
         "creating": "Creating account...",
-        "join-title": "Join Fitx Ninja",
-        "join-tagline": "...and let's get fit together.",
+        "join-title": "Join Oveno",
+        "join-tagline": "...where the world meets.",
         "username": "Username",
         "pass": "Password (at least 8 characters)",
         "confirm-pass": "Confirm password",

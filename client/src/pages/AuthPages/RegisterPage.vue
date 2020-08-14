@@ -98,12 +98,12 @@
 
 <script>
 import axios from "axios";
-// import Success from "../components/Success";
+import Success from "./Success";
 
 export default {
   name: "RegisterPage",
   components: {
-    // Success,
+    Success,
   },
   data() {
     return {
@@ -131,6 +131,7 @@ export default {
           username,
           password,
           passcheck: passwordCheck,
+          hostname: window.location.host,
         });
         this.errors = [];
         this.success = true;

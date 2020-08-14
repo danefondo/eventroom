@@ -1,10 +1,14 @@
 <template>
-  <div class="container">
-    <router-view @update="update"></router-view>
+  <div>
+    <Nav :isAuthenticated="isAuthenticated" :user="user" />
+    <div class="container">
+      <router-view @update="update"></router-view>
+    </div>
   </div>
 </template>
 
 <script>
+import Nav from "./components/Nav.vue";
 import { setAuth } from "./config/axios";
 import auth from "./config/auth";
 
@@ -15,6 +19,9 @@ export default {
       isAuthenticated: false,
       user: {},
     };
+  },
+  components: {
+    Nav,
   },
   mounted() {
     if (auth.isAuthenticated()) {
@@ -43,4 +50,8 @@ export default {
   color: #2c3e50;
   margin-top: 60px;
 }
+
+/* body {
+  font-family: 'Trebuchet MS', sans-serif;
+} */
 </style>

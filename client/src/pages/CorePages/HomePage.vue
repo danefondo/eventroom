@@ -3,7 +3,6 @@
     <p>Whaddddup.</p>
     <div v-if="isAuthenticated">
       <p>You are logged in.</p>
-      <div @click="logout">Logout</div>
     </div>
     <div v-if="!isAuthenticated">
       <p>You are not logged in.</p>

@@ -8,13 +8,7 @@ const User = require('../models/UserModel');
 const LoginRegisterController = {
 
 	async register(req, res) {
-		console.log("start here!");
-		console.log("---------------------------------");
-		//console.log("req: ", req);
 		const errors = validationResult(req);
-		console.log("Errors: ", errors);
-		console.log(req.errors);
-		console.log("---------------------------------");
 		if (!errors.isEmpty()) {
 			console.log('errors', errors)
 			return res.status(422).json({ errors: errors.array() });
@@ -24,7 +18,6 @@ const LoginRegisterController = {
 		const password = req.body.password;
 		const dateCreated = new Date();
 		const hostname = req.body.hostname;
-		console.log("username: ", username, "password: ", password);
 		try {
             const verificationToken = await AccountUtilities.generateToken();
             const hashedPass = await AccountUtilities.hashPassword(password);
@@ -43,7 +36,7 @@ const LoginRegisterController = {
             const link = `${req.protocol}://${hostname}/verify/${verificationToken}`;
             MailUtilities.sendVerificationMail(email, link);
             
-            const user = { username: newUser.username, _id: newUser._id}
+            const user = { username: newUser.username, _id: newUser._id, isVerified: false };
 			const token = JWT.sign({ user: user }, process.env.SECRET, {
 				expiresIn: '1d',
 			});
@@ -52,21 +45,6 @@ const LoginRegisterController = {
 			console.log(err);
 		}
     },
-	
-	/*
-	Validates the registration
-	*/
-	async validateRegistration(req, res, next) {
-		console.log("here11");
-		check('username').trim()
-			.not().isEmail().withMessage("Username cannot be an email address");
-		check('email').trim()
-			.isEmail();
-		check('password').trim()
-			.isLength({min: 8, max: 80});
-
-		next();
-	},
 
 	async login(req, res, next) {
         Passport.authenticate('local', { session: false }, function (err, user, info) {
@@ -84,8 +62,9 @@ const LoginRegisterController = {
 					return next(err) }
                 const theUser = {
                     username: user.username,
-                    _id: user._id
-                }
+					_id: user._id,
+					isVerified: user.verifiedStatus,
+				};
                 const token = JWT.sign({ user: theUser }, process.env.SECRET, {
                     expiresIn: '30d',
                 });

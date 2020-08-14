@@ -14,6 +14,7 @@ export default {
       return false;
     }
   },
+
   checkTempToken() {
     try {
       if (localStorage.tempToken && jwtDecode(localStorage.tempToken)) {

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Nav :isAuthenticated="isAuthenticated" :user="user" />
+    <Nav :isAuthenticated="isAuthenticated" :user="user" :isVerified="isVerified" />
     <div class="container">
       <router-view @update="update"></router-view>
     </div>
@@ -17,6 +17,7 @@ export default {
   data() {
     return {
       isAuthenticated: false,
+      isVerified: false,
       user: {},
     };
   },
@@ -35,6 +36,7 @@ export default {
         setAuth(details.token, false);
         this.isAuthenticated = true;
       }
+      this.isVerified = details.user.isVerified;
       this.user = details.user;
     },
   },

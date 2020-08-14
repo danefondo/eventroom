@@ -18,7 +18,6 @@ export default {
 
     methods: {
         atMounted() {
-            console.log("@ mounted")
             router.push("/register/success");
         }
     }

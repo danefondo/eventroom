@@ -1,6 +1,5 @@
 <template>
   <div>
-    <Nav :isAuthenticated="isAuthenticated" :user="user" :isVerified="isVerified" />
     <div class="container">
       <router-view @update="update"></router-view>
     </div>
@@ -8,7 +7,6 @@
 </template>
 
 <script>
-import Nav from "./components/Nav.vue";
 import { setAuth } from "./config/axios";
 import auth from "./config/auth";
 
@@ -21,12 +19,12 @@ export default {
       user: {},
     };
   },
-  components: {
-    Nav,
-  },
+  
   mounted() {
-    if (auth.isAuthenticated()) {
-      this.user = auth.isAuthenticated();
+    let authenticationResult = auth.isAuthenticated();
+    if (authenticationResult) {
+      this.user = authenticationResult;
+      this.isVerified = authenticationResult.isVerified;
       this.isAuthenticated = true;
     }
   },

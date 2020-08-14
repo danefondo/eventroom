@@ -1,6 +1,6 @@
 <template>
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
-    <div class="nav-logo">Oveno</div>
+    <router-link class="nav-logo" to="/">Oveno</router-link>
     <div v-if="isAuthenticated" @click="logout" class="nav-button">Logout</div>
     <div v-else-if="!isAuthenticated">
       <router-link to="/login" class="nav-button">Login</router-link>
@@ -46,6 +46,10 @@ export default {
 }
 .nav-logo {
     padding: 8px 14px;
+    cursor: pointer;
+}
+.nav-logo:hover {
+    color: #333;
 }
 .nav-button:hover {
     background-color: #f7f7fb;

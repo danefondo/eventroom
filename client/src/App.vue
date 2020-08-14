@@ -51,6 +51,10 @@ export default {
   margin-top: 60px;
 }
 
+a {
+  text-decoration: none;
+}
+
 /* body {
   font-family: 'Trebuchet MS', sans-serif;
 } */

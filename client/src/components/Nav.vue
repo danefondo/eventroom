@@ -1,11 +1,17 @@
 <template>
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
-    <router-link class="nav-logo" to="/">Oveno</router-link>
-    <div v-if="isAuthenticated" @click="logout" class="nav-button">Logout</div>
-    <div v-else-if="!isAuthenticated">
-      <router-link to="/login" class="nav-button">Login</router-link>
-      <router-link to="/register" class="nav-button">Register</router-link>
+    <div class="navbar">
+      <div class="nav-logo">Oveno</div>
+      <div v-if="isAuthenticated" @click="logout" class="nav-button">
+        Logout
+      </div>
+      <div v-else-if="!isAuthenticated">
+        <router-link to="/login" class="nav-button">Login</router-link>
+        <router-link to="/register" class="nav-button">Register</router-link>
+      </div>
     </div>
+    <br/>
+    <div v-if="isAuthenticated&&!isVerified"> Your account is not verified! </div>
   </div>
 </template>
 
@@ -16,6 +22,10 @@ export default {
   name: "Nav",
   props: {
     isAuthenticated: {
+      type: Boolean,
+      required: true,
+    },
+    isVerified: {
       type: Boolean,
       required: true,
     },
@@ -33,7 +43,7 @@ export default {
 </script>
 
 <style scoped>
-.nav-container {
+.navbar {
     display: flex;
     justify-content: space-between;
     padding: 10px;

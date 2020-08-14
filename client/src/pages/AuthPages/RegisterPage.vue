@@ -131,6 +131,7 @@ export default {
           username,
           password,
           passcheck: passwordCheck,
+          hostname: window.location.host,
         });
         this.errors = [];
         this.success = true;

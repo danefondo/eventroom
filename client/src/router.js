@@ -8,11 +8,13 @@ import HomePage from "./pages/CorePages/HomePage";
 /* ====== AUTH PAGES ====== */
 import LoginPage from "./pages/AuthPages/LoginPage";
 import RegisterPage from "./pages/AuthPages/RegisterPage";
+import VerificationPage from './pages/AuthPages/VerificationPage'
 
 const routes = [
   { path: "/", component: HomePage },
   { path: "/login", component: LoginPage, name: "LoginPage" },
   { path: "/register", component: RegisterPage, name: "RegisterPage" },
+  { path: "/verify/:token", component: VerificationPage, name: "VerificationPage" },
   {
     path: "/events/createEvent",
     component: CreateEventPage,

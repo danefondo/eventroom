@@ -9,3 +9,5 @@ It is also to not be reliant on active memory and brain recall, for they might n
 ## HTTP request issues
 ### GET request not working
 - [ ] Check that code is executed in the right order (e.g., an asterisk (*) route takes priority if before other routes)
+### POST request not working
+- [ ] Check that what you're doing is not dependent on reading data from URL parameters -- that's meant for GET requests which are designed as less safe as they contain all the necessary data in a URL often, whereas POST requests are for reading sent body details.

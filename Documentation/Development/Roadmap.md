@@ -10,7 +10,12 @@
 | 3. |  | [ ] Setup Vonage.io |
 
 # MVP major components breakdown
-1. Login & Registration system
+1. Authentication system
 2. Event lifecycle system
-    2.1 Event creation stage
-    2.2 Event scheduling stage
+    1. Event creation stage
+    2. Event scheduling stage
+    3. Pre-event stage (waiting room, 30m before start)
+    4. Event happening stage
+    5. After-event stage
+    6. Post-event stage
+    7. Event management & editing (stageless)

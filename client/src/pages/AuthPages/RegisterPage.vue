@@ -98,12 +98,12 @@
 
 <script>
 import axios from "axios";
-// import Success from "../components/Success";
+import Success from "./Success";
 
 export default {
   name: "RegisterPage",
   components: {
-    // Success,
+    Success,
   },
   data() {
     return {

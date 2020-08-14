@@ -14,14 +14,13 @@ const AccountController = {
 				console.log('Please ensure you have created an account');
 				return res.status(401).send({ message: "verification.ensure-account" });
 			}
-	
 			user.verifiedStatus = true;
 			user.save((err, savedUser) => {
 				const tokenUser = { username: savedUser.username, _id: savedUser._id }
 				const token = JWT.sign({ user: tokenUser }, process.env.SECRET, {
 					expiresIn: '1d',
 				});
-				return res.json({ user: user, token, message: "verification.verified" });
+				// return res.json({ user: user, token, message: "verification.verified" });
 			})
 		});
     },

@@ -38,6 +38,7 @@ export default {
     justify-content: space-between;
     padding: 10px;
     font-family: 'Trebuchet MS', sans-serif;
+    align-items: center;
 }
 .nav-button {
     padding: 8px 14px;

@@ -6,8 +6,7 @@ export default {
       if (localStorage.token && jwtDecode(localStorage.token)) {
         // check expiry
         const user = jwtDecode(localStorage.token).user;
-        user.is_live = localStorage.isLive || false;
-        user.active_stream_id = localStorage.active_stream_id || false;
+        user.isVerified = localStorage.isVerified || false;
         return user;
       } else {
         return false;
@@ -16,6 +15,7 @@ export default {
       return false;
     }
   },
+
   checkTempToken() {
     try {
       if (localStorage.tempToken && jwtDecode(localStorage.tempToken)) {

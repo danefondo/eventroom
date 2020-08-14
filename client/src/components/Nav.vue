@@ -33,7 +33,7 @@ export default {
   watch: {
     isAuthenticated: function(newVal, oldVal) {
       if (!newVal) this.logout(); 
-      console.log(oldVal);
+      oldVal;
     },
   },
 

@@ -3,6 +3,7 @@
         <p> Success </p>
         <br/>
         <p> Please verify your account </p>
+        <p> Did not get an email? Well, too bad </p>
     </div>
 </template>
 

@@ -37,6 +37,7 @@ export default {
     return {
       user: {},
       isAuthenticated: false,
+      isVerified: false,
       editor: DecoupledEditor,
       editorConfig: {
         placeholder: this.$t("newworkout.desc-holder"),
@@ -67,8 +68,10 @@ export default {
     };
   },
   mounted() {
-    if (auth.isAuthenticated()) {
-      this.user = auth.isAuthenticated();
+    let authenticationResult = auth.isAuthenticated();
+    if (authenticationResult) {
+      this.user = authenticationResult;
+      this.isVerified = authenticationResult.isVerified;
       this.isAuthenticated = true;
     }
   },

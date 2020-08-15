@@ -17,14 +17,17 @@ export default {
       user: {},
       event: {},
       isAuthenticated: false,
+      isVerified: false,
       eventName: "",
       eventDescription: "",
       eventNotFound: false,
     };
   },
   mounted() {
-    if (auth.isAuthenticated()) {
-      this.user = auth.isAuthenticated();
+    let authenticationResult = auth.isAuthenticated();
+    if (authenticationResult) {
+      this.user = authenticationResult;
+      this.isVerified = authenticationResult.isVerified;
       this.isAuthenticated = true;
     }
     this.getEvent();

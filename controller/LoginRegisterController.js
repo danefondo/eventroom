@@ -4,6 +4,9 @@ const MailUtilities = require('../utils/MailUtilities');
 const JWT = require('jsonwebtoken');
 const Passport = require('passport');
 const User = require('../models/UserModel');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const LoginRegisterController = {
 
@@ -45,6 +48,11 @@ const LoginRegisterController = {
 			console.log(err);
 		}
     },
+
+	async authenticateWithFacebook(req, res, next) {
+		//return req;
+		//Passport.authenticate('facebook', )
+	},
 
 	async login(req, res, next) {
         Passport.authenticate('local', { session: false }, function (err, user, info) {

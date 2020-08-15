@@ -9,10 +9,13 @@ import HomePage from "./pages/CorePages/HomePage";
 import LoginPage from "./pages/AuthPages/LoginPage";
 import RegisterPage from "./pages/AuthPages/RegisterPage";
 import VerificationPage from './pages/AuthPages/VerificationPage';
+import RequireVerificationPage from './pages/AuthPages/RequireVerificationPage';
 import SuccessPage from './pages/AuthPages/SuccessPage';
 
 const routes = [
   { path: "/", component: HomePage },
+
+  /* ====== AUTHENTICATION ROUTES ====== */
   { path: "/login", component: LoginPage, name: "LoginPage" },
   { path: "/register", component: RegisterPage, name: "RegisterPage",
       children: [
@@ -20,11 +23,15 @@ const routes = [
       ]
   },
   { path: "/verify/:token", component: VerificationPage, name: "VerificationPage" },
+  { path: "/verificationRequired", component: RequireVerificationPage, name: "RequireVerificationPage" },
+
+  /* ====== EVENT ROUTES ====== */
   {
     path: "/events/createEvent",
     component: CreateEventPage,
     meta: {
       requireAuthentication: true,
+      requireVerification: true,
     },
   },
   {
@@ -32,6 +39,7 @@ const routes = [
     component: EditEventPage,
     meta: {
       requireAuthentication: true,
+      requireVerification: true,
     },
   },
   { path: "/events/:id", component: EventPreviewPage },
@@ -42,15 +50,18 @@ const router = new VueRouter({
   routes,
 });
 
-const noReAuth = ["Login", "Register", "ForgotPassword"];
+const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
+const authenticationResult = auth.isAuthenticated();
 router.beforeEach((to, from, next) => {
-  if (to.meta.requireAuthentication && !auth.isAuthenticated()) {
-    next({ name: "Login" });
+  if (to.meta.requireAuthentication && !authenticationResult) {
+    next({ name: "LoginPage" });
   } else if (noReAuth.includes(to.name) && auth.isAuthenticated()) {
     next("/");
+  } else if (to.meta.requireVerification && !authenticationResult.isVerified) {
+    next({ name: "RequireVerificationPage"});
   } else {
     next();
   }
-});
+}); 
 
 export default router;

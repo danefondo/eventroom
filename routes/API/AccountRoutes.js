@@ -9,6 +9,8 @@ const router = Express.Router();
 // router.post('/register', AccountUtilities.usernameToLowerCase, AccountUtilities.emailToLowerCase,  DataValidator.register, LoginRegisterController.register);
 router.get('/verify/:verificationToken', AccountController.verifyToken);
 
+//router.get('/register/facebook', LoginRegisterController.registerFacebook);
+
 // router.post('/register', AccountUtilities.usernameToLowerCase, AccountUtilities.emailToLowerCase, DataValidator.register, LoginRegisterController.register);
 router.post('/register', DataValidator.register, LoginRegisterController.register);
 

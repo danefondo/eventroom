@@ -94,6 +94,7 @@
           >{{ $t("register.already-have-account")}}</router-link>
         </div>
       </form>
+      <button @click="registerFacebook"> Log in with fb </button>
     </div>
   </div>
 </template>
@@ -146,6 +147,16 @@ export default {
         }
       } finally {
         this.submitting = false;
+      }
+    },
+    async registerFacebook() {
+      try {
+        //const response = await axios.get(`/api/accounts/register/facebook`);
+        //console.log(response);
+      } catch (error) {
+        console.log("error", error)
+      } finally {
+        console.log("rip")
       }
     },
     getError(field) {

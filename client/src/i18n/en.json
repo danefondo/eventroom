@@ -250,7 +250,8 @@
         "login-instead": "Login instead."
     },
     "login": {
-        "login-title": "Log in",
+        "login-title": "Welcome back",
+        "login-subtitle": "Log into your account",
         "forgot-pass": "Forgot password?",
         "pass-success": "Password has been successfully changed. Log in.",
         "or-create-account": "Or create an account",

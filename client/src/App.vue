@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="page-container">
     <Nav :isAuthenticated="isAuthenticated" :user="user" :isVerified="isVerified" />
-    <div class="container">
+    <div class="app-container">
       <router-view @update="update"></router-view>
     </div>
   </div>
@@ -43,7 +43,12 @@ export default {
 };
 </script>
 
-<style>
+<style lang="scss">
+$link-color: #111;
+$visited-color: #111;
+$button-color: #493eff;
+$button-hover-color: #493effd1;
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -53,16 +58,30 @@ export default {
   margin-top: 60px;
 }
 
+html, body {
+  height: 100%;
+}
+
+body {
+  overscroll-behavior-y: none;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
 a {
   text-decoration: none;
 }
-
-.container {
-  display: flex;
-  flex-direction: column;
+a:visited {
+  color: $visited-color;
 }
 
-/* body {
-  font-family: 'Trebuchet MS', sans-serif;
-} */
+.page-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-container {
+  height: calc(100vh - 52px);
+}
+
 </style>

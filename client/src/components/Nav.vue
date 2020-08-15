@@ -1,17 +1,14 @@
 <template>
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
     <div class="navbar">
-      <div class="nav-logo">Oveno</div>
-      <div v-if="isAuthenticated" @click="logout" class="nav-button">
-        Logout
-      </div>
+      <router-link class="nav-logo" to="/">Oveno</router-link>
+      <div v-if="isAuthenticated" @click="logout" class="nav-button">Logout</div>
       <div v-else-if="!isAuthenticated">
         <router-link to="/login" class="nav-button">Login</router-link>
         <router-link to="/register" class="nav-button">Register</router-link>
       </div>
     </div>
-    <br/>
-    <div v-if="isAuthenticated&&!isVerified"> Your account is not verified! </div>
+    <div v-if="isAuthenticated&&!isVerified">Your account is not verified!</div>
   </div>
 </template>
 
@@ -43,26 +40,31 @@ export default {
 </script>
 
 <style scoped>
+.nav-container {
+  /* position: absolute;
+  width: 100%;
+  top: 0; */
+}
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    font-family: 'Trebuchet MS', sans-serif;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  font-family: "Trebuchet MS", sans-serif;
+  align-items: center;
 }
 .nav-button {
-    padding: 8px 14px;
-    border-radius: 4px;
-    cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 .nav-logo {
-    padding: 8px 14px;
-    cursor: pointer;
+  padding: 8px 14px;
+  cursor: pointer;
 }
 .nav-logo:hover {
-    color: #333;
+  color: #333;
 }
 .nav-button:hover {
-    background-color: #f7f7fb;
+  background-color: #f7f7fb;
 }
 </style>

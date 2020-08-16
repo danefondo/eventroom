@@ -1,6 +1,7 @@
 <template>
-  <div>
-    <div class="container">
+  <div class="app-container">
+    <Nav :isAuthenticated="isAuthenticated" :user="user" :isVerified="isVerified" />
+    <div class="page-container">
       <router-view @update="update"></router-view>
     </div>
   </div>
@@ -9,6 +10,7 @@
 <script>
 import { setAuth } from "./config/axios";
 import auth from "./config/auth";
+import Nav from "./components/Nav";
 
 export default {
   name: "App",
@@ -19,7 +21,9 @@ export default {
       user: {},
     };
   },
-  
+  components: {
+    Nav
+  },
   mounted() {
     let authenticationResult = auth.isAuthenticated();
     if (authenticationResult) {
@@ -67,19 +71,42 @@ body {
 
 a {
   text-decoration: none;
+  color: $link-color;
 }
 a:visited {
   color: $visited-color;
 }
 
-.page-container {
+.app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
-.app-container {
+.page-container {
   height: calc(100vh - 52px);
+}
+
+/* Button styles */
+
+.button {
+  outline: none;
+  background-color: #493eff;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: unset;
+  padding: 10px;
+  width: 100%;
+  border-radius: 3px;
+  cursor: pointer;
+  display: block;
+  margin: 0 auto;
+  margin-top: 25px;
+  max-width: 275px;
+}
+.button:hover {
+  background-color: #493effd1;
 }
 
 </style>

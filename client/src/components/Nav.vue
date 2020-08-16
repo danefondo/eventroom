@@ -2,15 +2,13 @@
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
     <div class="navbar">
       <router-link to="/" class="nav-logo">Oveno</router-link>
-      <div v-if="isAuthenticated" @click="logout" class="nav-button">
-        Logout
-      </div>
+      <div v-if="isAuthenticated" @click="logout" class="nav-button">Logout</div>
       <div v-else-if="!isAuthenticated">
         <router-link to="/login" class="nav-button">Login</router-link>
         <router-link to="/register" class="nav-button">Register</router-link>
       </div>
     </div>
-    <div v-if="isAuthenticated&&!isVerified">Your account is not verified!</div>
+    <div v-if="isAuthenticated&&!isVerified" class="unverified">Your account is not verified!</div>
   </div>
 </template>
 
@@ -19,19 +17,27 @@ import auth from "../config/auth";
 
 export default {
   name: "Nav",
-  
+
   data() {
     return {
-      isAuthenticated: false,
       isVerified: false,
-      user: {},
     };
   },
+  props: {
+    isAuthenticated: {
+      type: Boolean,
+      required: true,
+    },
+    user: {
+      type: Object,
+      required: true,
+    },
+  },
 
-// not sure if needed
+  // not sure if needed
   watch: {
-    isAuthenticated: function(newVal, oldVal) {
-      if (!newVal) this.logout(); 
+    isAuthenticated: function (newVal, oldVal) {
+      if (!newVal) this.logout();
       oldVal;
     },
   },
@@ -39,9 +45,7 @@ export default {
   mounted() {
     let authenticationResult = auth.isAuthenticated();
     if (authenticationResult) {
-      this.user = authenticationResult;
-      this.isVerified = authenticationResult.isVerified;
-      this.isAuthenticated = true;
+      this.isVerified = authenticationResult;
     }
   },
 
@@ -54,6 +58,13 @@ export default {
 </script>
 
 <style scoped>
+.unverified {
+  font-size: 21px;
+  text-align: center;
+  background-color: #bf0000;
+  color: white;
+  padding: 5px;
+}
 .nav-container {
   /* position: absolute;
   width: 100%;

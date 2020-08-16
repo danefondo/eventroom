@@ -1,28 +1,31 @@
 <template>
-  <div v-if="user" class="input-area">
-    <div class="input-container">
-      <div class="input-title">Event name</div>
-      <input
-        class="input"
-        v-model="eventName"
-        placeholder="What will your event be called?"
-        max-length="50"
-      />
+  <div v-if="user" class="event-creator">
+    <div class="event-creator-inputs">
+      <p class="title">Create event</p>
+      <div class="input-container">
+        <div class="input-title">Event name</div>
+        <input
+          class="event-creator-input"
+          v-model="eventName"
+          placeholder="What will your event be called?"
+          max-length="50"
+        />
+      </div>
+      <div class="input-container">
+        <div class="input-title">Event description</div>
+        <ckeditor
+          class="unreset event-creator-input ck-creator-input"
+          :editor="editor"
+          v-model="eventDescription"
+          :config="editorConfig"
+        ></ckeditor>
+      </div>
+      <div
+        class="button"
+        @click="createEvent"
+        :disabled="creatingEvent"
+      >{{ creatingEvent === true ? "Creating event..." : "Create event" }}</div>
     </div>
-    <div class="input-container">
-      <div class="input-title">Event description</div>
-      <ckeditor
-        class="unreset input-ck"
-        :editor="editor"
-        v-model="eventDescription"
-        :config="editorConfig"
-      ></ckeditor>
-    </div>
-    <div
-      class="button-create"
-      @click="createEvent"
-      :disabled="creatingEvent"
-    >{{ creatingEvent === true ? "Creating event..." : "Create event" }}</div>
   </div>
 </template>
 
@@ -84,6 +87,7 @@ export default {
           name: this.eventName,
           description: this.eventDescription,
           dateCreated: new Date(),
+          userId: this.user._id
         };
 
         const result = await axios.post(`api/events/createEvent`, eventData);
@@ -99,3 +103,53 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.title {
+  font-size: 47px;
+  margin-bottom: 20px;
+}
+.event-creator {
+  display: flex;
+  flex-direction: column;
+  /* justify-content: center; */
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+.event-creator-inputs {
+  margin-top: 104px;
+  width: 275px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.event-creator-input {
+  outline: none;
+  padding: 10px;
+  margin: 0 auto;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  font-size: 16px;
+  min-width: 275px;
+  max-width: 275px;
+}
+.event-creator-input:focus {
+  border: 1px solid #493eff;
+}
+
+.input-title {
+  text-align: left;
+  margin-bottom: 7px;
+}
+
+.ck-creator-input {
+  padding-top: 0px !important;
+}
+
+.ck-creator-input:focus {
+  border: 1px solid #493eff !important;
+}
+
+</style>

@@ -89,13 +89,14 @@
               :value="submitting ? $t('register.creating') : $t('register.create')"
             />
 
-          <router-link
-            class="accountExists__registerPage"
-            to="/login"
-          >{{ $t("register.already-have-account")}}</router-link>
-        </div>
-      </form>
-      <button @click="registerFacebook"> Log in with fb </button>
+            <router-link
+              class="accountExists__registerPage"
+              to="/login"
+            >{{ $t("register.already-have-account")}}</router-link>
+          </div>
+        </form>
+        <button @click="registerFacebook">Log in with fb</button>
+      </div>
     </div>
   </div>
 </template>
@@ -155,9 +156,9 @@ export default {
         //const response = await axios.get(`/api/accounts/register/facebook`);
         //console.log(response);
       } catch (error) {
-        console.log("error", error)
+        console.log("error", error);
       } finally {
-        console.log("rip")
+        console.log("rip");
       }
     },
     getError(field) {

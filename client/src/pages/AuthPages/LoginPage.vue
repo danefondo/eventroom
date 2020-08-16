@@ -27,7 +27,7 @@
         />
         <router-link class="auth-helper-button" to="/forgotpassword">{{$t("login.forgot-pass")}}</router-link>
         <div class="submit">
-          <input :disabled="submitting" class="auth-button" type="submit" value="Log in" />
+          <input :disabled="submitting" class="auth-button" type="submit" :value="loginText" />
         </div>
       </form>
       <div class="auth-alt-buttons">
@@ -50,11 +50,13 @@ export default {
       error: "",
       submitting: false,
       success: false,
+      loginText: "Login",
     };
   },
   methods: {
     async login() {
       this.submitting = true;
+      this.loginText = "Logging in...";
       try {
         const { username, password } = this;
         const response = await axios.post(`/api/accounts/login`, {
@@ -72,6 +74,7 @@ export default {
         }
       } finally {
         this.submitting = false;
+        this.loginText = "Login";
       }
     },
     getError(field) {
@@ -149,13 +152,20 @@ export default {
   color: #aaa;
   padding-left: 5px;
 }
-.auth-helper-button:hover {
-	color:#aaa;
-}
 .auth-helper-button:visited {
-	color: #aaa;
+  color: #aaa;
+}
+.auth-helper-button:hover {
+  color: #ccc;
 }
 .auth-alt-button {
   margin-bottom: 10px;
+  color: #555;
+}
+.auth-alt-button:visited {
+  color: #555;
+}
+.auth-alt-button:hover {
+  color: #777;
 }
 </style>

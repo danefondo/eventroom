@@ -3,6 +3,7 @@ import auth from "./config/auth";
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
 import EditEventPage from "./pages/CreatorPages/EditEventPage";
 import EventPreviewPage from "./pages/EventPages/EventPreviewPage";
+import EventRoomPage from "./pages/EventPages/EventRoomPage";
 import HomePage from "./pages/CorePages/HomePage";
 
 /* ====== AUTH PAGES ====== */
@@ -43,6 +44,7 @@ const routes = [
     },
   },
   { path: "/events/:id", component: EventPreviewPage },
+  { path: "/events/:eventId/rooms/:roomId", component: EventRoomPage },
 ];
 
 const router = new VueRouter({

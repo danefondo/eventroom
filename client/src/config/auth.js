@@ -19,8 +19,8 @@ export default {
     try {
       if (localStorage.tempToken && jwtDecode(localStorage.tempToken)) {
         // check expiry
-        const tempHost = jwtDecode(localStorage.tempToken).tempHost;
-        return tempHost;
+        const tempUser = jwtDecode(localStorage.tempToken).tempUser;
+        return tempUser;
       } else {
         return false;
       }

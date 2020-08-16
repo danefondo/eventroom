@@ -78,8 +78,8 @@ IO.on("connection", function (socket) {
   //   io.emit('message', msg);
   // });
   socket.on("joinRoom", function(data) {
-    console.log("roomId: ", data.room_id);
-    socket.join(data.room_id);
+    console.log("roomId: ", data.roomId);
+    socket.join(data.roomId);
   });
 
   // socket.on("message", function (data) {

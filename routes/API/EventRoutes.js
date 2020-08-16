@@ -8,6 +8,8 @@ router.get('/getAllEvents', EventController.getAllEvents);
 
 router.get('/getEvent/:eventId', EventController.getEvent);
 
+router.get('/:eventId/getRoom/:roomId', EventController.getRoom);
+
 router.post('/createEvent', EventController.createEvent);
 
 router.post('/findAndUpdateEvent/:eventId', EventController.findAndUpdateEvent);

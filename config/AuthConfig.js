@@ -20,8 +20,8 @@ const checkTempToken = (req, res, next) => {
   if (authorization && !authorization.includes('null')) {
     const tempToken = req.headers.authorization.split('BearerTemp ')[1];
     const decoded = JWT.verify(tempToken, process.env.SECRET)
-    if (decoded.tempHost) {
-      req.tempHost = decoded.tempHost;
+    if (decoded.tempUser) {
+      req.tempUser = decoded.tempUser;
     }
   }
   next();

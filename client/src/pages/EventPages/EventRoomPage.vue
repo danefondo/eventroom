@@ -87,8 +87,6 @@ export default {
         const { data } = await axios.get(
           `/api/events/${this.$route.params.id}/getRoom/${roomIdParam}`
         );
-        console.log("d", data);
-        console.log("r", data.room);
         this.roomNotFound = false;
         this.room = data.room;
         this.sessionId = data.sessionId;

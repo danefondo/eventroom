@@ -57,7 +57,7 @@ const router = new VueRouter({
 const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 const authenticationResult = auth.isAuthenticated();
 router.beforeEach((to, from, next) => {
-  //auth.isAuthenticated2();
+  auth.isAuthenticated2();
   if (to.meta.requireAuthentication && !authenticationResult) {
     next({ name: "LoginPage" });
   } else if (noReAuth.includes(to.name) && auth.isAuthenticated()) {

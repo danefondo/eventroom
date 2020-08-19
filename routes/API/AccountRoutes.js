@@ -20,8 +20,7 @@ const router = Express.Router();
 router.get('/verify/:verificationToken', AccountController.verifyToken);
 
 router.get('/authenticate', function(req,res,next) {
-    console.log("req: ", req);
-    console.log("req cookies: ", req.headers.cookies);
+    console.log("@authenticate req cookies vol1: ", req.cookies);
     next();
     },
     Passport.authenticate('jwt', {failureRedirect:'/login'}));

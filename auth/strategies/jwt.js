@@ -13,7 +13,7 @@ const strategy = () => {
     secretOrKey: process.env.JWT_SECRET,
     passReqToCallback: true,
   };
-
+  console.log("@jwts: stuff");
   const verifyCallback = async (req, jwtPayload, cb) => {
     const [err, user] = await to(getUserById(jwtPayload.data.__id));
 

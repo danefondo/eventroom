@@ -57,7 +57,7 @@ app.use(BodyParser.urlencoded({ extended: false }));
 app.use(BodyParser.json());
 
 //. Cookie parser middleware
-app.use(CookieParser);
+app.use(CookieParser());
 
 //- note:: to be removed
 app.use(Cors({ origin: "http://localhost:8080", credentials: true }));

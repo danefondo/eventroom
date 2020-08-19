@@ -72,6 +72,7 @@ app.use(Express.static(Path.join(__dirname, "client/dist/")));
 
 //- Passport middleware
 app.use(Passport.initialize());
+initialiseAuthentication(app);
 
 /* ====== SOCKET.IO SETUP ====== */
 
@@ -137,7 +138,6 @@ const EventRoutes = require("./routes/API/EventRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/events", EventRoutes);
 console.log("here2");
-initialiseAuthentication(app);
 
 
 /* ====== REQUESTS HANDLING ====== */

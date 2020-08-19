@@ -1,5 +1,7 @@
 import VueRouter from "vue-router";
 import auth from "./config/auth";
+
+/* ====== EVENT PAGES ====== */
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
 import EditEventPage from "./pages/CreatorPages/EditEventPage";
 import EventPreviewPage from "./pages/EventPages/EventPreviewPage";
@@ -55,6 +57,7 @@ const router = new VueRouter({
 const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 const authenticationResult = auth.isAuthenticated();
 router.beforeEach((to, from, next) => {
+  //auth.isAuthenticated2();
   if (to.meta.requireAuthentication && !authenticationResult) {
     next({ name: "LoginPage" });
   } else if (noReAuth.includes(to.name) && auth.isAuthenticated()) {

@@ -102,7 +102,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { authAxios } from "../../config/axios";
 import SuccessPage from "./SuccessPage";
 
 export default {
@@ -131,7 +131,8 @@ export default {
       this.submitting = true;
       try {
         const { email, username, password, passwordCheck } = this;
-        const response = await axios.post(`/api/accounts/register`, {
+        //axios.defaults.withCredentials=true;
+        const response = await authAxios.post(`/api/accounts/register`, {
           email,
           username,
           password,
@@ -141,8 +142,9 @@ export default {
         this.errors = [];
         this.success = true;
         this.$emit("update", response.data);
+        console.log("registration successful: ", response.data);
       } catch (error) {
-        if (error.response.status === 422) {
+        if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;
         } else {
           console.log("internal server error");

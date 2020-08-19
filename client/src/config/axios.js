@@ -29,3 +29,16 @@ export const setGlobals = () => {
 }
 
 // Set initial auth token
+const authAxios = axios.create({
+    baseURL: BASE_PATH,
+    withCredentials: true,
+    //timeout: 10000,
+});
+
+const authAxios2 = axios.create({
+    baseURL: BASE_PATH,
+    withCredentials: true,
+    //timeout: 10000,
+});
+
+export { authAxios, authAxios2 };

@@ -106,7 +106,7 @@ const loginHandler = async (req, res) => {
 const logoutHandler =  async (req, res) => {
     console.log("@logout");
     res.clearCookie('jwt');
-    res.status(200).json('User Logged out')
+    res.status(200).json({ success: true, data: 'User Logged out'});
 };
 
 const authenticationHandler = async (req, res, next) => {

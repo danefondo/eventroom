@@ -162,6 +162,7 @@ export default {
 .auth-alt-button {
   margin-bottom: 10px;
   color: #555;
+  display: block;
 }
 .auth-alt-button:visited {
   color: #555;

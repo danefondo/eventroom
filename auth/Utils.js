@@ -25,6 +25,17 @@ const signToken = (user) => {
     return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'1d'});
 };
 
+/*====== Access control middleware for API routes to make sure user is authenticated before being able to call auth-only API actions  ======*/
+// const ensureAuthenticated = function(req, res, next){
+// 	console.log("Req.session ", req.session)
+//   if(req.isAuthenticated()){
+//     return next();
+//   } else {
+//   	console.log("Sorry, but you gotta be logged in.")
+//     res.redirect('/');
+//   }
+// }
+
 const hashPassword = function(password) {
     return new Promise((resolve, reject) => {
         Bcrypt.genSalt(10, function(err, salt) {

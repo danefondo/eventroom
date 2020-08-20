@@ -1,8 +1,8 @@
 <template>
   <div class="event-container">
     <div v-if="event && room" class="event">
-      <div v-if="event" class="event-title">{{ event.name }}</div>
-      <div v-if="event" v-html="event.description" class="event-description"></div>
+      <div class="event-title">{{ event.name }}</div>
+      <div v-html="event.description" class="event-description"></div>
       <router-link class="button" :to="`/events/${event._id}/rooms/${room._id}`">Enter room</router-link>
     </div>
   </div>

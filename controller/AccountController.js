@@ -1,7 +1,7 @@
 
 const User = require('../database/user/UserModel')
 const JWT = require('jsonwebtoken');
-
+// AUTHENTICATION STUFF WILL BE MOVED TO /auth/AuthController
 const AccountController = {
 	async verifyToken(req, res, next) {
 		const { verificationToken } = req.params;

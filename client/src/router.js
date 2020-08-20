@@ -59,7 +59,7 @@ const router = new VueRouter({
 const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 router.beforeEach(async (to, from, next) => {
   if (to.meta || noReAuth.includes(to.name)) {
-    console.log("@router, need auth or noreauth")
+    // console.log("@router, need auth or noreauth")
     // SHOULD BE CALLED JUST ONCE, expensive operation
     const authenticationResult = await auth.isAuthenticated();     
     
@@ -75,7 +75,6 @@ router.beforeEach(async (to, from, next) => {
     } 
     if (to.meta.requireVerification && user && !user.isVerified && !nextHasBeenCalled) {
       nextHasBeenCalled = true;
-      console.log("here: ", authenticationResult.response);
       next({ name: "RequireVerificationPage"});
     }
     if (noReAuth.includes(to.name) && success && !nextHasBeenCalled) {

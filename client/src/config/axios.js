@@ -28,26 +28,10 @@ export const setGlobals = () => {
     }
 }
 
-// Set initial auth token
 const authAxios = axios.create({
     baseURL: BASE_PATH,
     withCredentials: true,
     //timeout: 10000,
 });
 
-// For testing, deletable stuff
-const authAxios2 = axios.create({
-    baseURL: BASE_PATH,
-    withCredentials: true,
-    //timeout: 10000,
-});
-
-authAxios2.interceptors.request.use(function(req) {
-    console.log('@inter: ', req);
-    return req;
-    }, function(err) {
-    console.log(err);
-    return Promise.reject(err);
-});
-
-export { authAxios, authAxios2 };
+export { authAxios };

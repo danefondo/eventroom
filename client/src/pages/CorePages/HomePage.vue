@@ -37,14 +37,11 @@ export default {
   },
   async mounted() {
     let authenticationResult = await auth.isAuthenticated();
-    console.log("@hp: authenticationResult", authenticationResult);
     if (authenticationResult.success) {
-      console.log("@hp: here");
       this.user = authenticationResult.response.user;
       this.isVerified = authenticationResult.response.user.isVerified;
       this.isAuthenticated = true;
     }
-    console.log("@hp: authenticatiod?", this.isAuthenticated);
     this.getAllEvents();
   },
   methods: {

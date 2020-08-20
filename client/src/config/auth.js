@@ -4,12 +4,10 @@ import { authAxios } from "./axios";
 export default {
   async isAuthenticated() {
     try {
-      console.log("@isauth: Starting auth");
       const response = await authAxios.get(`/api/accounts/authenticate`);
-      console.log("@isauth: response", response);
       return { success: true, response: response.data};
     } catch (err) {
-      console.log("@isauth:", err);
+      // console.log("@isauth:", err);
       return { success: false, response: err.response};
     }
   },

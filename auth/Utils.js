@@ -9,7 +9,7 @@ const User = require('../database/user/UserModel');
 Dotenv.config();
 
 const setup = () => {
-    Passport.serializeUser((user, done) => done(null, user,_id));
+    Passport.serializeUser((user, done) => done(null, user._id));
 
     Passport.deserializeUser(async (id, done) => {
         try {

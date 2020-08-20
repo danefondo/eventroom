@@ -19,11 +19,18 @@ const router = Express.Router();
 
 router.get('/verify/:verificationToken', AccountController.verifyToken);
 
-router.get('/authenticate', function(req,res,next) {
-    console.log("@authenticate req cookies vol1: ", req.cookies);
-    next();
-    },
-    Passport.authenticate('jwt', {failureRedirect:'/login'}));
+router.get('/authenticate', AuthController.authenticationHandler);
+// router.post('/authenticate', function(req,res,next) {
+//     // console.log("@authenticate req cookies: ", req.cookies);
+//     // console.log("@authenticate req jwt cookie: ", req.cookies['jwt']);
+//     // console.log("@authenticate req IO cookie: ", req.cookies['io']);
+//     next();
+//     },
+//     Passport.authenticate('jwt', {failureRedirect:'/login'}), function(res, req) {
+//         console.log("@authenticate res: ", res.user);
+//         res.json({})
+//         // console.log("@authenticate req: ", req);
+//     });
 
 router.post('/login', AccountUtilities.usernameToLowerCase, AuthController.loginHandler);
 

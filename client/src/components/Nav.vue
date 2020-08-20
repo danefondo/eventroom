@@ -13,16 +13,12 @@
 </template>
 
 <script>
-import auth from "../config/auth";
+// import auth from "../config/auth";
 
 export default {
   name: "Nav",
 
-  data() {
-    return {
-      isVerified: false,
-    };
-  },
+  
   props: {
     isAuthenticated: {
       type: Boolean,
@@ -32,6 +28,10 @@ export default {
       type: Object,
       required: true,
     },
+    isVerified: {
+      type: Boolean,
+      required: true,
+    }
   },
 
   // not sure if needed
@@ -42,16 +42,11 @@ export default {
     },
   },
 
-  mounted() {
-    let authenticationResult = auth.isAuthenticated();
-    if (authenticationResult) {
-      this.isVerified = authenticationResult;
-    }
-  },
-
   methods: {
     logout() {
-      auth.logout();
+      // DOES NOT WORK
+      this.$cookies.remove("jwt");
+      this.$router.push("logout");
     },
   },
 };
@@ -65,11 +60,11 @@ export default {
   color: white;
   padding: 5px;
 }
-.nav-container {
-  /* position: absolute;
+/* .nav-container {
+  position: absolute;
   width: 100%;
-  top: 0; */
-}
+  top: 0; 
+} */
 .navbar {
   display: flex;
   justify-content: space-between;

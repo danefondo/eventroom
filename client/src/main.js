@@ -5,6 +5,7 @@ import i18nConfig from './i18n/config';
 import CKEditor from "@ckeditor/ckeditor5-vue";
 import VueSocketIO from "vue-socket.io";
 import VueRouter from "vue-router";
+import VueCookies from 'vue-cookies';
 import { setGlobals } from "./config/axios";
 import router from "./router";
 
@@ -13,6 +14,7 @@ Vue.config.productionTip = false;
 Vue.use(VueI18n);
 Vue.use(VueRouter);
 Vue.use(CKEditor);
+Vue.use(VueCookies);
 
 const i18n = new VueI18n(i18nConfig);
 

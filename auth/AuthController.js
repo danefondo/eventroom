@@ -1,4 +1,5 @@
 const { validationResult } = require('express-validator');
+const Passport = require('passport');
 
 const User = require('../database/user/UserModel');
 const { createUser } = require('../database/user/UserUtilities');
@@ -92,7 +93,7 @@ const loginHandler = async (req, res) => {
 
     let token;
     try {
-        token = login(req, user);
+        token = await login(req, user);
     } catch (err) {
         return res.status(500).send({error: "Internal server error"});
     }
@@ -102,5 +103,23 @@ const loginHandler = async (req, res) => {
         .json({ success: true, data: "/"});
 };
 
+const authenticationHandler = async (req, res, next) => {
+    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, function (second_req, user) {
+        console.log("@authenticate");
+        if (!user) {
+            console.log("no user");
+            return res.status(401).send({ error: "Unauthorized." });
+        }
 
-module.exports = { registerHandler, loginHandler };
+        const returnUser = {
+            username: user.username,
+            _id: user._id,
+            isVerified: user.verifiedStatus,
+            displayName: user.displayName,
+        };
+        return res.json({ user: returnUser});
+    })(req, res, next);
+};
+
+
+module.exports = { registerHandler, loginHandler, authenticationHandler };

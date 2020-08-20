@@ -2,7 +2,7 @@ const User = require('./UserModel');
 
 
 async function getUserById(id) {
-    return await User.findById.exec();
+    return await User.findById(id).exec();
 }
 
 async function createUser({username, firstName, lastName, email, hashedPassword, verificationToken}) {

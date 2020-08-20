@@ -9,18 +9,23 @@ const JWTStrategy = PassportJWT.Strategy;
 
 const strategy = () => {
   const strategyOptions = {
-    jwtFromRequest: req => req.cookies.jwt,
+    jwtFromRequest: req => {
+      let token = null;
+      if (req && req.cookies) { token = req.cookies['jwt'];}
+      console.log("@strat: token", token);
+      return token;
+    },
     secretOrKey: process.env.JWT_SECRET,
     passReqToCallback: true,
   };
-  console.log("@jwts: stuff");
+  
   const verifyCallback = async (req, jwtPayload, cb) => {
-    const [err, user] = await to(getUserById(jwtPayload.data.__id));
-
+    console.log("@strat payload: ", jwtPayload);
+    const [err, user] = await to(getUserById(jwtPayload.data._id));
     if (err) return cb(err);
 
+    console.log("@strat user: ", user);
     req.user = user;
-
     return cb(null, user);
 
   };
@@ -29,9 +34,12 @@ const strategy = () => {
 }
 
 const login = (req, user) => {
+  console.log("@jwtlogin: req: ", req.body, req.header);
+  console.log("@jwtlogin: user: ", user);
   return new Promise((resolve, reject) => {
     req.login(user, {session: false}, err => {
       if (err) return reject(err);
+      console.log("@jwtlogin: user, token: ", user, signToken(user));
       return resolve(signToken(user));
     });
   });

@@ -132,12 +132,10 @@ IO.on("connection", function (socket) {
 
 
 /* ====== ROUTES SETUP ====== */
-console.log("here1");
 const AccountRoutes = require("./routes/API/AccountRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/events", EventRoutes);
-console.log("here2");
 
 
 /* ====== REQUESTS HANDLING ====== */
@@ -156,7 +154,6 @@ if (port == null || port == "") {
 }
 
 /* ====== START SETUP ====== */
-console.log("here3")
 HTTP.listen(port, function () {
   console.log("Server started on port " + port);
 });

@@ -71,10 +71,11 @@ export default {
       eventNotFound: false,
     };
   },
-  mounted() {
+  async mounted() {
     this.getEvent();
-    if (auth.isAuthenticated()) {
-      this.user = auth.isAuthenticated();
+    let authenticationResult = await auth.isAuthenticated();
+    if (authenticationResult.success) {
+      this.user = authenticationResult.response.user;
       this.isAuthenticated = true;
     }
   },

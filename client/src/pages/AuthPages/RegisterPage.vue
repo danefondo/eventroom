@@ -141,7 +141,7 @@ export default {
         });
         this.errors = [];
         this.success = true;
-        this.$emit("update", response.data);
+        this.$emit("update");
         console.log("registration successful: ", response.data);
       } catch (error) {
         if (error.response && error.response.status === 422) {

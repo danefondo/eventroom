@@ -64,8 +64,9 @@ export default {
           password,
         });
         this.error = "";
-        this.$emit("update", response.data);
+        this.$emit("update");
         this.$router.push("/");
+        console.log("login successful: ", response.data);
       } catch (error) {
         if (error.response && error.response.status === 401) {
           this.error = error.response.data.error;

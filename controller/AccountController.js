@@ -1,5 +1,5 @@
 
-const User = require('../models/UserModel')
+const User = require('../database/user/UserModel')
 const JWT = require('jsonwebtoken');
 
 const AccountController = {

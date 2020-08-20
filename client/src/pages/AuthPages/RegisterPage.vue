@@ -4,12 +4,12 @@
   </div>
   <div v-else class="registration">
     <div class="registration-block">
-      <div class="titleBlock__registerPage">
-        <h1 class="title__registerPage">{{ $t("register.join-title")}}</h1>
-        <div class="subtitle__registerPage">{{ $t("register.join-tagline")}}</div>
+      <div class="auth-header">
+        <h1 class="auth-title">{{ $t("register.join-title")}}</h1>
+        <div class="auth-subtitle">{{ $t("register.join-tagline")}}</div>
       </div>
       <div class="registration-form">
-        <form class="form-register" method="POST" @submit.prevent="register()">
+        <form class="auth-form" method="POST" @submit.prevent="register()">
           <div class="notifier__register">
             <h2>Errors</h2>
           </div>
@@ -17,11 +17,11 @@
             <div class="form-group">
               <input
                 v-model="email"
-                class="input__registration first-input"
+                class="auth-input"
                 name="email"
                 type="text"
                 placeholder="example@mail.com"
-                autocomplete="falsess"
+                autocomplete="falsessy"
               />
               <div class="inputErrorContainer">
                 <div class="inputErrorText">{{ getError('email') }}</div>
@@ -30,7 +30,7 @@
             <div class="form-group">
               <input
                 v-model="username"
-                class="input__registration"
+                class="auth-input"
                 name="username"
                 type="text"
                 :placeholder="$t('register.username')"
@@ -43,7 +43,7 @@
             <div class="form-group">
               <input
                 v-model="password"
-                class="input__registration inline passwordInput"
+                class="auth-input"
                 name="password"
                 :type="passwordType ? 'password' : 'text'"
                 :placeholder="$t('register.pass')"
@@ -63,7 +63,7 @@
             <div class="form-group last-form-group">
               <input
                 v-model="passwordCheck"
-                class="input__registration last-input passwordInput"
+                class="auth-input"
                 name="passcheck"
                 :type="passwordCheckType ? 'password' : 'text'"
                 :placeholder="$t('register.confirm-pass')"
@@ -84,17 +84,13 @@
           <div class="buttonGroup">
             <input
               :disabled="submitting"
-              class="register-button"
+              class="auth-button"
               type="submit"
               :value="submitting ? $t('register.creating') : $t('register.create')"
             />
-
-            <router-link
-              class="accountExists__registerPage"
-              to="/login"
-            >{{ $t("register.already-have-account")}}</router-link>
           </div>
         </form>
+        <router-link class="auth-alt-button" to="/login">{{ $t("register.already-have-account")}}</router-link>
         <button @click="registerFacebook">Log in with fb</button>
       </div>
     </div>
@@ -102,7 +98,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { authAxios } from "../../config/axios";
 import SuccessPage from "./SuccessPage";
 
 export default {
@@ -131,7 +127,8 @@ export default {
       this.submitting = true;
       try {
         const { email, username, password, passwordCheck } = this;
-        const response = await axios.post(`/api/accounts/register`, {
+        //axios.defaults.withCredentials=true;
+        const response = await authAxios.post(`/api/accounts/register`, {
           email,
           username,
           password,
@@ -140,9 +137,10 @@ export default {
         });
         this.errors = [];
         this.success = true;
-        this.$emit("update", response.data);
+        this.$emit("update");
+        console.log("registration successful: ", response.data);
       } catch (error) {
-        if (error.response.status === 422) {
+        if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;
         } else {
           console.log("internal server error");
@@ -174,14 +172,48 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   text-align: center;
+  height: 100%;
+  width: 100%;
 }
 .registration-block {
-  margin: 0 auto;
+  max-width: 350px;
+  width: 325px;
+  text-align: center;
+  margin-top: -156px;
 }
-.register-button {
-  display: block;
-  margin: 0 auto;
+.auth-button {
+  outline: none;
+  background-color: #493eff;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  border: unset;
+  padding: 10px;
+  width: 100%;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.auth-button:hover {
+  background-color: #493effd1;
+}
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 25px;
+}
+.auth-header {
+  margin-bottom: 25px;
+}
+.auth-title {
+  font-size: 50px;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.auth-subtitle {
+  color: #aaa;
+  font-size: 18px;
 }
 .form-groups {
   display: flex;
@@ -193,12 +225,25 @@ export default {
   display: flex;
   margin-bottom: 5px;
   justify-content: center;
+  position: relative;
 }
+
+.form-group input {
+  width: 100%;
+}
+
 .showPass {
   width: 18px;
 }
-
-.passwordInput {
-  margin-left: 18px;
+.showPassContainer {
+  position: absolute;
+  right: 3%;
+  top: 0px;
+  bottom: 26%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
 }
 </style>

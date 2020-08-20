@@ -8,7 +8,6 @@
 </template>
 
 <script>
-import { setAuth } from "./config/axios";
 import auth from "./config/auth";
 import Nav from "./components/Nav";
 
@@ -25,21 +24,17 @@ export default {
     Nav
   },
   mounted() {
-    let authenticationResult = auth.isAuthenticated();
-    if (authenticationResult) {
-      this.user = authenticationResult;
-      this.isVerified = authenticationResult.isVerified;
-      this.isAuthenticated = true;
-    }
+    this.update();
   },
+
   methods: {
-    update(details) {
-      if (details.token) {
-        setAuth(details.token, false);
+    async update() {
+      let authenticationResult = await auth.isAuthenticated();
+      if (authenticationResult.success) {
+        this.user = authenticationResult.response.user;
+        this.isVerified = authenticationResult.response.user.isVerified;
         this.isAuthenticated = true;
       }
-      this.isVerified = details.user.isVerified;
-      this.user = details.user;
     },
   },
 };

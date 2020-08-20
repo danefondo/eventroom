@@ -1,17 +1,16 @@
 import jwtDecode from "jwt-decode";
-import { setAuth } from "./axios";
+// import axios from 'axios';
+import { setAuth, authAxios } from "./axios";
 export default {
-  isAuthenticated() {
+  async isAuthenticated() {
     try {
-      if (localStorage.token && jwtDecode(localStorage.token)) {
-        // check expiry
-        const user = jwtDecode(localStorage.token).user;
-        return user;
-      } else {
-        return false;
-      }
-    } catch (error) {
-      return false;
+      console.log("@isauth: Starting auth");
+      const response = await authAxios.get(`/api/accounts/authenticate`);
+      console.log("@isauth: response", response);
+      return { success: true, response: response.data};
+    } catch (err) {
+      console.log("@isauth:", err);
+      return { success: false, response: err.response};
     }
   },
 

@@ -42,15 +42,15 @@ export default {
   components: {
     Session,
   },
-  mounted() {
-    let authenticationResult = auth.isAuthenticated();
-    if (authenticationResult) {
-      this.user = authenticationResult;
-      this.isVerified = authenticationResult.isVerified;
+  async mounted() {
+    let authenticationResult = await auth.isAuthenticated();
+    if (authenticationResult.success) {
+      this.user = authenticationResult.response.user;
+      this.isVerified = authenticationResult.response.user.isVerified;
       this.isAuthenticated = true;
     }
 
-    if (!authenticationResult) {
+    if (!authenticationResult.success) {
       this.createTempUser();
     }
 
@@ -87,8 +87,6 @@ export default {
         const { data } = await axios.get(
           `/api/events/${this.$route.params.id}/getRoom/${roomIdParam}`
         );
-        console.log("d", data);
-        console.log("r", data.room);
         this.roomNotFound = false;
         this.room = data.room;
         this.sessionId = data.sessionId;

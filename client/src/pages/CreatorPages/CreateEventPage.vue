@@ -70,11 +70,11 @@ export default {
       creatingEvent: false,
     };
   },
-  mounted() {
-    let authenticationResult = auth.isAuthenticated();
-    if (authenticationResult) {
-      this.user = authenticationResult;
-      this.isVerified = authenticationResult.isVerified;
+  async mounted() {
+    let authenticationResult = await auth.isAuthenticated();
+    if (authenticationResult.success) {
+      this.user = authenticationResult.response.user;
+      this.isVerified = authenticationResult.response.user.isVerified;
       this.isAuthenticated = true;
     }
   },

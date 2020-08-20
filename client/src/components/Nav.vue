@@ -36,14 +36,6 @@ export default {
     }
   },
 
-  // not sure if needed
-  watch: {
-    isAuthenticated: function (newVal, oldVal) {
-      if (!newVal) this.logout();
-      oldVal;
-    },
-  },
-
   methods: {
     async logout() {
       const response = await auth.logout();
@@ -51,6 +43,7 @@ export default {
       this.isAuthenticated = false;
       this.user = null;
       this.isVerified = null;
+      this.$emit("update");
       this.$router.push("/logout");
     },
   },

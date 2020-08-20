@@ -1,6 +1,6 @@
 import jwtDecode from "jwt-decode";
 // import axios from 'axios';
-import { setAuth, authAxios } from "./axios";
+import { authAxios } from "./axios";
 export default {
   async isAuthenticated() {
     try {
@@ -27,7 +27,7 @@ export default {
       return false;
     }
   },
-  logout() {
-    setAuth(null);
+  async logout() {
+    return await authAxios.get(`/api/accounts/logout`); 
   },
 };

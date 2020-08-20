@@ -14,8 +14,8 @@
 
 <script>
 // import auth from "../config/auth";
-import axios from "axios";
-
+import auth from "../config/auth";
+ 
 
 export default {
   name: "Nav",
@@ -46,12 +46,12 @@ export default {
 
   methods: {
     async logout() {
-      await axios.get(`/api/accounts/logout`, { withCredentials: true });
-      // this.$cookies.remove("jwt");
+      const response = await auth.logout();
+      console.log("@logout", response);
       this.isAuthenticated = false;
       this.user = null;
       this.isVerified = null;
-      this.$router.push("logout");
+      this.$router.push("/logout");
     },
   },
 };

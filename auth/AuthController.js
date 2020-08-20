@@ -103,17 +103,10 @@ const loginHandler = async (req, res) => {
         .json({ success: true, data: "/"});
 };
 
-const logoutUser =  async (req, res) => {
+const logoutHandler =  async (req, res) => {
     console.log("@logout");
-    // return res.cookie("jwt", "", { expires: new Date(0),domain:'localhost'})
-    //     .json({ success: true});
-    //     // .cookie('jwt', {expires: Date.now()});
-    //     // .cookie('jwt', {maxAge: 0});
-    //     // .clearCookie('jwt', {path: '/'})
-    // res.clearCookie('jwt', { domain: 'http://localhost:8080', path: '/' , expires: 0});
     res.clearCookie('jwt');
     res.status(200).json('User Logged out')
-    // res.redirect('/');
 };
 
 const authenticationHandler = async (req, res, next) => {
@@ -135,4 +128,4 @@ const authenticationHandler = async (req, res, next) => {
 };
 
 
-module.exports = { registerHandler, loginHandler, logoutUser, authenticationHandler };
+module.exports = { registerHandler, loginHandler, logoutHandler, authenticationHandler };

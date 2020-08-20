@@ -34,7 +34,7 @@ router.get('/authenticate', AuthController.authenticationHandler);
 
 router.post('/login', AccountUtilities.usernameToLowerCase, AuthController.loginHandler);
 
-router.get('/logout', AuthController.logoutUser);
+router.get('/logout', AuthController.logoutHandler);
 
 router.post('/register', function(req,res,next) {
     console.log("req:", req);

@@ -19,7 +19,9 @@ export default {
 
     methods: {
         atMounted() {
+            console.log("here1");
             router.push("/register/success");
+            console.log("here2");
         }
     }
 }

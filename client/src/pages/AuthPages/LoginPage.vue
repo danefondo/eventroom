@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { authAxios } from "../../config/axios";
 
 export default {
   name: "LoginPage",
@@ -59,15 +59,16 @@ export default {
       this.loginText = "Logging in...";
       try {
         const { username, password } = this;
-        const response = await axios.post(`/api/accounts/login`, {
+        const response = await authAxios.post(`/api/accounts/login`, {
           username,
           password,
         });
         this.error = "";
-        this.$emit("update", response.data);
+        this.$emit("update");
         this.$router.push("/");
+        console.log("login successful: ", response.data);
       } catch (error) {
-        if (error.response.status === 401) {
+        if (error.response && error.response.status === 401) {
           this.error = error.response.data.error;
         } else {
           console.log("internal server error");

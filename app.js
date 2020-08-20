@@ -3,12 +3,14 @@
 const Express = require("express");
 const Mongoose = require("mongoose");
 const BodyParser = require("body-parser");
+const CookieParser = require("cookie-parser");
 const Path = require("path");
 const Enforce = require("express-sslify");
 const Passport = require("passport");
 const DatabaseConfig = require("./config/DatabaseConfig");
 const Cors = require("cors");
 
+const initialiseAuthentication = require('./auth/index').initialiseAuthentication;
 /* ====== DATABASE SETUP ====== */
 
 /* 
@@ -18,7 +20,7 @@ Mongoose.connect(TEST_DB_URI, { useNewUrlParser: true });
 */
 
 //- Mongoose production database setup
-Mongoose.connect(DatabaseConfig.DB_URI);
+Mongoose.connect(DatabaseConfig.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
 Mongoose.set("useFindAndModify", false);
 
 //- Get default Mongoose connection
@@ -54,8 +56,11 @@ if (process.env.NODE_ENV === "production") {
 app.use(BodyParser.urlencoded({ extended: false }));
 app.use(BodyParser.json());
 
+//. Cookie parser middleware
+app.use(CookieParser());
+
 //- note:: to be removed
-app.use(Cors({ origin: "http://localhost:8080" }));
+app.use(Cors({ origin: "http://localhost:8080", credentials: true }));
 
 //- Set public folder
 app.use(Express.static(Path.join(__dirname, "client/dist/")));
@@ -63,10 +68,11 @@ app.use(Express.static(Path.join(__dirname, "client/dist/")));
 /* ====== AUTHENTICATION SETUP ====== */
 
 //- Passport config
-require("./config/PassportConfig")(Passport);
+//require("./config/PassportConfig")(Passport);
 
 //- Passport middleware
 app.use(Passport.initialize());
+initialiseAuthentication(app);
 
 /* ====== SOCKET.IO SETUP ====== */
 
@@ -126,11 +132,11 @@ IO.on("connection", function (socket) {
 
 
 /* ====== ROUTES SETUP ====== */
-
 const AccountRoutes = require("./routes/API/AccountRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/events", EventRoutes);
+
 
 /* ====== REQUESTS HANDLING ====== */
 
@@ -148,7 +154,7 @@ if (port == null || port == "") {
 }
 
 /* ====== START SETUP ====== */
-
 HTTP.listen(port, function () {
   console.log("Server started on port " + port);
 });
+

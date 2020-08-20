@@ -3,7 +3,7 @@ const AccountUtilities = require('../utils/AccountUtilities')
 const MailUtilities = require('../utils/MailUtilities');
 const JWT = require('jsonwebtoken');
 const Passport = require('passport');
-const User = require('../models/UserModel');
+const User = require('../database/user/UserModel');
 const dotenv = require('dotenv');
 
 dotenv.config();
@@ -56,7 +56,7 @@ const LoginRegisterController = {
 
 	async login(req, res, next) {
         Passport.authenticate('local', { session: false }, function (err, user, info) {
-			console.log("user", user);
+			console.log("@login: user", user);
             if (err) { 
 				console.log("err1", err);
 				return next(err) }

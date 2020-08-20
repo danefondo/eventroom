@@ -1,5 +1,5 @@
 const { check } = require('express-validator');
-const AccountUtilities = require('../utils/AccountUtilities');
+const AccountUtilities = require('../utils/AccountUtilities'); // TODO to remove
 
 
 

@@ -3,7 +3,7 @@ const Passport = require('passport');
 
 const User = require('../database/user/UserModel');
 const { createUser } = require('../database/user/UserUtilities');
-const { verifyPassword, hashPassword, generateToken } = require('./Utils');
+const { verifyPassword, hashPassword, generateToken, userInJWT } = require('./Utils');
 const { login } = require('./strategies/jwt');
 const MailUtilities = require('../utils/MailUtilities');
 
@@ -41,7 +41,7 @@ const registerHandler = async (req, res) => {
     // Logging in
     let loginResult;
     try {
-        loginResult = await login(req, newUser);
+        loginResult = await login(req, userInJWT(newUser));
     } catch (err) {
         return res.status(500).send({ error: "Internal server error - problem with logging in"});
     }
@@ -80,19 +80,17 @@ const loginHandler = async (req, res) => {
     }
 
     let token;
+
+    const returnUser = userInJWT(user);
+
     try {
-        token = await login(req, user);
+        token = await login(req, returnUser);
     } catch (err) {
         console.log("@login: 3 ", err);
         return res.status(500).send({error: "Internal server error"});
     }
 
-    const returnUser = {
-        username: user.username,
-        _id: user._id,
-        isVerified: user.verifiedStatus,
-        displayName: user.displayName,
-    };
+    
 
     return res.status(200)
         .cookie('jwt', token, { httpOnly: true })   // sameSession?

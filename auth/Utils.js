@@ -23,6 +23,19 @@ const setup = () => {
     });
 };
 
+/*====== Data in JWT  ======*/
+
+const userInJWT = function(user) {
+    const returnUser = {
+        username: user.username,
+        _id: user._id,
+        isVerified: user.verifiedStatus,
+        displayName: user.displayName,
+    };
+
+    return returnUser;
+};
+
 /*====== Crypto helpers  ======*/
 
 const signToken = (user) => {
@@ -56,4 +69,4 @@ const verifyPassword = async (candidate, actual) => {
     return await Bcrypt.compare(candidate, actual);
 };
 
-module.exports = { setup, signToken, hashPassword, generateToken, verifyPassword }; 
+module.exports = { setup, signToken, hashPassword, generateToken, verifyPassword, userInJWT }; 

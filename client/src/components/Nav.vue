@@ -13,7 +13,8 @@
 </template>
 
 <script>
-// import auth from "../config/auth";
+import { mapState } from 'vuex';
+
 import auth from "../config/auth";
  
 
@@ -21,30 +22,25 @@ export default {
   name: "Nav",
 
   
-  props: {
-    isAuthenticated: {
-      type: Boolean,
-      required: true,
-    },
-    user: {
-      type: Object,
-      required: true,
-    },
-    isVerified: {
-      type: Boolean,
-      required: true,
-    }
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
   },
 
   methods: {
     async logout() {
-      const response = await auth.logout();
-      console.log("@logout", response);
-      this.isAuthenticated = false;
-      this.user = null;
-      this.isVerified = null;
-      this.$emit("update");
-      this.$router.push("/logout");
+      try {
+        const response = await auth.logout();
+        console.log("@nav logout: ", response.data);
+        if (response.data.success) {
+          this.$router.push("/logout");
+        }
+      } catch (err) {
+        console.log(err);
+      }
     },
   },
 };

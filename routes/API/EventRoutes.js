@@ -1,5 +1,6 @@
 const Express = require('express');
 const EventController = require('../../controller/EventController');
+const AuthController = require('../../auth/AuthController');
 
 const router = Express.Router();
 
@@ -10,7 +11,7 @@ router.get('/getEvent/:eventId', EventController.getEvent);
 
 router.get('/:eventId/getRoom/:roomId', EventController.getRoom);
 
-router.post('/createEvent', EventController.createEvent);
+router.post('/createEvent', AuthController.confirmAuthentication, EventController.createEvent);
 
 router.post('/findAndUpdateEvent/:eventId', EventController.findAndUpdateEvent);
 

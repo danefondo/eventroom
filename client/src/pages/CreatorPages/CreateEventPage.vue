@@ -32,7 +32,9 @@
 <script>
 import { mapState } from 'vuex';
 
-import axios from "axios";
+// import axios from "axios";
+// import { authAxios } from "../../config/axios";
+import { requestWithAuthentication } from "../../config/api";
 import DecoupledEditor from "@ckeditor/ckeditor5-build-decoupled-document";
 
 export default {
@@ -75,11 +77,6 @@ export default {
       isVerified: state => state.verificationStatus,
     })
   },
-  mounted() {
-    console.log("@ce: ", this.$store.state.user);
-    console.log("@ce: ", this.$store.state.authenticationStatus);
-    console.log("@ce: ", this.$store.state.verificationStatus);
-  },
   methods: {
     async createEvent() {
       try {
@@ -92,11 +89,11 @@ export default {
           userId: this.user._id
         };
 
-        const result = await axios.post(`api/events/createEvent`, eventData);
-        const test = await axios.get(`api/events/testing`);
-        console.log(test);
+        const result = await requestWithAuthentication('post', `api/events/createEvent`, eventData, true);
         this.$router.push(`/events/${result.data.event._id}`);
       } catch (error) {
+        // TODO catch 401 error!
+        console.log(error);
         window.scrollTo(0, 0);
         this.error = true;
         this.creatingEvent = false;

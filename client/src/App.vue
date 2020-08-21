@@ -2,7 +2,7 @@
   <div class="app-container">
     <Nav/>
     <div class="page-container">
-      <router-view @update="update"></router-view>
+      <router-view></router-view>
     </div>
   </div>
 </template>
@@ -28,19 +28,9 @@ export default {
     Nav,
   },
   mounted() {
-    this.update();
+    auth.isAuthenticated();
   },
 
-  methods: {
-    async update() {
-      let authenticationResult = await auth.isAuthenticated();
-      if (authenticationResult.success) {
-        this.user = authenticationResult.response.user;
-        this.isVerified = authenticationResult.response.user.isVerified;
-        this.isAuthenticated = true;
-      }
-    },
-  },
 };
 </script>
 

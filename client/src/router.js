@@ -1,5 +1,5 @@
 import VueRouter from "vue-router";
-import auth from "./config/auth";
+import store from "./store";
 
 /* ====== EVENT PAGES ====== */
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
@@ -60,15 +60,12 @@ const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 router.beforeEach(async (to, from, next) => {
   if (to.meta || noReAuth.includes(to.name)) {
     // console.log("@router, need auth or noreauth")
-    // SHOULD BE CALLED JUST ONCE, expensive operation
-    const authenticationResult = await auth.isAuthenticated();     
-    
-    const success = authenticationResult.success
-    const user = success ? authenticationResult.response.user : null; 
+    const user = store.state.user;
+    const authenticationStatus = store.state.authenticationStatus;
 
     let nextHasBeenCalled = false;
 
-    if (to.meta.requireAuthentication && !success) {
+    if (to.meta.requireAuthentication && !authenticationStatus) {
       console.log("@router go login")
       nextHasBeenCalled = true;
       next({ name: "LoginPage" });  // TODO proper error page/error code or smth
@@ -77,7 +74,7 @@ router.beforeEach(async (to, from, next) => {
       nextHasBeenCalled = true;
       next({ name: "RequireVerificationPage"});
     }
-    if (noReAuth.includes(to.name) && success && !nextHasBeenCalled) {
+    if (noReAuth.includes(to.name) && authenticationStatus && !nextHasBeenCalled) {
       nextHasBeenCalled = true;
       next("/");
     }

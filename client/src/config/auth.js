@@ -53,6 +53,10 @@ export default {
   async isAuthenticated() {
     try {
       const response = await authAxios.get(`/api/accounts/authenticate`);
+      
+      store.commit("updateAuthenticationStatus", true);
+      store.commit('updateVerificationStatus', response.data.user.isVerified);
+      store.commit('updateUser', response.data.user);
       return { success: true, response: response.data};
     } catch (err) {
       // console.log("@isauth:", err);

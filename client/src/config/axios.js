@@ -34,4 +34,5 @@ const authAxios = axios.create({
     //timeout: 10000,
 });
 
+
 export { authAxios };

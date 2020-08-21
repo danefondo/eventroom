@@ -56,6 +56,7 @@ const registerHandler = async (req, res) => {
 
 const loginHandler = async (req, res) => {
     const { username, password } = req.body;
+    console.log("@login", username, password);
     let user;
     try {
         user = await User.findOne({username: username}).select('+password').exec();
@@ -63,6 +64,7 @@ const loginHandler = async (req, res) => {
             return res.status(400).send({error: "User does not exist"});
         }
     } catch (err) {
+        console.log("@login: 1 ", err);
         return res.status(500).send({error: "Internal server error"});
     }
     try {
@@ -70,6 +72,8 @@ const loginHandler = async (req, res) => {
             return res.status(401).send({error: "Wrong username or password"});
         }
     } catch (err) {
+        console.log("@login: 2 ", err);
+        console.log(typeof(verifyPassword));
         return res.status(500).send({error: "Internal server error"});
     }
 
@@ -77,6 +81,7 @@ const loginHandler = async (req, res) => {
     try {
         token = await login(req, user);
     } catch (err) {
+        console.log("@login: 3 ", err);
         return res.status(500).send({error: "Internal server error"});
     }
 
@@ -91,12 +96,18 @@ const loginHandler = async (req, res) => {
         .cookie('jwt', token, { httpOnly: true })   // sameSession?
         .json({ success: true, user: returnUser, data: "/"});
 };
-
+ 
 const logoutHandler =  async (req, res) => {
     res.clearCookie('jwt');
-    res.status(200).json({ success: true, data: 'User Logged out'});
+    res.status(200).json({ success: true, message: 'User Logged out'});
 };
 
+/*
+    Used to confirm logged in user data. Is ----> NOT <---- a middleware function
+    response
+        .status === 401 if no user found
+        .user === returnUser if user found
+*/
 const authenticationHandler = async (req, res, next) => {
     Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, function (second_req, user) {
         if (!user) {
@@ -114,5 +125,22 @@ const authenticationHandler = async (req, res, next) => {
     })(req, res, next);
 };
 
+/*
+    Middleware function to confirm that the request is allowed. Restricts access to API 
+    response
+        .status === 401 if no user found
+        calls next if authentication was successful i.e. user is logged in
+*/
+const confirmAuthentication = async (req, res, next) => {
+    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, function (second_req, user) {
+        if (!user) {
+            console.log("no user");
+            return res.status(401).send({ error: "Unauthorized." });
+        }
+        console.log("@auth2")
+        return next();
+    })(req, res, next);
+};
 
-module.exports = { registerHandler, loginHandler, logoutHandler, authenticationHandler };
+
+module.exports = { registerHandler, loginHandler, logoutHandler, authenticationHandler, confirmAuthentication };

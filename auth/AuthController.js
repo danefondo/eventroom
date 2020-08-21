@@ -55,16 +55,20 @@ const registerHandler = async (req, res) => {
 };
 
 const loginHandler = async (req, res) => {
+    const errors = validationResult(req);
+
     const { username, password } = req.body;
-    console.log("@login", username, password);
+     
+    // If there was an error in the validator, the user logged in via username
+    const field = errors.isEmpty() ? 'email' : 'username';    
+
     let user;
     try {
-        user = await User.findOne({username: username}).select('+password').exec();
+        user = await User.findOne({[field]: username}).select('+password').exec();
         if (!user) {
             return res.status(400).send({error: "User does not exist"});
         }
-    } catch (err) {
-        console.log("@login: 1 ", err);
+    } catch (err) {         
         return res.status(500).send({error: "Internal server error"});
     }
     try {
@@ -72,8 +76,6 @@ const loginHandler = async (req, res) => {
             return res.status(401).send({error: "Wrong username or password"});
         }
     } catch (err) {
-        console.log("@login: 2 ", err);
-        console.log(typeof(verifyPassword));
         return res.status(500).send({error: "Internal server error"});
     }
 

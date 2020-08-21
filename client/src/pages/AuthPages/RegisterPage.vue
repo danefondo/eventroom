@@ -144,6 +144,7 @@ export default {
       } catch (error) {
         if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;
+          console.log(this.errors);
         } else {
           console.log("internal server error");
         }

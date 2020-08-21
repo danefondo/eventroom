@@ -1,4 +1,4 @@
-const { check } = require('express-validator');
+const { check, validationResult } = require('express-validator');
 const AccountUtilities = require('../utils/AccountUtilities'); // TODO to remove
 
 
@@ -29,7 +29,7 @@ module.exports = {
 			.isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
 			.isLength({ max: 80 }).withMessage('Password must be less than 80 characters')
 			.custom((value, { req }) => {
-				if (value === req.body.email ||value === req.body.username) {
+				if (value === req.body.email || value === req.body.username) {
 					throw new Error("Password can't equal the email address or username");
 				} else {
 					return value;
@@ -46,6 +46,12 @@ module.exports = {
 
 	],
 
+	login: [
+		check('username').trim().escape()
+			.isEmail().bail()
+			.normalizeEmail()
+	],
+
 	check_email: [
 		check('email').isEmail()
 			.custom(value => {
@@ -55,19 +61,19 @@ module.exports = {
 					}
 				});
 			})
-   ],
+  ],
 
-   check_username: [
-	check('username').not().isEmpty()
-		.withMessage('Username cannot be empty.')
-		.custom(value => {
-			return AccountUtilities.checkIfUserWithValueExists('username', value).then(exists => {
-				if (exists) {
-					return Promise.reject("Username already exists");
-				}
-			});
-		})
-],
+  check_username: [
+		check('username').not().isEmpty()
+			.withMessage('Username cannot be empty.')
+			.custom(value => {
+				return AccountUtilities.checkIfUserWithValueExists('username', value).then(exists => {
+					if (exists) {
+						return Promise.reject("Username already exists");
+					}
+				});
+			})
+	],
 
 	forgotPass: [
 		 check('email').isEmail().withMessage('Email empty or in incorrect format')

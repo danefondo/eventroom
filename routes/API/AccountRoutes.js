@@ -14,11 +14,11 @@ router.get('/verify/:verificationToken', AccountController.verifyToken);
 
 router.get('/authenticate', AuthController.authenticationHandler);
 
-router.post('/login', AccountUtilities.usernameToLowerCase, AuthController.loginHandler);
+router.post('/login', AccountUtilities.usernameToLowerCase, DataValidator.login, AuthController.loginHandler);
 
 router.get('/logout', AuthController.logoutHandler);
 
-router.post('/register', DataValidator.register, AuthController.registerHandler);
+router.post('/register', AccountUtilities.usernameToLowerCase, DataValidator.register, AuthController.registerHandler);
 
 
 router.post('/createTempUser', TempUserController.createTempUser);

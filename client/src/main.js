@@ -7,6 +7,7 @@ import VueSocketIO from "vue-socket.io";
 import VueRouter from "vue-router";
 import Vuex from "vuex";
 import VueCookies from 'vue-cookies';
+import VueYoutube from 'vue-youtube'
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
@@ -19,6 +20,7 @@ Vue.use(VueI18n);
 Vue.use(VueRouter);
 Vue.use(Vuex);
 Vue.use(CKEditor);
+Vue.use(VueYoutube)
 Vue.use(VueCookies);
 
 

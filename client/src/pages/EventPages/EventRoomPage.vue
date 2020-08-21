@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import axios from "axios";
 import auth from "../../config/auth";
 import { setTempToken } from "../../config/axios";
@@ -24,12 +26,9 @@ export default {
   name: "EventRoomPage",
   data() {
     return {
-      user: {},
       tempUser: {},
       room: {},
       event: {},
-      isAuthenticated: false,
-      isVerified: false,
       sessionId: "",
       apiKey: "",
       token: "",
@@ -39,22 +38,22 @@ export default {
       connection: null,
     };
   },
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
+  },
   components: {
     Session,
   },
   async mounted() {
-    let authenticationResult = await auth.isAuthenticated();
-    if (authenticationResult.success) {
-      this.user = authenticationResult.response.user;
-      this.isVerified = authenticationResult.response.user.isVerified;
-      this.isAuthenticated = true;
-    }
-
-    if (!authenticationResult.success) {
+    if (!this.$store.state.authenticationStatus) {
       this.createTempUser();
     }
 
-    if (this.user) {
+    if (this.$store.state.user) {
       this.getRoom();
     }
   },

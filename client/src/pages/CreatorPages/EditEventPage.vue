@@ -30,17 +30,16 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import axios from "axios";
-import auth from "../../config/auth";
 import DecoupledEditor from "@ckeditor/ckeditor5-build-decoupled-document";
 
 export default {
   name: "CreateEventPage",
   data() {
     return {
-      user: {},
       event: {},
-      isAuthenticated: false,
       editor: DecoupledEditor,
       editorConfig: {
         placeholder: this.$t("newworkout.desc-holder"),
@@ -71,13 +70,15 @@ export default {
       eventNotFound: false,
     };
   },
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
+  },
   async mounted() {
     this.getEvent();
-    let authenticationResult = await auth.isAuthenticated();
-    if (authenticationResult.success) {
-      this.user = authenticationResult.response.user;
-      this.isAuthenticated = true;
-    }
   },
   methods: {
     async getEvent() {

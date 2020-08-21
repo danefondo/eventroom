@@ -18,6 +18,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import auth from "../../config/auth";
 import axios from "axios";
 import EventBox from "../../components/EventDiscoveryComponents/EventBox";
@@ -26,22 +28,20 @@ export default {
   name: "HomePage",
   data() {
     return {
-      isAuthenticated: false,
-      isVerified: false,
-      user: {},
       events: {},
     };
   },
   components: {
     EventBox,
   },
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
+  },
   async mounted() {
-    let authenticationResult = await auth.isAuthenticated();
-    if (authenticationResult.success) {
-      this.user = authenticationResult.response.user;
-      this.isVerified = authenticationResult.response.user.isVerified;
-      this.isAuthenticated = true;
-    }
     this.getAllEvents();
   },
   methods: {

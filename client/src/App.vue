@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <Nav :isAuthenticated="isAuthenticated" :user="user" :isVerified="isVerified" />
+    <Nav/>
     <div class="page-container">
       <router-view @update="update"></router-view>
     </div>
@@ -8,20 +8,24 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import auth from "./config/auth";
 import Nav from "./components/Nav";
 
 export default {
   name: "App",
-  data() {
-    return {
-      isAuthenticated: false,
-      isVerified: false,
-      user: {},
-    };
+    
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
   },
+
   components: {
-    Nav
+    Nav,
   },
   mounted() {
     this.update();

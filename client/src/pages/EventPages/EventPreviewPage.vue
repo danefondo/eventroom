@@ -9,31 +9,32 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 import axios from "axios";
-import auth from "../../config/auth";
 
 export default {
   name: "EventPreviewPage",
   data() {
     return {
-      user: {},
       event: {},
       room: {},
-      isAuthenticated: false,
-      isVerified: false,
       eventName: "",
       eventDescription: "",
       eventNotFound: false,
       roomNotFound: false,
     };
   },
+  
+  computed: {
+    ...mapState({
+      user: state => state.user,
+      isAuthenticated: state => state.authenticationStatus,
+      isVerified: state => state.verificationStatus,
+    })
+  },
+
   async mounted() {
-    let authenticationResult = await auth.isAuthenticated();
-    if (authenticationResult.success) {
-      this.user = authenticationResult.response.user;
-      this.isVerified = authenticationResult.response.user.isVerified;
-      this.isAuthenticated = true;
-    }
     this.getEvent();
   },
   methods: {

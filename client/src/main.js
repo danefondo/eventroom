@@ -5,16 +5,22 @@ import i18nConfig from './i18n/config';
 import CKEditor from "@ckeditor/ckeditor5-vue";
 import VueSocketIO from "vue-socket.io";
 import VueRouter from "vue-router";
+import Vuex from "vuex";
 import VueCookies from 'vue-cookies';
+
 import { setGlobals } from "./config/axios";
 import router from "./router";
+import store from "./store";
+
 
 setGlobals();
 Vue.config.productionTip = false;
 Vue.use(VueI18n);
 Vue.use(VueRouter);
+Vue.use(Vuex);
 Vue.use(CKEditor);
 Vue.use(VueCookies);
+
 
 const i18n = new VueI18n(i18nConfig);
 
@@ -29,5 +35,6 @@ Vue.use(
 new Vue({
   i18n,
   router,
+  store,
   render: (h) => h(App),
 }).$mount("#app");

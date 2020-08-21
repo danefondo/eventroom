@@ -1,6 +1,6 @@
 <template>
   <div v-if="success">
-    <SuccessPage />
+    <SuccessPage :registrationMethod="registrationMethod"/>
   </div>
   <div v-else class="registration">
     <div class="registration-block">
@@ -117,6 +117,8 @@ export default {
       passwordType: true,
       submitting: false,
       success: false,
+
+      registrationMethod: "",
     };
   },
   methods: {
@@ -128,7 +130,6 @@ export default {
       try {
         const { email, username, password, passwordCheck } = this;
         //axios.defaults.withCredentials=true;
-        console.log("@register");
         const response = await auth.register({
           email,
           username,
@@ -138,6 +139,7 @@ export default {
         });
         this.errors = [];
         this.success = true;
+        this.registrationMethod = "local";
         console.log("registration successful: ", response.data);
       } catch (error) {
         if (error.response && error.response.status === 422) {

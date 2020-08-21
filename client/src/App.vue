@@ -15,7 +15,7 @@ import Nav from "./components/Nav";
 
 export default {
   name: "App",
-    
+
   computed: {
     ...mapState({
       user: state => state.user,
@@ -30,6 +30,7 @@ export default {
   mounted() {
     auth.isAuthenticated();
   },
+
 
 };
 </script>

@@ -54,6 +54,7 @@ export default {
       loginText: "Login",
     };
   },
+
   methods: {
     async login() {
       this.submitting = true;

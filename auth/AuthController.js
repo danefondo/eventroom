@@ -79,9 +79,17 @@ const loginHandler = async (req, res) => {
     } catch (err) {
         return res.status(500).send({error: "Internal server error"});
     }
+
+    const returnUser = {
+        username: user.username,
+        _id: user._id,
+        isVerified: user.verifiedStatus,
+        displayName: user.displayName,
+    };
+
     return res.status(200)
         .cookie('jwt', token, { httpOnly: true })   // sameSession?
-        .json({ success: true, data: "/"});
+        .json({ success: true, user: returnUser, data: "/"});
 };
 
 const logoutHandler =  async (req, res) => {

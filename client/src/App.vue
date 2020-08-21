@@ -27,8 +27,9 @@ export default {
   components: {
     Nav,
   },
-  mounted() {
-    auth.isAuthenticated();
+
+  async created() {
+    await auth.isAuthenticated();
   },
 
 

@@ -40,7 +40,7 @@ const userInJWT = function(user) {
 /*====== Crypto helpers  ======*/
 
 const signToken = function(user){
-    return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'1d'});
+    return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'30min'});
 };
 
 const hashPassword = function(password) {

@@ -5,7 +5,7 @@ const User = require('../database/user/UserModel');
 const { createUser } = require('../database/user/UserUtilities');
 const { verifyRefreshToken, deleteRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
 
-const { verifyPassword, hashPassword, generateToken, userInJWT, createRefreshToken } = require('./Utils');
+const { verifyPassword, hashPassword, generateToken, userInJWT, createRefreshToken, signToken } = require('./Utils');
 const { login } = require('./strategies/jwt');
 const MailUtilities = require('../utils/MailUtilities');
 
@@ -41,30 +41,23 @@ const registerHandler = async (req, res) => {
     MailUtilities.sendVerificationMail(req.body.email, link);
     
     // Logging in
-    let loginResult, refreshToken;
-    try {
-        loginResult = await login(req, userInJWT(newUser));
-    } catch (err) {
-        return res.status(500).send({ error: "Internal server error - problem with logging in"});
-    }
-    
-    try {
-        refreshToken = await createRefreshToken(newUser._id.toString());
-    } catch (err) {
-        console.log("errors", err)
-        return res.status(500).send({error: "Internal server error"});
-    }
+    const returnUser = userInJWT(newUser)
+    return Promise.all([createRefreshToken(newUser._id.toString()), login(req, returnUser)])
+        .then(result => {
+            const refreshToken = result[0]; 
+            const token = result[1];
 
-    res.clearCookie('jwt');
-    res.clearCookie('refresh');
-    try {
-        return res.status(200)
-            .cookie('jwt', loginResult, {httpOnly: true}) // sameSession: true? 
-            .cookie('refresh', refreshToken, {httpOnly: true}) // sameSession: true? 
-            .json({success: true, data: '/'});
-    } catch (err) {
-        return res.status(500).send({error: "Internal server error"});
-    }
+            res.clearCookie('jwt');
+            res.clearCookie('refresh');
+            return res.status(200)
+                .cookie('jwt', token, { httpOnly: true })   // sameSession?
+                .cookie('refresh', refreshToken, { httpOnly: true })
+                .json({ success: true, user: returnUser, data: "/"});
+        })
+        .catch(errors => {
+            console.log("@register errors:", errors);
+            return res.status(500).send({error: "Internal server error"});
+        });
 };
 
 const loginHandler = async (req, res) => {
@@ -171,7 +164,8 @@ const authenticationHandler = async (req, res, next) => {
                 .json({success: false});
             
         }
-        return res.json({success: true, user});
+        // console.log("@authenticate: user", user);
+        return res.json({success: true, user: userInJWT(user)});
     })(req, res, next);
 };
 
@@ -213,9 +207,7 @@ const confirmAuthentication = async (req, res, next) => {
 /*====== Authentication helpers  ======*/
 /** DO NOT move to Utils, creates circular dependency and all the accompanying sad stuff */
 const handleNoUser = async (req, refreshToken) => {
-    console.log("@nouser----------------------------");
     if (refreshToken) {
-        console.log("@nouser jwt available");
         let newRefreshToken, verificationResult;
         try {
             newRefreshToken = await generateToken();
@@ -225,12 +217,8 @@ const handleNoUser = async (req, refreshToken) => {
             return null;
         }
 
-        console.log("@nouser verificationResult:", verificationResult);
-
         if (verificationResult.success) {
-            console.log("@nouser user:", verificationResult.user);
             const returnUser = userInJWT(verificationResult.user);
-            console.log("@nouser returnuser:", returnUser);
             const newjwtToken = await login(req, returnUser); 
             return {newjwtToken, newRefreshToken, user: returnUser};
         }
@@ -239,4 +227,69 @@ const handleNoUser = async (req, refreshToken) => {
     return null
 };
 
-module.exports = { registerHandler, loginHandler, logoutHandler, authenticationHandler, confirmAuthentication };
+/*====== External auth controllers  ======*/
+
+/*---- Google handlers  ----*/
+
+const googleAuthHandler = async (req, res, next) => {
+    Passport.authenticate('google', {
+        scope: [
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ]
+      }
+    )(req,res,next);
+};
+
+const googleAuthCallback = async (req, res, next) => {
+    Passport.authenticate('google', { failureRedirect: '/login' }, async function(err,user,info) {
+
+        if (!user) {
+            return res.status(401).send({ error: "could not authenticate" });
+        }
+
+        let refreshToken;
+        try {
+            refreshToken = await createRefreshToken(user._id.toString());
+        } catch (err) {
+            console.log("@gauthcb: err", err);
+            return err;
+        }
+        return res.status(200)
+            .cookie('jwt', signToken(user), { httpOnly: true })
+            .cookie('refresh', refreshToken, { httpOnly: true })
+            .redirect("/");
+        }
+    )(req,res,next);
+};
+/*---- Facebook handlers  ----*/
+
+const facebookAuthHandler = async (req, res, next) => {
+    Passport.authenticate('facebook')(req,res,next);
+};
+
+const facebookAuthCallback = async (req, res, next) => {
+    Passport.authenticate('facebook', { failureRedirect: '/login' }, async function(err,user,info) {
+        let refreshToken;
+        if (!user) {
+            return res.status(401).send({ error: "could not authenticate" });
+        }
+        try {
+            refreshToken = await createRefreshToken(user._id.toString());
+        } catch (err) {
+            console.log("fbcb: err", err);
+            return err;
+        }
+        return res.status(200)
+            .cookie('jwt', signToken(user), { httpOnly: true })
+            .cookie('refresh', refreshToken, { httpOnly: true })
+            .redirect("/");
+        }
+    )(req,res,next);
+};
+
+module.exports = {
+    registerHandler, loginHandler, logoutHandler, 
+    authenticationHandler, confirmAuthentication,
+    googleAuthHandler, googleAuthCallback, facebookAuthHandler, facebookAuthCallback
+};

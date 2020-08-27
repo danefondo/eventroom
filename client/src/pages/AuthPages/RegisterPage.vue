@@ -91,7 +91,8 @@
           </div>
         </form>
         <router-link class="auth-alt-button" to="/login">{{ $t("register.already-have-account")}}</router-link>
-        <button @click="registerFacebook">Log in with fb</button>
+        <a :href="facebookLoginLink">Log in with FB</a>
+        <a :href="googleLoginLink"> Log in with Google </a>
       </div>
     </div>
   </div>
@@ -100,6 +101,7 @@
 <script>
 import auth from "../../config/auth";
 import SuccessPage from "./SuccessPage";
+import { BASE_PATH } from "../../constants"
 
 export default {
   name: "RegisterPage",
@@ -117,6 +119,9 @@ export default {
       passwordType: true,
       submitting: false,
       success: false,
+
+      googleLoginLink: BASE_PATH+"/api/accounts/google",
+      facebookLoginLink: BASE_PATH+"/api/accounts/facebook",
 
       registrationMethod: "",
     };

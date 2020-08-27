@@ -10,7 +10,6 @@
 <script>
 import { mapState } from 'vuex';
 
-import auth from "./config/auth";
 import Nav from "./components/Nav";
 
 export default {
@@ -27,12 +26,6 @@ export default {
   components: {
     Nav,
   },
-
-  async created() {
-    await auth.isAuthenticated();
-  },
-
-
 };
 </script>
 

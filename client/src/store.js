@@ -2,23 +2,22 @@ import Vue from "vue";
 import Vuex from "vuex";
 
 // import auth from "./config/auth";
-// import { authAxios } from "./config/axios";
+import { authAxios } from "./config/axios";
 
 Vue.use(Vuex);
 
 const state = {
+    ready: false,
+
     user: null,
 
     authenticationStatus: false,
     verificationStatus: false,
-
-
-    count: 0
 };
 
 const mutations = {
-    increment (state) {
-        state.count++;
+    ready(state) {
+        state.ready = true;
     },
 
     updateAuthenticationStatus(state, newStatus) {
@@ -40,9 +39,28 @@ const mutations = {
 };
 
 const actions = {
-    // async login ( { state, commit }) {
-        
-    // },
+    authenticate: async ({ commit }) => {
+        let response;
+        try {
+            response = await authAxios.get(`/api/accounts/authenticate`);
+        } catch (err) {
+            console.log("@store err:", err);
+            return(err);
+        }
+        if (response && response.data && response.data.success) {
+            commit("updateAuthenticationStatus", true);
+            commit('updateVerificationStatus', response.data.user.isVerified);
+            commit('updateUser', response.data.user);
+            commit('ready');
+        } else {
+            commit("updateAuthenticationStatus", false);
+            commit('updateVerificationStatus', false);
+            commit('updateUser', null);
+            commit('ready');
+        }
+        return true;
+    }    
+    
 };
 
 

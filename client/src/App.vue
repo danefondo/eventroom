@@ -57,6 +57,7 @@ html, body {
 
 body {
   overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 

@@ -15,6 +15,13 @@ const errorHandler = (err) => {
 
 export default {
   name: "Session",
+  data() {
+    return {
+      publisherElementId: "",
+      streams: [],
+      session: null,
+    };
+  },
   props: {
     apiKey: {
       type: String,
@@ -28,32 +35,69 @@ export default {
       type: String,
       required: true,
     },
+    participants: {
+      type: Array,
+      required: false,
+    },
   },
   async mounted() {
     //- https://glitch.com/edit/#!/basic-video-chat
     this.session = OT.initSession(this.apiKey, this.sessionId);
 
+    let uniquePublisherId = "box_" + this.generateUniqueId(16);
+    //- Must check in case in database user is to be in spotlight by default
+    //- Should this include UserId?
+    let participant = {
+      objectId: uniquePublisherId,
+      type: "publisher",
+      orderNumber: 0,
+      spotlight: false,
+      isMyStream: true,
+    };
+    this.$emit("emit_participant", participant);
+
     let publisherOptions = {
-      insertMode: "append",
+      insertMode: "appendChild",
       width: "100%",
       height: "100%",
+      showControls: false,
     };
+    //- Here I will need Correct REF, which is participant.objectId, allowing finding the new object; after this I can append to the right place
 
+    // let containerBox = document.getElementById(uniquePublisherId);
+
+    // console.log("cont", containerBox);
     var publisher = OT.initPublisher(
-      this.$refs.publisher,
+      document.getElementById(uniquePublisherId),
       publisherOptions,
       this.handleCallback
     );
+    // var publisher = OT.initPublisher(
+    //   this.$refs.publisher,
+    //   publisherOptions,
+    //   this.handleCallback
+    // );
+
     this.session.connect(this.token, (err) => {
       if (err) {
         errorHandler(err);
       } else {
         this.session.publish(publisher, this.handleCallback);
+        // let leId = JSON.parse(JSON.stringify(publisher.streamId));
+        let streamId = publisher.streamId;
+        console.log("streamid", streamId);
+        let elementId = publisher.id;
+        let newDetails = {
+          streamId,
+          elementId,
+          objectRefId: uniquePublisherId,
+        };
+        this.$emit("emit_stream_details", newDetails);
       }
     });
 
     this.session.on("streamCreated", (event) => {
-      this.session.subscribe(
+      const subscriber = this.session.subscribe(
         event.stream,
         this.$refs.subscriber,
         {
@@ -63,7 +107,9 @@ export default {
         },
         this.handleCallback
       );
+      console.log("subscriber joined", subscriber);
     });
+
     this.session.on("streamDestroyed", (event) => {
       console.log("stream destroyed");
       const idx = this.streams.indexOf(event.stream);
@@ -72,10 +118,6 @@ export default {
       }
     });
   },
-  data: () => ({
-    streams: [],
-    session: null,
-  }),
   methods: {
     errorHandler,
     handleCallback(error) {
@@ -85,6 +127,27 @@ export default {
         console.log("callback success");
       }
     },
+    generateUniqueId(length) {
+      return parseInt(
+        Math.ceil(Math.random() * Date.now())
+          .toPrecision(length)
+          .toString()
+          .replace(".", "")
+      );
+    },
+    initMakeSpotlight(videoElementId) {
+      let spotlight = document.getElementById("spotlight");
+      let defaultSlot = spotlight.querySelectorAll(".spotlight-default")[0];
+      let videoFeed = document.getElementById(videoElementId);
+      videoFeed.parentNode.removeChild(videoFeed);
+      defaultSlot.appendChild(videoFeed);
+      // when this is run, get correct video box
+      // remove its current location
+      // add to spotlight default
+      // when spotlight changes, update database
+      // next time, when code is run
+    },
+    initRemoveSpotlight() {},
   },
 };
 </script>
@@ -98,8 +161,8 @@ export default {
 }
 .session {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-direction: column;
+  height: 100%;
 }
 .subscriber {
   width: 100%;

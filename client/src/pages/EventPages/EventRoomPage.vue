@@ -1,26 +1,130 @@
 <template>
-  <div class="special-container" v-if="room">
+  <div class="eventroom-container party" v-if="room">
+    <SettingsModal />
+    <div class="eventroom-ribbon">
+      <div class="eventroom-layout-controls">
+        <div class="eventroom-chat-icon">Chat o/c</div>
+        <LayoutSelector v-if="layoutSelectorShown" />
+        <div
+          class="dropdown"
+          @click="layoutSelectorShown ? layoutSelectorShown=false : layoutSelectorShown=true"
+        >
+          <div class="toggle">
+            <div class="control">
+              <svg
+                class="icon"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                height="24"
+                width="24"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linejoin="round"
+                stroke-linecap="round"
+              >
+                <rect
+                  x="2"
+                  y="2"
+                  width="20"
+                  height="20"
+                  rx="4"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  fill="currentColor"
+                  fill-opacity="0.4"
+                  d="M2 6C2 3.79086 3.79086 2 6 2H7V12V22H6C3.79086 22 2 20.2091 2 18V6Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  fill="currentColor"
+                  fill-opacity="0.4"
+                  d="M22 6C22 3.79086 20.2091 2 18 2H17V12V22H18C20.2091 22 22 20.2091 22 18V6Z"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="eventroom-panel">
+      <SearchForm v-on:search="search" />
+      <NoVideosText v-if="videos" />
+      <SearchResults
+        v-if="videos.length > 0"
+        v-bind:videos="videos"
+        v-bind:reformattedSearchString="reformattedSearchString"
+      />
+      <Pagination
+        v-if="videos.length > 0"
+        v-bind:prevPageToken="api.prevPageToken"
+        v-bind:nextPageToken="api.nextPageToken"
+        v-on:prev-page="prevPage"
+        v-on:next-page="nextPage"
+      />
+    </div>
+    <!-- <div class="eventroom-feed"></div> -->
+    <div v-if="currentBoxObjects.length" id="spotlight-boxes">
+      <SpotlightBox
+        v-for="boxData in currentBoxObjects"
+        :key="boxData.objectId"
+        :boxData="boxData"
+        :ref="boxData.objectId"
+      />
+    </div>
+    <EmptyVideoPanel />
     <div class="watch">
       <div class="host-bar">
         <div class="is_host">{{userIsHost ? 'You are the HOST!' : 'You are currently not a host.'}}</div>
+      </div>
+      <div v-if="currentBoxObjects.length" id="container-boxes">
+        <ContainerBox
+          v-for="boxData in currentBoxObjects"
+          :key="boxData.objectId"
+          :boxData="boxData"
+          :ref="boxData.objectId"
+        />
       </div>
       <Session
         v-if="sessionId &amp;&amp; apiKey &amp;&amp; token"
         :sessionId="sessionId"
         :apiKey="apiKey"
         :token="token"
+        :participants="currentBoxObjects"
+        @emit_participant="addParticipantToBox"
+        @emit_stream_details="findAndUpdateParticipantBox"
       ></Session>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 
 import axios from "axios";
 import auth from "../../config/auth";
 import { setTempToken } from "../../config/axios";
 import Session from "../../components/Session";
+import SpotlightBox from "../../components/EventComponents/EventRoomComponents/SpotlightBox";
+import ContainerBox from "../../components/EventComponents/EventRoomComponents/ContainerBox";
+import SettingsModal from "../../components/EventComponents/EventRoomComponents/SettingsModal";
+import SearchForm from "../../components/EventComponents/EventRoomComponents/SearchForm";
+import SearchResults from "../../components/EventComponents/EventRoomComponents/SearchResults";
+import Pagination from "../../components/EventComponents/EventRoomComponents/Pagination";
+import LayoutSelector from "../../components/EventComponents/EventRoomComponents/LayoutSelector";
+import NoVideosText from "../../components/EventComponents/EventRoomComponents/NoVideosText";
+import EmptyVideoPanel from "../../components/EventComponents/EventRoomComponents/EmptyVideoPanel";
 
 export default {
   name: "EventRoomPage",
@@ -36,17 +140,38 @@ export default {
       userIsHost: false,
       isConnected: false,
       connection: null,
+      layoutSelectorShown: false,
+      videos: [],
+      reformattedSearchString: "",
+      api: {
+        q: "",
+        prevPageToken: "",
+        nextPageToken: "",
+      },
+      currentlyInSpotlight: 0,
+      spotlightObjects: {},
+      currentParticipantsCount: 0,
+      currentBoxObjects: [],
     };
   },
   computed: {
     ...mapState({
-      user: state => state.user,
-      isAuthenticated: state => state.authenticationStatus,
-      isVerified: state => state.verificationStatus,
-    })
+      user: (state) => state.user,
+      isAuthenticated: (state) => state.authenticationStatus,
+      isVerified: (state) => state.verificationStatus,
+    }),
   },
   components: {
     Session,
+    SpotlightBox,
+    ContainerBox,
+    SettingsModal,
+    SearchForm,
+    SearchResults,
+    Pagination,
+    LayoutSelector,
+    NoVideosText,
+    EmptyVideoPanel,
   },
   async mounted() {
     if (!this.$store.state.authenticationStatus) {
@@ -58,6 +183,17 @@ export default {
     }
   },
   methods: {
+    async addParticipantToBox(participant) {
+      this.currentBoxObjects.push(participant);
+      console.log("participant added", this.currentBoxObjects);
+    },
+    findAndUpdateParticipantBox(newDetails) {
+      let objectId = newDetails.objectRefId;
+      let obj = this.currentBoxObjects.find((e) => e.objectId === objectId);
+      obj.streamId = newDetails.streamId;
+      obj.elementId = newDetails.elementId;
+      console.log("participant updated", this.currentBoxObjects);
+    },
     async createTempUser() {
       try {
         const roomIdParam = window.location.href.substring(
@@ -116,6 +252,59 @@ export default {
         this.roomNotFound = true;
       }
     },
+    search(searchParams) {
+      this.reformattedSearchString = searchParams.join(" ");
+      this.api.q = searchParams.join("+");
+      const { baseUrl, part, type, order, maxResults, q } = this.api;
+      const apiUrl = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${q}&maxResults=${maxResults}`;
+      this.getData(apiUrl);
+    },
+    prevPage() {
+      const {
+        baseUrl,
+        part,
+        type,
+        order,
+        maxResults,
+        q,
+        key,
+        prevPageToken,
+      } = this.api;
+      const apiUrl = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${q}&maxResults=${maxResults}&key=${key}&pageToken=${prevPageToken}`;
+      this.getData(apiUrl);
+    },
+    nextPage() {
+      const {
+        baseUrl,
+        part,
+        type,
+        order,
+        maxResults,
+        q,
+        key,
+        nextPageToken,
+      } = this.api;
+      const apiUrl = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${q}&maxResults=${maxResults}&key=${key}&pageToken=${nextPageToken}`;
+      this.getData(apiUrl);
+    },
+    async getData() {
+      try {
+        let query = this.api.q;
+        console.log("qq", query);
+        let queryData = { query };
+        const { data } = await axios.post(
+          `/api/events/getYouTubeQuery`,
+          queryData
+        );
+        console.log("data", data);
+        this.videos = data.videos;
+        // this.videos = res.data.items;
+        // this.api.prevPageToken = res.data.prevPageToken;
+        // this.api.nextPageToken = res.data.nextPageToken;
+      } catch (error) {
+        console.log("err", error);
+      }
+    },
   },
   watch: {
     tempUser: function () {
@@ -128,6 +317,44 @@ export default {
 </script>
 
 <style scoped>
+.eventroom-feed {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: #242729;
+  border-right: 1px solid #333537;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.watch {
+  width: 324px;
+  max-height: 100%;
+  height: 100%;
+  background-color: #242729;
+  overflow: hidden;
+}
+.eventroom-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: center; */
+  align-items: center;
+}
+.eventroom-ribbon {
+  width: 50px;
+  background-color: #242729;
+  height: 100%;
+  border-right: 1px solid #333537;
+}
+.eventroom-panel {
+  width: 324px;
+  height: 100%;
+  background-color: #242729;
+  border-right: 1px solid #333537;
+}
 .title {
   font-size: 47px;
   margin-bottom: 20px;
@@ -173,5 +400,33 @@ export default {
 
 .ck-creator-input:focus {
   border: 1px solid #493eff !important;
+}
+
+/*! CSS Used from: https://campfire.gg/styles.04163730.css */
+.dropdown {
+  position: relative;
+  display: flex;
+  user-select: none;
+}
+.dropdown .toggle {
+  display: flex;
+  cursor: pointer;
+}
+.controls .control {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+* {
+  box-sizing: border-box;
+}
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+}
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.25);
 }
 </style>

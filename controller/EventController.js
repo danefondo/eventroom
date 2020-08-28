@@ -1,6 +1,7 @@
 const Event = require("../models/EventModel");
 const Room = require("../models/RoomModel");
 const OpenTok = require("opentok");
+const axios = require("axios");
 
 var apiKey = process.env.API_KEY;
 var apiSecret = process.env.API_SECRET;
@@ -197,6 +198,61 @@ const EventController = {
       res.status(500).json({
         message:
           "An error occurred while deleting event, please try again later.",
+      });
+    }
+  },
+
+  async getYouTubeQuery(req, res) {
+    try {
+      const apiKey = process.env.YOUTUBE_API_KEY;
+      // const apiString = "&key=" + YOUTUBE_API_KEY;
+
+      const baseUrl = "https://www.googleapis.com/youtube/v3/search?";
+      const part = "snippet";
+      const type = "video";
+      const order = "viewCount";
+      const maxResults = 12;
+
+      let query = req.body.query;
+      console.log("query", query);
+
+      let youtubeQuery = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${query}&maxResults=${maxResults}&key=${apiKey}`;
+
+      // let videos = await axios.get(youtubeQuery);
+      // videos = JSON.stringify(videos);
+
+      axios
+        .get(youtubeQuery)
+        .then((response) => {
+          console.log("data yt", response.data.items);
+          res.json({
+            videos: response.data.items,
+          });
+          // videos = res.data.items;
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      // axios.get(youtubeQuery)
+      // .then(response => {
+      //   console.log(response.data);
+      //   videos = response.data;
+      // })
+      // .catch(error => {
+      //   console.log(error);
+      // });
+
+      // const videos = await youtube.searchVideos(query, 12);
+      // console.log("Videos:");
+      // console.log(videos);
+
+      // res.json({
+      //   videos: videos,
+      // });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({
+        errors: "An unknown error occurred",
       });
     }
   },

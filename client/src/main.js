@@ -8,6 +8,7 @@ import VueRouter from "vue-router";
 import Vuex from "vuex";
 import VueCookies from 'vue-cookies';
 import VueYoutube from 'vue-youtube'
+import moment from 'moment';
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
@@ -33,6 +34,11 @@ Vue.use(
     connection,
   })
 );
+
+Vue.filter("formatDate", function (value) {
+  if (!value) return "";
+  return moment(value.toString()).format("MM/DD/YYYY hh:mm");
+});
 
 new Vue({
   i18n,

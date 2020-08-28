@@ -1,26 +1,40 @@
 const User = require('./UserModel');
 
-
 async function getUserById(id) {
     return await User.findById(id).exec();
 }
 
-async function createUser({username, firstName, lastName, email, hashedPassword, verificationToken}) {
+async function getUserByProviderId(providerId) {
+    return await User.findOne({ providerId }).exec()
+}
+
+async function createUser({
+    username, 
+    firstName, 
+    lastName, 
+    email, 
+    hashedPassword, 
+    verificationToken,
+    provider,
+    providerId,
+    displayName,
+    verifiedStatus,
+    }) {
     return new Promise(async (resolve, reject) => {
         const user = await User.findOne({username: username});
         if (user) {
-            reject("Username already in use");
+            if (!provider || user.provider == provider) reject("Username already in use;")
         }
         const newUser = new User({
             username,
             firstName,
             lastName,
             password: hashedPassword,
-            provider: null,
-            providerId: null,
-            displayName: username,
+            provider,
+            providerId,
+            displayName: displayName || username,
             email,
-            verifiedStatus: false,
+            verifiedStatus: verifiedStatus || false,
             verificationToken,
             dateCreated: new Date()
         });
@@ -42,4 +56,4 @@ function checkIfUserWithValueExists(field, value) {
     })
 }
 
-module.exports = {checkIfUserWithValueExists, getUserById, createUser };
+module.exports = {checkIfUserWithValueExists, getUserById, createUser, getUserByProviderId };

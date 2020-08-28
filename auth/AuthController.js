@@ -3,7 +3,9 @@ const Passport = require('passport');
 
 const User = require('../database/user/UserModel');
 const { createUser } = require('../database/user/UserUtilities');
-const { verifyPassword, hashPassword, generateToken, userInJWT } = require('./Utils');
+const { verifyRefreshToken, deleteRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
+
+const { verifyPassword, hashPassword, generateToken, userInJWT, createRefreshToken, signToken } = require('./Utils');
 const { login } = require('./strategies/jwt');
 const MailUtilities = require('../utils/MailUtilities');
 
@@ -39,29 +41,34 @@ const registerHandler = async (req, res) => {
     MailUtilities.sendVerificationMail(req.body.email, link);
     
     // Logging in
-    let loginResult;
-    try {
-        loginResult = await login(req, userInJWT(newUser));
-    } catch (err) {
-        return res.status(500).send({ error: "Internal server error - problem with logging in"});
-    }
-    try {
-        return res.status(200)
-            .cookie('jwt', loginResult, {httpOnly: true}) // sameSession: true? 
-            .json({success: true, data: '/'});
-    } catch (err) {
-        return res.status(500).send({error: "Internal server error"});
-    }
+    const returnUser = userInJWT(newUser)
+    return Promise.all([createRefreshToken(newUser._id.toString()), login(req, returnUser)])
+        .then(result => {
+            const refreshToken = result[0]; 
+            const token = result[1];
+
+            res.clearCookie('jwt');
+            res.clearCookie('refresh');
+            return res.status(200)
+                .cookie('jwt', token, { httpOnly: true })   // sameSession?
+                .cookie('refresh', refreshToken, { httpOnly: true })
+                .json({ success: true, user: returnUser, data: "/"});
+        })
+        .catch(errors => {
+            console.log("@register errors:", errors);
+            return res.status(500).send({error: "Internal server error"});
+        });
 };
 
 const loginHandler = async (req, res) => {
     const errors = validationResult(req);
 
     const { username, password } = req.body;
-     
-    // If there was an error in the validator, the user logged in via username
+
+    // if there was an error in the validator, the user logged in via username
     const field = errors.isEmpty() ? 'email' : 'username';    
 
+    // finding user and verifying input
     let user;
     try {
         user = await User.findOne({[field]: username}).select('+password').exec();
@@ -79,27 +86,50 @@ const loginHandler = async (req, res) => {
         return res.status(500).send({error: "Internal server error"});
     }
 
-    let token;
+    // creating tokens
 
     const returnUser = userInJWT(user);
+    return Promise.all([createRefreshToken(user._id.toString()), login(req, returnUser)])
+        .then(result => {
+            const refreshToken = result[0]; 
+            const token = result[1];
 
-    try {
-        token = await login(req, returnUser);
-    } catch (err) {
-        console.log("@login: 3 ", err);
-        return res.status(500).send({error: "Internal server error"});
-    }
-
-    
-
-    return res.status(200)
-        .cookie('jwt', token, { httpOnly: true })   // sameSession?
-        .json({ success: true, user: returnUser, data: "/"});
+            res.clearCookie('jwt');
+            res.clearCookie('refresh');
+            return res.status(200)
+                .cookie('jwt', token, { httpOnly: true })   // sameSession?
+                .cookie('refresh', refreshToken, { httpOnly: true })
+                .json({ success: true, user: returnUser, data: "/"});
+        })
+        .catch(errors => {
+            return res.status(500).send({error: "Internal server error"});
+        });
 };
  
 const logoutHandler =  async (req, res) => {
+    let refreshToken;
+    if (req && req.cookies) {
+        refreshToken = req.cookies['refresh'];
+    }
+
     res.clearCookie('jwt');
+    res.clearCookie('refresh');
+    if (refreshToken) {
+        try {
+            const logoutResult = await deleteRefreshToken(refreshToken);
+            if (logoutResult.n > 1) {
+                console.log("@logout error: matching documents");
+                res.status(500).send({ error: "internal server error" });
+            } else if (logoutResult.n != 0 && logoutResult.ok == 0) {
+                console.log("@logout error: could not delete document");
+                res.status(500).send({ error: "internal server error" });
+            } 
+        } catch (err) {
+            res.status(500).send({ error: "internal server error" });
+        }
+    } 
     res.status(200).json({ success: true, message: 'User Logged out'});
+    
 };
 
 /*
@@ -109,19 +139,33 @@ const logoutHandler =  async (req, res) => {
         .user === returnUser if user found
 */
 const authenticationHandler = async (req, res, next) => {
-    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, function (second_req, user) {
-        if (!user) {
-            console.log("no user");
-            return res.status(401).send({ error: "Unauthorized." });
+    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, async function (err, user, info) {
+        if (err) {
+            res.status(500).send({error: "Internal server error"});
         }
+        if (!user) {
+            if (req && req.cookies) {
+                jwt = req.cookies['jwt'];
+                refreshToken = req.cookies['refresh'];
+                
+                const newTokens = await handleNoUser(req, refreshToken);
 
-        const returnUser = {
-            username: user.username,
-            _id: user._id,
-            isVerified: user.verifiedStatus,
-            displayName: user.displayName,
-        };
-        return res.json({ user: returnUser});
+                res.clearCookie('refresh');
+                if (newTokens) {
+                    return res.status(200)
+                        .cookie('jwt', newTokens.newjwtToken, { httpOnly: true })   // sameSession?
+                        .cookie('refresh', newTokens.newRefreshToken, { httpOnly: true })
+                        .json({ success: true, user: newTokens.user, data: "/"});
+                }
+                return res.status(200)
+                    .json({success: false});
+            } 
+            return res.status(200)
+                .json({success: false});
+            
+        }
+        // console.log("@authenticate: user", user);
+        return res.json({success: true, user: userInJWT(user)});
     })(req, res, next);
 };
 
@@ -132,15 +176,120 @@ const authenticationHandler = async (req, res, next) => {
         calls next if authentication was successful i.e. user is logged in
 */
 const confirmAuthentication = async (req, res, next) => {
-    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, function (second_req, user) {
-        if (!user) {
-            console.log("no user");
-            return res.status(401).send({ error: "Unauthorized." });
+    Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, async function (err, user, info) {
+        if (err) {
+            res.status(500).send({error: "Internal server error"});
         }
-        console.log("@auth2")
+        
+        if (!user) {
+            if (req && req.cookies) {
+                refreshToken = req.cookies['refresh'];
+                const newTokens = await handleNoUser(req, refreshToken);
+
+                res.clearCookie('jwt');
+                res.clearCookie('refresh');
+                if (newTokens) {
+                    user = newTokens.user;
+                    res.cookie('jwt', newTokens.newjwtToken, { httpOnly: true })   // sameSession?
+                    res.cookie('refresh', newTokens.newRefreshToken, { httpOnly: true })
+                } else {
+                    return res.status(401).send({ error: "Unauthorized." });
+                }
+            } else {
+                return res.status(401).send({ error: "Unauthorized." });
+            }
+        } 
         return next();
     })(req, res, next);
 };
 
 
-module.exports = { registerHandler, loginHandler, logoutHandler, authenticationHandler, confirmAuthentication };
+/*====== Authentication helpers  ======*/
+/** DO NOT move to Utils, creates circular dependency and all the accompanying sad stuff */
+const handleNoUser = async (req, refreshToken) => {
+    if (refreshToken) {
+        let newRefreshToken, verificationResult;
+        try {
+            newRefreshToken = await generateToken();
+            verificationResult = await verifyRefreshToken(refreshToken, newRefreshToken);
+        } catch (err) {
+            console.log("@nouser errors:", err);
+            return null;
+        }
+
+        if (verificationResult.success) {
+            const returnUser = userInJWT(verificationResult.user);
+            const newjwtToken = await login(req, returnUser); 
+            return {newjwtToken, newRefreshToken, user: returnUser};
+        }
+        return null;
+    }  
+    return null
+};
+
+/*====== External auth controllers  ======*/
+
+/*---- Google handlers  ----*/
+
+const googleAuthHandler = async (req, res, next) => {
+    Passport.authenticate('google', {
+        scope: [
+          'https://www.googleapis.com/auth/userinfo.profile',
+          'https://www.googleapis.com/auth/userinfo.email'
+        ]
+      }
+    )(req,res,next);
+};
+
+const googleAuthCallback = async (req, res, next) => {
+    Passport.authenticate('google', { failureRedirect: '/login' }, async function(err,user,info) {
+
+        if (!user) {
+            return res.status(401).send({ error: "could not authenticate" });
+        }
+
+        let refreshToken;
+        try {
+            refreshToken = await createRefreshToken(user._id.toString());
+        } catch (err) {
+            console.log("@gauthcb: err", err);
+            return err;
+        }
+        return res.status(200)
+            .cookie('jwt', signToken(user), { httpOnly: true })
+            .cookie('refresh', refreshToken, { httpOnly: true })
+            .redirect("/");
+        }
+    )(req,res,next);
+};
+/*---- Facebook handlers  ----*/
+
+const facebookAuthHandler = async (req, res, next) => {
+    Passport.authenticate('facebook')(req,res,next);
+};
+
+const facebookAuthCallback = async (req, res, next) => {
+    Passport.authenticate('facebook', { failureRedirect: '/login' }, async function(err,user,info) {
+        let refreshToken;
+        if (!user) {
+            return res.status(401).send({ error: "could not authenticate" });
+        }
+        try {
+            refreshToken = await createRefreshToken(user._id.toString());
+        } catch (err) {
+            console.log("fbcb: err", err);
+            return err;
+        }
+        return res.status(200)
+            .cookie('jwt', signToken(user), { httpOnly: true })
+            .cookie('refresh', refreshToken, { httpOnly: true })
+            .redirect("/");
+        }
+    )(req,res,next);
+};
+
+module.exports = {
+    registerHandler, loginHandler, logoutHandler, 
+    authenticationHandler, confirmAuthentication,
+    googleAuthHandler, googleAuthCallback, facebookAuthHandler, facebookAuthCallback
+};

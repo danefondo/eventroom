@@ -20,10 +20,15 @@ router.get('/logout', AuthController.logoutHandler);
 
 router.post('/register', AccountUtilities.usernameToLowerCase, DataValidator.register, AuthController.registerHandler);
 
-
 router.post('/createTempUser', TempUserController.createTempUser);
 
+router.get('/google', AuthController.googleAuthHandler);
 
+router.get('/google/callback', AuthController.googleAuthCallback);
+
+router.get('/facebook', AuthController.facebookAuthHandler);
+
+router.get('/facebook/callback', AuthController.facebookAuthCallback);
 
 
 module.exports = router;

@@ -5,6 +5,7 @@ const Bcrypt = require('bcryptjs')
 const Dotenv = require('dotenv');
 
 const User = require('../database/user/UserModel');
+const { createNewUserRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
 
 Dotenv.config();
 
@@ -38,8 +39,8 @@ const userInJWT = function(user) {
 
 /*====== Crypto helpers  ======*/
 
-const signToken = (user) => {
-    return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'1d'});
+const signToken = function(user){
+    return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'30min'});
 };
 
 const hashPassword = function(password) {
@@ -69,4 +70,36 @@ const verifyPassword = async (candidate, actual) => {
     return await Bcrypt.compare(candidate, actual);
 };
 
-module.exports = { setup, signToken, hashPassword, generateToken, verifyPassword, userInJWT }; 
+
+
+/*====== Refresh token helpers  ======*/
+
+/**
+ * Creates refresh token. First, checks whether a refreshtoken already exists 
+ * for the given user and given client (we have just one client). 
+ * If so, replaces the token and returns the new one. 
+ * 
+ * Refresh token expires in 7 days. 
+ * 
+ * Otherwise creates a new refreshtoken and returns the token 
+ * @param {*} userId
+ * @returns refreshtoken
+ */
+const createRefreshToken = async function(userId) {
+    const clientId = 1;
+    const token = await generateToken();
+    try {
+        const success = await createNewUserRefreshToken(userId, token);
+        if (success) {
+            return token;
+        } 
+    } catch (err) {
+        console.log("@crt: error", err);
+        throw err;
+    }
+    return null;
+    
+};
+
+
+module.exports = { setup, signToken, hashPassword, generateToken, verifyPassword, userInJWT, createRefreshToken }; 

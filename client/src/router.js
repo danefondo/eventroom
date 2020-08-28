@@ -58,6 +58,13 @@ const router = new VueRouter({
 
 const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 router.beforeEach(async (to, from, next) => {
+  if (!store.state.ready) {
+    try {
+      await store.dispatch('authenticate');
+    } catch (err) {
+      console.log("@router err: ", err);
+    }
+  }
   if (to.meta || noReAuth.includes(to.name)) {
     // console.log("@router, need auth or noreauth")
     const user = store.state.user;
@@ -75,6 +82,7 @@ router.beforeEach(async (to, from, next) => {
       next({ name: "RequireVerificationPage"});
     }
     if (noReAuth.includes(to.name) && authenticationStatus && !nextHasBeenCalled) {
+      console.log("@router noreauth");
       nextHasBeenCalled = true;
       next("/");
     }

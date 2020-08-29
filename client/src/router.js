@@ -16,6 +16,9 @@ import VerificationPage from './pages/AuthPages/VerificationPage';
 import RequireVerificationPage from './pages/AuthPages/RequireVerificationPage';
 import SuccessPage from './pages/AuthPages/SuccessPage';
 
+/* ====== PROFILE ROUTES ====== */
+import ProfilePage from './pages/UserPages/ProfilePage';
+
 const routes = [
   { path: "/", component: HomePage },
 
@@ -29,6 +32,13 @@ const routes = [
   },
   { path: "/verify/:token", component: VerificationPage, name: "VerificationPage" },
   { path: "/verificationRequired", component: RequireVerificationPage, name: "RequireVerificationPage" },
+
+  /* ====== PROFILE ROUTES ====== */
+  { path: "/profile", component: ProfilePage, name: "ProfilePage",
+    meta: {
+      requireAuthentication: true,
+    }
+  },
 
   /* ====== EVENT ROUTES ====== */
   {

@@ -2,7 +2,10 @@
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
     <div class="navbar">
       <router-link to="/" class="nav-logo">Oveno</router-link>
-      <div v-if="isAuthenticated" @click="logout" class="nav-button">Logout</div>
+      <div v-if="isAuthenticated">
+        <router-link to="/profile" class="nav-button">Profile</router-link>
+        <router-link to="/logout" class="nav-button">Logout</router-link>
+      </div>
       <div v-else-if="!isAuthenticated">
         <router-link to="/login" class="nav-button">Login</router-link>
         <router-link to="/register" class="nav-button">Register</router-link>
@@ -15,35 +18,16 @@
 <script>
 import { mapState } from 'vuex';
 
-import auth from "../config/auth";
- 
-
 export default {
   name: "Nav",
-
-  
   computed: {
     ...mapState({
       user: state => state.user,
       isAuthenticated: state => state.authenticationStatus,
       isVerified: state => state.verificationStatus,
-    })
+    }),
   },
-
-  methods: {
-    async logout() {
-      try {
-        const response = await auth.logout();
-        console.log("@nav logout: ", response.data);
-        if (response.data.success) {
-          this.$router.push("/logout");
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    },
-  },
-};
+}
 </script>
 
 <style scoped>

@@ -3,7 +3,7 @@
     <div class="navbar">
       <router-link to="/" class="nav-logo">Oveno</router-link>
       <div v-if="isAuthenticated">
-        <router-link to="/profile" class="nav-button">Profile</router-link>
+        <router-link :to="profileLink" class="nav-button">Profile</router-link>
         <router-link to="/logout" class="nav-button">Logout</router-link>
       </div>
       <div v-else-if="!isAuthenticated">
@@ -26,6 +26,9 @@ export default {
       isAuthenticated: state => state.authenticationStatus,
       isVerified: state => state.verificationStatus,
     }),
+    profileLink: function() {
+      return "/profile/"+this.user.username;
+    }
   },
 }
 </script>

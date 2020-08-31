@@ -1,7 +1,10 @@
 <template>
   <div v-if="boxData.spotlight" :id="boxData.objectId" class="spotlight-box">
     <div class="control-buttons">
-      <div @click="removeFromSpotlight" class="control-button remove-spotlight">Remove from spotlight</div>
+      <div
+        @click="removeFromSpotlight"
+        class="control-button remove-spotlight"
+      >Remove from spotlight</div>
     </div>
   </div>
 </template>
@@ -15,13 +18,26 @@ export default {
       console.log("Removing.");
     },
   },
+  mounted() {
+    console.log("whadup1 spotlight");
+    if (this.boxData && this.boxData.spotlight) {
+      console.log("whadup2", this.boxData);
+      const containerData = {
+        objectId: this.boxData.objectId,
+        type: this.boxData.type,
+        spotlight: this.boxData.spotlight,
+      };
+      this.$store.dispatch("addReadyContainer", containerData);
+      console.log("whadup3");
+    }
+  },
 };
 </script>
 
 <style scoped>
 .spotlight-box {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 .control-buttons {
   /* z-index: 9999;

@@ -104,6 +104,7 @@
         :participants="currentBoxObjects"
         @emit_participant="addParticipantToBox"
         @emit_stream_details="findAndUpdateParticipantBox"
+        @participantLeft="findAndRemoveParticipantBox"
       ></Session>
     </div>
   </div>
@@ -183,7 +184,7 @@ export default {
     }
   },
   methods: {
-    async addParticipantToBox(participant) {
+    addParticipantToBox(participant) {
       this.currentBoxObjects.push(participant);
       console.log("participant added", this.currentBoxObjects);
     },
@@ -193,6 +194,11 @@ export default {
       obj.streamId = newDetails.streamId;
       obj.elementId = newDetails.elementId;
       console.log("participant updated", this.currentBoxObjects);
+    },
+    findAndRemoveParticipantBox(participantStreamId) {
+      let participantBoxes = this.currentBoxObjects;
+      let index = participantBoxes.findIndex((box) => box.streamId === participantStreamId);
+      participantBoxes.splice(index, 1);
     },
     async createTempUser() {
       try {

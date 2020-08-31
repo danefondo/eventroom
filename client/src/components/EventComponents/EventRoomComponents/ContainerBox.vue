@@ -15,13 +15,26 @@ export default {
       console.log("Adding.");
     },
   },
+  mounted() {
+    console.log("whadup1");
+    if (this.boxData) {
+      console.log("whadup2", this.boxData);
+      const containerData = {
+        objectId: this.boxData.objectId,
+        type: this.boxData.type,
+        spotlight: this.boxData.spotlight,
+      };
+      this.$store.dispatch("addReadyContainer", containerData);
+      console.log("Added regular container into readyContainers in Vuex store");
+    }
+  }
 };
 </script>
 
 <style scoped>
 .container-box {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }
 .control-buttons {
   /* z-index: 9999;

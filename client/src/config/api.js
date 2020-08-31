@@ -30,7 +30,7 @@ const requestWithAuthentication = async function(method, url, data=null, require
   const instance = axios.create(instanceConfig);
 
   instance.interceptors.response.use(function(response) {
-    console.log("@intercept resp", response);
+    // console.log("@intercept resp", response);
     return response;
   }, async function(error) {
     // TODO add 401 error page - same as login page, but with text that says to do this action you have to be logged in or smth

@@ -8,10 +8,16 @@
         <h1 class="auth-title">{{ $t("register.join-title")}}</h1>
         <div class="auth-subtitle">{{ $t("register.join-tagline")}}</div>
       </div>
+      <div class="external-auth fb-auth">
+        <a class="fb-link" :href="facebookLoginLink">Sign up with FB</a>
+      </div>
+      <div class="external-auth google-auth">
+        <a class="google-link" :href="googleLoginLink"> Sign up with Google </a>
+      </div>
       <div class="registration-form">
         <form class="auth-form" method="POST" @submit.prevent="register()">
           <div class="notifier__register">
-            <h2>Errors</h2>
+            <!-- <h2>Errors</h2> -->
           </div>
           <div class="form-groups">
             <div class="form-group">
@@ -91,8 +97,7 @@
           </div>
         </form>
         <router-link class="auth-alt-button" to="/login">{{ $t("register.already-have-account")}}</router-link>
-        <a :href="facebookLoginLink">Log in with FB</a>
-        <a :href="googleLoginLink"> Log in with Google </a>
+        
       </div>
     </div>
   </div>
@@ -176,6 +181,9 @@ export default {
 </script>
 
 <style>
+.external-auth {
+  padding: 10px;
+}
 .registration {
   display: flex;
   flex-direction: column;

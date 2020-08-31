@@ -1,4 +1,4 @@
-const User = require('./UserModel');
+const User = require('./models/UserModel');
 
 async function getUserById(id) {
     return await User.findById(id).exec();
@@ -7,6 +7,20 @@ async function getUserById(id) {
 async function getUserByProviderId(providerId) {
     return await User.findOne({ providerId }).exec()
 }
+
+async function getUserByUsername(username) {
+    return await User.findOne({ username }).exec()
+}
+
+async function getUserByUsernameWithPassword(field, username) {
+    return await User.findOne({[field]: username}).select('+password').exec();
+}
+
+async function getUserByVerificationToken(verificationToken) {
+    return await User.findOne({ verificationToken }).exec()
+}
+
+
 
 async function createUser({
     username, 
@@ -56,4 +70,5 @@ function checkIfUserWithValueExists(field, value) {
     })
 }
 
-module.exports = {checkIfUserWithValueExists, getUserById, createUser, getUserByProviderId };
+module.exports = {checkIfUserWithValueExists, createUser, 
+    getUserById, getUserByProviderId, getUserByUsername, getUserByVerificationToken, getUserByUsernameWithPassword };

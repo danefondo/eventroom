@@ -2,7 +2,7 @@
     <div v-if="verified">
         <p> Verified! </p> 
         <br/>
-        <p> For security purposes, you'll need to sign in.</p>
+        <p> For security purposes, you'll need to sign in again.</p>
         <router-link to="/login"> Sign in </router-link>
 
     </div>

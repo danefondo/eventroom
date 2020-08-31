@@ -22,8 +22,8 @@ const UserSchema = new Schema({
 	provider: String,
 
     // Verification
-    verificationToken: String,
-    verifiedStatus: Boolean,
+	verificationToken: String,
+	verifiedStatus: Boolean,
 
     // Date
     dateCreated: Date,

@@ -1,4 +1,4 @@
-const UserRefreshToken = require('./UserRefreshTokenModel');
+const UserRefreshToken = require('./models/UserRefreshTokenModel');
 
 const { getUserById } = require('./UserUtilities');
 

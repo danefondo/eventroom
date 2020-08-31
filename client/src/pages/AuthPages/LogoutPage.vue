@@ -7,7 +7,20 @@
 </template>
 
 <script>
+import auth from '../../config/auth';
+
 export default {
     name: "LogoutPage",
+    async beforeRouteEnter (to, from, next) {
+      try {
+        const response = await auth.logout();
+        console.log("@logout_beforeenter: ", response.data);
+        if (response.data.success) {
+          next();
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    },
 }
 </script>

@@ -1,13 +1,20 @@
 <template>
   <div class="auth">
     <div class="auth-container">
+      
+      <div class="auth-header">
+        <div class="auth-title">{{$t("login.login-title")}}</div>
+        <div class="auth-subtitle">{{$t("login.login-subtitle")}}</div>
+      </div>
+      <div class="external-auth fb-auth">
+        <a class="fb-link" :href="facebookLoginLink">Sign in with FB</a>
+      </div>
+      <div class="external-auth google-auth">
+        <a class="google-link" :href="googleLoginLink"> Sign in with Google </a>
+      </div>
       <form @submit.prevent="login" class="auth-form" method="POST">
         <div v-if="error" class="inputErrorContainer">
           <div class="inputErrorText">{{ error }}</div>
-        </div>
-        <div class="auth-header">
-          <div class="auth-title">{{$t("login.login-title")}}</div>
-          <div class="auth-subtitle">{{$t("login.login-subtitle")}}</div>
         </div>
         <input
           v-model="username"
@@ -41,6 +48,8 @@
 <script>
 // import { authAxios } from "../../config/axios";
 import auth from "../../config/auth";
+import { BASE_PATH } from "../../constants"
+
 
 export default {
   name: "LoginPage",
@@ -52,6 +61,9 @@ export default {
       submitting: false,
       success: false,
       loginText: "Login",
+
+      googleLoginLink: BASE_PATH+"/api/accounts/google",
+      facebookLoginLink: BASE_PATH+"/api/accounts/facebook",
     };
   },
 
@@ -86,6 +98,9 @@ export default {
 </script>
 
 <style>
+.external-auth {
+  padding: 10px;
+}
 .auth {
   height: 100%;
   width: 100%;

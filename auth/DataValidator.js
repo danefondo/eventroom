@@ -1,5 +1,5 @@
 const { check, validationResult } = require('express-validator');
-const AccountUtilities = require('../utils/AccountUtilities'); // TODO to remove
+const { checkIfUserWithValueExists } = require('../database/user/UserUtilities'); // TODO to remove
 
 
 
@@ -9,7 +9,7 @@ module.exports = {
 		check('email').trim().escape().normalizeEmail()
 			.isEmail().withMessage("Please insert an email address")
 			.custom(value => {
-				return AccountUtilities.checkIfUserWithValueExists('email', value).then(exists => {
+				return checkIfUserWithValueExists('email', value).then(exists => {
 					if (exists) {
 						return Promise.reject("Email already exists");
 					}
@@ -19,7 +19,7 @@ module.exports = {
 			.not().isEmpty().withMessage('Username cannot be empty')
 			.not().isEmail().withMessage('Username cannot be an email address')
 			.custom(value => {
-				return AccountUtilities.checkIfUserWithValueExists('username', value).then(exists => {
+				return checkIfUserWithValueExists('username', value).then(exists => {
 					if (exists) {
 						return Promise.reject("Username already exists");
 					}
@@ -55,7 +55,7 @@ module.exports = {
 	check_email: [
 		check('email').isEmail()
 			.custom(value => {
-				return AccountUtilities.checkIfUserWithValueExists('email', value).then(exists => {
+				return checkIfUserWithValueExists('email', value).then(exists => {
 					if (exists) {
 						return Promise.reject("Email already exists");
 					}
@@ -67,7 +67,7 @@ module.exports = {
 		check('username').not().isEmpty()
 			.withMessage('Username cannot be empty.')
 			.custom(value => {
-				return AccountUtilities.checkIfUserWithValueExists('username', value).then(exists => {
+				return checkIfUserWithValueExists('username', value).then(exists => {
 					if (exists) {
 						return Promise.reject("Username already exists");
 					}

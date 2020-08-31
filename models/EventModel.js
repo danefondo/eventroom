@@ -7,7 +7,8 @@ const EventSchema = new Schema({
     dateCreated: Date,
     creatorId: String,
     defaultRoomId: String,
-    rooms: [String]
+    rooms: [String],
+    scheduledTime: Date,
 });
 
 const Event = module.exports = mongoose.model('Event', EventSchema);

@@ -20,7 +20,9 @@ export default {
   },
   mounted() {
     console.log("whadup1 spotlight");
-    if (this.boxData && this.boxData.spotlight) {
+    // let box = document.getElementById(this.boxData.objectId);
+    // let hasVideo = box.querySelector("#" + this.boxData.elementId) != null;
+    if (this.boxData.spotlight) {
       console.log("whadup2", this.boxData);
       const containerData = {
         objectId: this.boxData.objectId,

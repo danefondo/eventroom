@@ -81,6 +81,7 @@
         :key="boxData.objectId"
         :boxData="boxData"
         :ref="boxData.objectId"
+        @removeFromSpotlight="removeFromSpotlight"
       />
     </div>
     <EmptyVideoPanel />
@@ -94,6 +95,7 @@
           :key="boxData.objectId"
           :boxData="boxData"
           :ref="boxData.objectId"
+          @addToSpotlight="addToSpotlight"
         />
       </div>
       <Session
@@ -197,8 +199,56 @@ export default {
     },
     findAndRemoveParticipantBox(participantStreamId) {
       let participantBoxes = this.currentBoxObjects;
-      let index = participantBoxes.findIndex((box) => box.streamId === participantStreamId);
+      let index = participantBoxes.findIndex(
+        (box) => box.streamId === participantStreamId
+      );
       participantBoxes.splice(index, 1);
+    },
+    addToSpotlight(containerId) {
+      // Find correct container, make copy to not alter original
+      console.log("id", containerId);
+      let container = this.currentBoxObjects.find(
+        (box) => box.objectId === containerId
+      );
+      // container = container[0];
+      console.log("cont", container);
+
+      // let uniqueBoxId = "box_" + this.generateUniqueId(16);
+      // container.objectId = uniqueBoxId;
+      container.spotlight = true;
+      // const newContainer = {
+      //   elementId: container.elementId,
+      //   objectId: container.objectId,
+      //   orderNumber: container.orderNumber,
+      //   spotlight: true,
+      //   streamId: container.streamId,
+      //   type: container.type,
+      // };
+      this.$store.dispatch("setStreamOnHold", container);
+      // let videoElementId = container.elementId;
+      // let videoFeed = document.getElementById(videoElementId);
+
+      // changing spotlight to true removes it automatically
+      // videoFeed.parentNode.removeChild(videoFeed);
+
+      // Get index to update container
+      // https://stackoverflow.com/a/52132401/8010396
+      const index = this.currentBoxObjects.findIndex(
+        (box) => box.objectId === containerId
+      );
+      this.currentBoxObjects.splice(index, 1, container);
+
+      // let newContainer = document.getElementById(container.objectId);
+      // this.$refs.appendChild(videoFeed);
+    },
+    removeFromSpotlight() {},
+    generateUniqueId(length) {
+      return parseInt(
+        Math.ceil(Math.random() * Date.now())
+          .toPrecision(length)
+          .toString()
+          .replace(".", "")
+      );
     },
     async createTempUser() {
       try {

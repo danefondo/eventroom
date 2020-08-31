@@ -15,6 +15,8 @@ const state = {
   verificationStatus: false,
 
   containersReady: [],
+
+  streamsWaitingForContainer: [],
 };
 
 const mutations = {
@@ -46,6 +48,15 @@ const mutations = {
     let index = state.containersReady.findIndex((data) => data.objectId === containerObjectId);
     state.containersReady.splice(index, 1);
   },
+
+  setStreamOnHold(state, streamObject) {
+    state.streamsWaitingForContainer.push(streamObject);
+  },
+
+  removeStreamOnHold(state, streamObjectId) {
+    let index = state.streamsWaitingForContainer.findIndex((data) => data.objectId === streamObjectId);
+    state.streamsWaitingForContainer.splice(index, 1);
+  },
 };
 
 const actions = {
@@ -76,6 +87,14 @@ const actions = {
 
   removeFinalizedContainer(state, containerObjectId) {
     state.commit("removeFinalizedContainer", containerObjectId);
+  },
+
+  setStreamOnHold(state, streamObject) {
+    state.commit("setStreamOnHold", streamObject);
+  },
+
+  removeStreamOnHold(state, streamObjectId) {
+    state.commit("removeStreamOnHold", streamObjectId);
   },
 };
 

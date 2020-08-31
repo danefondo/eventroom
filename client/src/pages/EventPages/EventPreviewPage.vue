@@ -3,13 +3,17 @@
     <div v-if="event && room" class="event">
       <div class="event-title">{{ event.name }}</div>
       <div v-html="event.description" class="event-description"></div>
+      <div v-if="event.scheduledTime" class="eventDatetime">
+        <div class="eventDate">{{ getEventDate(event)}}</div>
+        <div class="eventTime">{{ getEventTime(event) }}</div>
+      </div>
       <router-link class="button" :to="`/events/${event._id}/rooms/${room._id}`">Enter room</router-link>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 
 import axios from "axios";
 
@@ -25,13 +29,13 @@ export default {
       roomNotFound: false,
     };
   },
-  
+
   computed: {
     ...mapState({
-      user: state => state.user,
-      isAuthenticated: state => state.authenticationStatus,
-      isVerified: state => state.verificationStatus,
-    })
+      user: (state) => state.user,
+      isAuthenticated: (state) => state.authenticationStatus,
+      isVerified: (state) => state.verificationStatus,
+    }),
   },
 
   async mounted() {
@@ -53,6 +57,26 @@ export default {
         this.eventNotFound = true;
         this.roomNotFound = true;
       }
+    },
+    getEventTime(event) {
+      let time;
+      if (event.scheduledTime) {
+        time = event.scheduledTime;
+        time = new Date(time);
+        const options = { hour: "2-digit", minute: "2-digit" };
+        time = time.toLocaleTimeString("et-EE", options);
+      }
+      return time;
+    },
+    getEventDate(event) {
+      let date;
+      if (event.scheduledTime) {
+        date = event.scheduledTime;
+        date = new Date(date);
+        const options = { month: "long", day: "numeric" };
+        date = date.toLocaleDateString("et-EE", options);
+      }
+      return date;
     },
     // async getRoom() {
     //   try {

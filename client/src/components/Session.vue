@@ -20,7 +20,6 @@ export default {
       publisherElementId: "",
       streams: [],
       session: null,
-      streamsWaitingForContainer: [],
     };
   },
   props: {
@@ -55,7 +54,9 @@ export default {
       spotlight: false,
     };
     this.$emit("emit_participant", participant);
-    this.streamsWaitingForContainer.push(participant);
+
+    // Set Publisher stream on hold
+    this.$store.dispatch("setStreamOnHold", participant);
 
     this.session.on("streamCreated", (event) => {
       let uniqueSubscriberId = "box_" + this.generateUniqueId(16);
@@ -67,7 +68,8 @@ export default {
         event: event,
       };
       this.$emit("emit_participant", subscriber);
-      this.streamsWaitingForContainer.push(subscriber);
+      // Set Subscriber stream on hold
+      this.$store.dispatch("setStreamOnHold", subscriber);
     });
 
     this.session.on("streamDestroyed", (event) => {
@@ -90,7 +92,7 @@ export default {
         height: "100%",
         showControls: false,
       };
-      let streamsOnHold = this.streamsWaitingForContainer;
+      let streamsOnHold = this.$store.state.streamsWaitingForContainer;
       let subscriberObject = streamsOnHold.find(
         (stream) => stream.objectId === assignedContainerId
       );
@@ -172,15 +174,9 @@ export default {
       defaultSlot.appendChild(videoFeed);
     },
     initRemoveFinalizedContainer(containerObjectId) {
-      //- Remove from Vuex store readyContainers
+      //- Remove from Vuex store readyContainers & streamWaitingForContainer
       this.$store.dispatch("removeFinalizedContainer", containerObjectId);
-
-      //- Remove from Session data streamsWaitingForContainer
-      let streamsOnHold = this.streamsWaitingForContainer;
-      let index = streamsOnHold.findIndex(
-        (stream) => stream.objectId === containerObjectId
-      );
-      streamsOnHold.splice(index, 1);
+      this.$store.dispatch("removeStreamOnHold", containerObjectId);
     },
   },
   watch: {
@@ -188,9 +184,10 @@ export default {
       // Check if readyContainers contains matching container
       let appendPublisher = this.appendPublisher;
       let appendSubscriber = this.appendSubscriber;
-      this.streamsWaitingForContainer.forEach(function (streamOnHold) {
-        let assignedContainerId = streamOnHold.objectId;
-        let type = streamOnHold.type;
+      let streamsOnHold = this.$store.state.streamsWaitingForContainer;
+      streamsOnHold.forEach(function (streamObject) {
+        let assignedContainerId = streamObject.objectId;
+        let type = streamObject.type;
         //- Prevent infinite loop upon further changes
         //- Get correct container matched with stream
         if (readyContainers.some((c) => c.objectId === assignedContainerId)) {

@@ -71,6 +71,7 @@ const EventController = {
       event.description = eventData.description;
       event.dateCreated = eventData.dateCreated;
       event.creatorId = eventData.userId;
+      event.scheduledTime = eventData.scheduledTime;
 
       let room = new Room();
       room.name = event.name;

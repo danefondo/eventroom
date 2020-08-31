@@ -13,6 +13,13 @@ export default {
   methods: {
     addToSpotlight() {
       console.log("Adding.");
+      let containerId = this.boxData.objectId;
+      this.$emit("addToSpotlight", containerId);
+      // emit to EventRoom to change spotlight value to true
+      // then copy video
+      // remove video
+      // append video
+      // update database with new state
     },
   },
   mounted() {

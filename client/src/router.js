@@ -34,7 +34,7 @@ const routes = [
   { path: "/verificationRequired", component: RequireVerificationPage, name: "RequireVerificationPage" },
 
   /* ====== PROFILE ROUTES ====== */
-  { path: "/profile", component: ProfilePage, name: "ProfilePage",
+  { path: "/profile/:username", component: ProfilePage, name: "ProfilePage",
     meta: {
       requireAuthentication: true,
     }

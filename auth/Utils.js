@@ -4,8 +4,8 @@ const JWT = require('jsonwebtoken');
 const Bcrypt = require('bcryptjs')
 const Dotenv = require('dotenv');
 
-const User = require('../database/user/UserModel');
 const { createNewUserRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
+const { getUserById } = require('../database/user/UserUtilities');
 
 Dotenv.config();
 
@@ -16,7 +16,7 @@ const setup = () => {
 
     Passport.deserializeUser(async (id, done) => {
         try {
-            const user = await User.findById(id);
+            const user = await getUserById(id);
             return done(null, user);
         } catch (err) {
             return done(err, null);

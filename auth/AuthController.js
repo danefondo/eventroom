@@ -1,8 +1,7 @@
 const { validationResult } = require('express-validator');
 const Passport = require('passport');
 
-const User = require('../database/user/UserModel');
-const { createUser } = require('../database/user/UserUtilities');
+const { createUser, getUserByUsernameWithPassword } = require('../database/user/UserUtilities');
 const { verifyRefreshToken, deleteRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
 
 const { verifyPassword, hashPassword, generateToken, userInJWT, createRefreshToken, signToken } = require('./Utils');
@@ -71,7 +70,7 @@ const loginHandler = async (req, res) => {
     // finding user and verifying input
     let user;
     try {
-        user = await User.findOne({[field]: username}).select('+password').exec();
+        user = await getUserByUsernameWithPassword(field, username);
         if (!user) {
             return res.status(400).send({error: "User does not exist"});
         }
@@ -190,6 +189,7 @@ const confirmAuthentication = async (req, res, next) => {
                 res.clearCookie('refresh');
                 if (newTokens) {
                     user = newTokens.user;
+                    req.user = user;
                     res.cookie('jwt', newTokens.newjwtToken, { httpOnly: true })   // sameSession?
                     res.cookie('refresh', newTokens.newRefreshToken, { httpOnly: true })
                 } else {
@@ -199,6 +199,7 @@ const confirmAuthentication = async (req, res, next) => {
                 return res.status(401).send({ error: "Unauthorized." });
             }
         } 
+        req.user = user;
         return next();
     })(req, res, next);
 };

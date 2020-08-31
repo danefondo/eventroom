@@ -1,4 +1,4 @@
-const AccountUtilities = require("../utils/AccountUtilities");
+const { generateToken } = require("../auth/Utils");
 const Dotenv = require("dotenv");
 const JWT = require('jsonwebtoken');
 const TempUser = require("../models/TempUserModel");
@@ -13,7 +13,7 @@ const TempUserController = {
 
       const dateCreated = new Date();
       const associatedRoomId = roomId;
-      const tempUserToken = await AccountUtilities.generateToken();
+      const tempUserToken = await generateToken();
 
       let user = new TempUser({
         associatedRoomId,

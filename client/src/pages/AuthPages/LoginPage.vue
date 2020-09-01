@@ -13,9 +13,6 @@
         <a class="google-link" :href="googleLoginLink"> Sign in with Google </a>
       </div>
       <form @submit.prevent="login" class="auth-form" method="POST">
-        <div v-if="error" class="inputErrorContainer">
-          <div class="inputErrorText">{{ error }}</div>
-        </div>
         <input
           v-model="username"
           class="auth-input"
@@ -32,11 +29,32 @@
           :placeholder="$t('login.login-pass')"
           autocomplete="off"
         />
-        <router-link class="auth-helper-button" to="/forgotpassword">{{$t("login.forgot-pass")}}</router-link>
+        <div v-if="error" class="inputErrorContainer">
+          <div class="inputErrorText">{{ error }}</div>
+        </div>
         <div class="submit">
           <input :disabled="submitting" class="auth-button" type="submit" :value="loginText" />
         </div>
       </form>
+      <div class="auth-helper-button" @click="toggleRefreshPassword">{{$t("login.forgot-pass")}}</div>
+        <div v-if="refreshPassword">
+          <p>Please enter your email </p>
+          <form @submit.prevent="sendRefreshPassword" method="POST">
+            <input
+              v-model="refreshEmail"
+              name="refreshEmail"
+              type="text"
+              placeholder="enter email"
+              autocomplete="off"
+            />
+            <div class="submit">
+              <input class="auth-button" type="submit" :value="refreshText" />
+            </div>
+            <div v-if="refreshPasswordSent">
+              Please check your email. Make sure you wrote the correct email! Sometimes it might end up in your spam folder!
+            </div>
+          </form>
+        </div>
       <div class="auth-alt-buttons">
         <div v-if="success" class="successMessage">{{$t("login.pass-success")}}</div>
         <router-link class="auth-alt-button" to="/register">{{$t("login.or-create-account")}}</router-link>
@@ -46,10 +64,9 @@
 </template>
 
 <script>
-// import { authAxios } from "../../config/axios";
-import auth from "../../config/auth";
 import { BASE_PATH } from "../../constants"
-
+import auth from "../../config/auth";
+import { requestWithoutAuthentication } from "../../config/api";
 
 export default {
   name: "LoginPage",
@@ -61,6 +78,12 @@ export default {
       submitting: false,
       success: false,
       loginText: "Login",
+
+      refreshEmail: "",
+      refreshPassword: false,
+      sending: false,
+      refreshPasswordSent: false,
+      refreshText: "Send email",
 
       googleLoginLink: BASE_PATH+"/api/accounts/google",
       facebookLoginLink: BASE_PATH+"/api/accounts/facebook",
@@ -79,8 +102,9 @@ export default {
         this.error = "";
         this.$router.push("/");
       } catch (error) {
-        if (error.response && error.response.status === 401) {
+        if (error.response && (error.response.status === 401 || error.response.status === 400)) {
           this.error = error.response.data.error;
+          console.log("@login here");
         } else {
           console.log("internal server error");
         }
@@ -92,6 +116,19 @@ export default {
     getError(field) {
       const error = this.errors.filter((each) => each.param === field)[0];
       return error ? error.msg : "";
+    },
+    toggleRefreshPassword() {
+      this.refreshPassword = !this.refreshPassword;
+    },
+    async sendRefreshPassword() {
+      console.log("@clicked!");
+      this.sending = true;
+      this.refreshText = "Sending...";
+
+      await requestWithoutAuthentication('post', '/api/accounts/sendresetpasswordmail', {email: this.refreshEmail, hostname: window.location.host});
+      this.refreshPasswordSent = true;
+      this.sending = false;
+      this.refreshText = "Send email";
     },
   },
 };

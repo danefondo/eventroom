@@ -24,6 +24,8 @@ const setup = () => {
     });
 };
 
+
+
 /*====== Data in JWT  ======*/
 
 const userInJWT = function(user) {
@@ -42,6 +44,16 @@ const userInJWT = function(user) {
 const signToken = function(user){
     return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'30min'});
 };
+
+const verifyToken = function(token) {
+    try { 
+        const decoded = JWT.verify(token, process.env.JWT_SECRET);
+        decoded.success = true;
+        return decoded;
+    } catch (err) {
+        return {success: false, error: err};
+    }
+}
 
 const hashPassword = function(password) {
     return new Promise((resolve, reject) => {
@@ -69,6 +81,7 @@ const generateToken = function() {
 const verifyPassword = async (candidate, actual) => {
     return await Bcrypt.compare(candidate, actual);
 };
+
 
 
 
@@ -102,4 +115,6 @@ const createRefreshToken = async function(userId) {
 };
 
 
-module.exports = { setup, signToken, hashPassword, generateToken, verifyPassword, userInJWT, createRefreshToken }; 
+
+module.exports = { setup, signToken, verifyToken, hashPassword, 
+    generateToken, verifyPassword, userInJWT, createRefreshToken }; 

@@ -8,6 +8,23 @@ async function getUserByProviderId(providerId) {
     return await User.findOne({ providerId }).exec()
 }
 
+async function getUserByEmail(email) {
+    const users = await User.find({ email: email }).select('+password').exec();
+    // console.log("users: ", users);
+    // console.log("type of users: ", typeof(users));
+    if (users) {
+        for (let i=0; i<users.length; i++){
+            if ((!users[i].provider || users[i].provider === null) && users[i].password != null) {
+                // console.log("return user", users[i]);
+                // console.log("Type of return user", typeof(users[i]));
+                return users[i];
+            }
+        }
+    }
+    console.log("Return null");
+    return null;
+}
+
 async function getUserByUsername(username) {
     return await User.findOne({ username }).exec()
 }
@@ -71,4 +88,4 @@ function checkIfUserWithValueExists(field, value) {
 }
 
 module.exports = {checkIfUserWithValueExists, createUser, 
-    getUserById, getUserByProviderId, getUserByUsername, getUserByVerificationToken, getUserByUsernameWithPassword };
+    getUserById, getUserByProviderId, getUserByEmail, getUserByUsername, getUserByVerificationToken, getUserByUsernameWithPassword };

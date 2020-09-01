@@ -36,7 +36,6 @@ const loginWithTokens = async (req, res, returnUser) => {
         .then(result => {
             const refreshToken = result[0]; 
             const token = result[1];
-            console.log("@lwt");
             res.clearCookie('jwt');
             res.clearCookie('refresh');
             return res.status(200)

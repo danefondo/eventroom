@@ -10,11 +10,12 @@ const DataValidator = require('../../auth/DataValidator');
 
 const router = Express.Router();
 
+// Verification
 router.get('/verify/:verificationToken', AccountController.verifyToken);
 
-router.get('/profile/:username', AuthController.confirmAuthentication, AccountController.sendProfileData);
+router.post('/resendemailverification', AccountController.resendEmailVerification);
 
-
+// Authentication
 router.get('/authenticate', AuthController.authenticationHandler);
 
 router.post('/login', AccountUtilities.usernameToLowerCase, DataValidator.login, AuthController.loginHandler);
@@ -32,6 +33,8 @@ router.get('/passresetconfirmation', PasswordResetController.resetPasswordConfir
 
 router.post('/passreset', DataValidator.passwordReset, PasswordResetController.resetPassword);
 
+// Profile
+router.get('/profile/:username', AuthController.confirmAuthentication, AccountController.sendProfileData);
 
 
 router.post('/createTempUser', TempUserController.createTempUser);

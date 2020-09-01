@@ -87,5 +87,6 @@ function checkIfUserWithValueExists(field, value) {
     })
 }
 
+
 module.exports = {checkIfUserWithValueExists, createUser, 
     getUserById, getUserByProviderId, getUserByEmail, getUserByUsername, getUserByVerificationToken, getUserByUsernameWithPassword };

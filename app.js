@@ -20,7 +20,7 @@ Mongoose.connect(TEST_DB_URI, { useNewUrlParser: true });
 */
 
 //- Mongoose production database setup
-Mongoose.connect(DatabaseConfig.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true});
+Mongoose.connect(DatabaseConfig.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
 Mongoose.set("useFindAndModify", false);
 
 //- Get default Mongoose connection

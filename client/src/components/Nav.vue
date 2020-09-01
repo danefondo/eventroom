@@ -45,7 +45,6 @@ export default {
         try {
           console.log("@clicked");
           const response = await requestWithAuthentication('post', `/api/accounts/resendemailverification`, {hostname: window.location.host, userId: this.user._id});
-          console.log("@nav response", response);
           if (response.success && this.emailSentCounter < 5) {
             this.buttonText = "Resend email again";
             this.emailSentCounter += 1;

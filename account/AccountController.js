@@ -24,20 +24,15 @@ const AccountController = {
   },
 		
 	async resendEmailVerification(req, res, next) {
-		console.log("@resend");
-		console.log("@resend body", req.body);
 		if (req.body && req.body.userId) {
 			try {
-				console.log("@resend here")
 				const user = await getUserById(req.body.userId);
-				console.log("@resend user", user);
 				if (user && user.email) {
 					const verificationToken = await generateToken();
 					user.verificationToken = verificationToken;
 					await user.save();
 					const link = `${req.protocol}://${req.body.hostname}/verify/${verificationToken}`;
 					MailUtilities.sendVerificationMail(user.email, link);
-					console.log("@resend success");
 					return res.status(200).send({ success: true });
 				}
 			} catch (err) {

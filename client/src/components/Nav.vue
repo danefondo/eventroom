@@ -11,12 +11,16 @@
         <router-link to="/register" class="nav-button">Register</router-link>
       </div>
     </div>
-    <div v-if="isAuthenticated&&!isVerified" class="unverified">Your account is not verified!</div>
+    <div v-if="isAuthenticated&&!isVerified" class="unverified">
+      <p>Your account is not verified! </p>
+      <button @click="resendEmail">{{buttonText}}</button>
+    </div>
   </div>
 </template>
 
 <script>
 import { mapState } from 'vuex';
+import { requestWithAuthentication } from '../config/api';
 
 export default {
   name: "Nav",
@@ -30,6 +34,26 @@ export default {
       return "/profile/"+this.user.username;
     }
   },
+  data() {
+    return {
+      buttonText: "Resend email",
+      emailSentCounter: 0,
+    }
+  },
+  methods: {
+    async resendEmail() {
+        try {
+          console.log("@clicked");
+          const response = await requestWithAuthentication('post', `/api/accounts/resendemailverification`, {hostname: window.location.host, userId: this.user._id});
+          if (response.success && this.emailSentCounter < 5) {
+            this.buttonText = "Resend email again";
+            this.emailSentCounter += 1;
+          }
+        } catch(err) {
+          console.log(err);
+        }
+    }
+  }
 }
 </script>
 

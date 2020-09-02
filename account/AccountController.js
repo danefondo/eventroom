@@ -1,7 +1,11 @@
 const JWT = require('jsonwebtoken');
 
-const { getUserByUsername, getUserByVerificationToken } = require('../database/user/UserUtilities');
-// AUTHENTICATION STUFF WILL BE MOVED TO /auth/AuthController
+const { getUserById, getUserByUsername, getUserByVerificationToken } = require('../database/user/UserUtilities');
+const { generateToken } = require('../auth/Utils');
+
+const MailUtilities = require('../utils/MailUtilities');
+
+
 const AccountController = {
 	async verifyToken(req, res, next) {
 		const { verificationToken } = req.params;
@@ -19,6 +23,26 @@ const AccountController = {
 		}
   },
 		
+	async resendEmailVerification(req, res, next) {
+		if (req.body && req.body.userId) {
+			try {
+				const user = await getUserById(req.body.userId);
+				if (user && user.email) {
+					const verificationToken = await generateToken();
+					user.verificationToken = verificationToken;
+					await user.save();
+					const link = `${req.protocol}://${req.body.hostname}/verify/${verificationToken}`;
+					MailUtilities.sendVerificationMail(user.email, link);
+					return res.status(200).send({ success: true });
+				}
+			} catch (err) {
+				console.log(err);
+				return res.status(200).send({ success: true });
+			}
+		}
+		return res.status(500).send({ error: "internal server error" });
+	},
+
 	async sendProfileData(req, res) {
 		console.log("@send", req.params);
 		const isOwner = req.user.username === req.params.username;
@@ -44,10 +68,6 @@ const AccountController = {
 		return res.status(200).send({user});
 	},
 	
-	async resetPassword(req, res) {
-
-	},
-
 	async deleteAccount(req, res) {
 
 	},  

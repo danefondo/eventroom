@@ -15,6 +15,8 @@ import RegisterPage from "./pages/AuthPages/RegisterPage";
 import VerificationPage from './pages/AuthPages/VerificationPage';
 import RequireVerificationPage from './pages/AuthPages/RequireVerificationPage';
 import SuccessPage from './pages/AuthPages/SuccessPage';
+import PassResetPage from './pages/AuthPages/PassResetPage';
+import PassResetRedirect from './pages/AuthPages/PassResetRedirect';
 
 /* ====== PROFILE ROUTES ====== */
 import ProfilePage from './pages/UserPages/ProfilePage';
@@ -32,6 +34,8 @@ const routes = [
   },
   { path: "/verify/:token", component: VerificationPage, name: "VerificationPage" },
   { path: "/verificationRequired", component: RequireVerificationPage, name: "RequireVerificationPage" },
+  { path: "/resetpassword/:token", component: PassResetRedirect },
+  { path: "/resetpassword", component: PassResetPage },
 
   /* ====== PROFILE ROUTES ====== */
   { path: "/profile/:username", component: ProfilePage, name: "ProfilePage",

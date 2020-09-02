@@ -18,7 +18,7 @@ const globalConfig = {
 
     Returns server response, if response was successful.
 */
-const requestWithAuthentication = async function(method, url, data=null, requiresAuthentication=true) {
+export const requestWithAuthentication = async function(method, url, data=null, requiresAuthentication=true) {
   const instanceConfig = {
     ...globalConfig,
     method,
@@ -45,5 +45,20 @@ const requestWithAuthentication = async function(method, url, data=null, require
   return await instance.request(instanceConfig);
 
 }
+/*
+    Used to send requests if user authentication is *NOT* required.
+*/
+export const requestWithoutAuthentication = async function(method, url, data=null) {
+  const instanceConfig = {
+    ...globalConfig,
+    method,
+    data, 
+    url,
+    withCredentials: false,
+  };
 
-export { requestWithAuthentication };
+  const instance = axios.create(instanceConfig);
+
+  return instance.request(instanceConfig);
+
+}

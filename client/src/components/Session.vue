@@ -141,6 +141,7 @@ export default {
         this.handleCallback
       );
 
+      
       this.session.connect(this.token, (err) => {
         if (err) {
           this.errorHandler(err);

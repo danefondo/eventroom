@@ -7,7 +7,7 @@
         <div class="eventDate">{{ getEventDate(event)}}</div>
         <div class="eventTime">{{ getEventTime(event) }}</div>
       </div>
-      <router-link class="button" :to="`/events/${event._id}/rooms/${room._id}`">Enter room</router-link>
+      <router-link v-if="event._id && room._id" class="button" :to="`/events/${event._id}/rooms/${room._id}`">Enter room</router-link>
     </div>
   </div>
 </template>

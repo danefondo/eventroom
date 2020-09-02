@@ -9,10 +9,6 @@
 import OT from "@opentok/client";
 // import axios from 'axios';
 
-const errorHandler = (err) => {
-  alert(err.message);
-};
-
 export default {
   name: "Session",
   data() {
@@ -43,20 +39,25 @@ export default {
   async mounted() {
     //- https://glitch.com/edit/#!/basic-video-chat
     this.session = OT.initSession(this.apiKey, this.sessionId);
+    console.log("@session", this.session);
 
     let uniquePublisherId = "box_" + this.generateUniqueId(16);
     //- Must check in case in database user is to be in spotlight by default
     //- Should this include UserId?
+
     let participant = {
       objectId: uniquePublisherId,
       type: "publisher",
       orderNumber: 0,
       spotlight: false,
     };
-    this.$emit("emit_participant", participant);
+
+    console.log("@participant", JSON.parse(JSON.stringify(participant)));
 
     // Set Publisher stream on hold
     this.$store.dispatch("setStreamOnHold", participant);
+
+    this.$emit("participantData", participant);
 
     this.session.on("streamCreated", (event) => {
       let uniqueSubscriberId = "box_" + this.generateUniqueId(16);
@@ -67,12 +68,13 @@ export default {
         spotlight: false,
         event: event,
       };
-      this.$emit("emit_participant", subscriber);
       // Set Subscriber stream on hold
       this.$store.dispatch("setStreamOnHold", subscriber);
+      this.$emit("participantData", subscriber);
     });
 
     this.session.on("streamDestroyed", (event) => {
+      console.log("@steamDestroyed", event);
       const idx = this.streams.indexOf(event.stream);
       if (idx > -1) {
         this.streams.splice(idx, 1);
@@ -84,8 +86,14 @@ export default {
     });
   },
   methods: {
-    errorHandler,
-    appendSubscriber(assignedContainerId) {
+    errorHandler(error) {
+      if (error) {
+        console.log("error: " + error.message);
+      } else {
+        console.log("callback success");
+      }
+    },
+    createAndAppendSubscriber(assignedContainerId) {
       let subscriberOptions = {
         insertMode: "append",
         width: "100%",
@@ -115,17 +123,16 @@ export default {
         elementId,
         objectRefId: assignedContainerId,
       };
-      this.$emit("emit_stream_details", newDetails);
+      this.$emit("updatedParticipantData", newDetails);
       this.initRemoveFinalizedContainer(assignedContainerId);
     },
-    appendPublisher(assignedContainerId) {
+    createAndAppendPublisher(assignedContainerId) {
       let publisherOptions = {
         insertMode: "append",
         width: "100%",
         height: "100%",
         showControls: false,
       };
-      //- Here I will need Correct REF, which is participant.objectId, allowing finding the new object; after this I can append to the right place
 
       let refToContainer = document.getElementById(assignedContainerId);
       var publisher = OT.initPublisher(
@@ -136,7 +143,7 @@ export default {
 
       this.session.connect(this.token, (err) => {
         if (err) {
-          errorHandler(err);
+          this.errorHandler(err);
         } else {
           this.session.publish(publisher, this.handleCallback);
           let streamId = publisher.streamId;
@@ -146,7 +153,7 @@ export default {
             elementId,
             objectRefId: assignedContainerId,
           };
-          this.$emit("emit_stream_details", newDetails);
+          this.$emit("updatedParticipantData", newDetails);
           this.initRemoveFinalizedContainer(assignedContainerId);
         }
       });
@@ -182,8 +189,8 @@ export default {
   watch: {
     "$store.state.containersReady": function (readyContainers) {
       // Check if readyContainers contains matching container
-      let appendPublisher = this.appendPublisher;
-      let appendSubscriber = this.appendSubscriber;
+      let createAndAppendPublisher = this.createAndAppendPublisher;
+      let createAndAppendSubscriber = this.createAndAppendSubscriber;
       let streamsOnHold = this.$store.state.streamsWaitingForContainer;
       streamsOnHold.forEach(function (streamObject) {
         let assignedContainerId = streamObject.objectId;
@@ -193,9 +200,9 @@ export default {
         if (readyContainers.some((c) => c.objectId === assignedContainerId)) {
           /* readyContainers contains matching container */
           if (type == "publisher") {
-            appendPublisher(assignedContainerId);
+            createAndAppendPublisher(assignedContainerId);
           } else if (type == "subscriber") {
-            appendSubscriber(assignedContainerId);
+            createAndAppendSubscriber(assignedContainerId);
           }
         }
       });

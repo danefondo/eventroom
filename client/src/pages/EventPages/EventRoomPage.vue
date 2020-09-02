@@ -104,8 +104,8 @@
         :apiKey="apiKey"
         :token="token"
         :participants="currentBoxObjects"
-        @emit_participant="addParticipantToBox"
-        @emit_stream_details="findAndUpdateParticipantBox"
+        @participantData="addParticipantToBox"
+        @updatedParticipantData="findAndUpdateParticipantBox"
         @participantLeft="findAndRemoveParticipantBox"
       ></Session>
     </div>
@@ -224,7 +224,9 @@ export default {
       //   streamId: container.streamId,
       //   type: container.type,
       // };
-      this.$store.dispatch("setStreamOnHold", container);
+
+      // this.$store.dispatch("setStreamOnHold", container);
+      
       // let videoElementId = container.elementId;
       // let videoFeed = document.getElementById(videoElementId);
 

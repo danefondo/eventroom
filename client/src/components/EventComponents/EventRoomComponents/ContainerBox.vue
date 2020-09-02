@@ -23,9 +23,9 @@ export default {
     },
   },
   mounted() {
-    console.log("whadup1");
+    console.log("@containerBox");
     if (this.boxData) {
-      console.log("whadup2", this.boxData);
+      console.log("@containerBox boxData", JSON.parse(JSON.stringify(this.boxData)));
       const containerData = {
         objectId: this.boxData.objectId,
         type: this.boxData.type,

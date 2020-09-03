@@ -75,8 +75,12 @@ const AuthController = {
                 hashedPassword: hashedPass,
             });
         } catch (err) {
+            console.log("@register err", err);
             return res.status(500).send({ error: "Internal server error - problem with creating the user"});
         }
+        console.log("@register newUser", newUser);
+        newUser = newUser[0];
+        console.log("@register newUser 2: ", newUser);
         // Sending mail
         const link = `${req.protocol}://${req.body.hostname}/verify/${verificationToken}`;
         MailUtilities.sendVerificationMail(req.body.email, link);

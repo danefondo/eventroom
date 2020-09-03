@@ -19,18 +19,15 @@ export default {
     },
   },
   mounted() {
-    console.log("whadup1 spotlight");
-    // let box = document.getElementById(this.boxData.objectId);
-    // let hasVideo = box.querySelector("#" + this.boxData.elementId) != null;
+    console.log("@spotlightBox");
     if (this.boxData.spotlight) {
-      console.log("whadup2", this.boxData);
+      console.log("@spotlightBox box data", this.boxData);
       const containerData = {
         objectId: this.boxData.objectId,
         type: this.boxData.type,
         spotlight: this.boxData.spotlight,
       };
       this.$store.dispatch("addReadyContainer", containerData);
-      console.log("whadup3");
     }
   },
 };

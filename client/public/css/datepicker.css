@@ -15,10 +15,6 @@
     font-family: "Trebuchet MS", sans-serif;
   }
   
-  .date_picker input:focus {
-    border-left: 3px solid #120088;
-  }
-  
   /* .timepicker {
     max-width: 285px;
     width: 285px;

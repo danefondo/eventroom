@@ -1,5 +1,7 @@
 const User = require('./models/UserModel');
 
+const UserInteractionUtilities = require('./UserInteractionUtilities');
+
 async function getUserById(id) {
     return await User.findById(id).exec();
 }
@@ -69,8 +71,9 @@ async function createUser({
             verificationToken,
             dateCreated: new Date()
         });
+        console.log("@utils", typeof(newUser._id));
         return resolve(
-            await newUser.save()
+            Promise.all([newUser.save(), UserInteractionUtilities.createUserInteraction(newUser._id, newUser.displayName, newUser.username)])
         );
     });
 }

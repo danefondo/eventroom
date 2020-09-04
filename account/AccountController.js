@@ -138,9 +138,18 @@ const AccountController = {
 	 * 	followers - true, if followers are requested, false, if followings are requested
 	 * 	nrOfLoadedProfiles - how many profiles have already been loaded
 	 * @param {*} res 
-	 * @return {*} 
+	 * @return {*} object 
 	 * {
-	 * 	followList: list of followers
+	 * 	success: whether the request was successful
+	 * 	followList: {
+	 * 		displayName, 
+	 * 		username,
+	 * 		bio,
+	 * 		followersNumber, 
+	 * 		followingsNumber, 
+	 * 		upcomingPublicEventNumber, 
+	 * 		pastPublicEventNumber
+	 * 	}
 	 * 	allLoaded: whether all profiles have been loaded
 	 * }
 	 */

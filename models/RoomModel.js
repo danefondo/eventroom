@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 let Schema = mongoose.Schema;
 
+
 const RoomSchema = new Schema({
     name: String,
     description: String,
@@ -9,6 +10,7 @@ const RoomSchema = new Schema({
     videoUrl: String,
     videoId: String,
     youtubeId: String,
+    // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
     dateCreated: Date,
     dateEnded: Date,
     location: String,

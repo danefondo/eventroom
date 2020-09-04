@@ -235,7 +235,7 @@ export default {
       //   type: container.type,
       // };
 
-      // this.$store.dispatch("setStreamOnHold", container);
+      this.$store.dispatch("setToSpotlight", JSON.parse(JSON.stringify(container)));
 
       // changing spotlight to true removes it automatically
       // videoFeed.parentNode.removeChild(videoFeed);

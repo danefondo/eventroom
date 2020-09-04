@@ -1,5 +1,5 @@
 import VueRouter from "vue-router";
-import store from "./store";
+import store from "./store/index";
 
 /* ====== EVENT PAGES ====== */
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
@@ -72,17 +72,17 @@ const router = new VueRouter({
 
 const noReAuth = ["LoginPage", "RegisterPage", "ForgotPassword"];
 router.beforeEach(async (to, from, next) => {
-  if (!store.state.ready) {
+  if (!store.state.auth.ready) {
     try {
-      await store.dispatch('authenticate');
+      await store.dispatch('auth/authenticate');
     } catch (err) {
       console.log("@router err: ", err);
     }
   }
   if (to.meta || noReAuth.includes(to.name)) {
     // console.log("@router, need auth or noreauth")
-    const user = store.state.user;
-    const authenticationStatus = store.state.authenticationStatus;
+    const user = store.state.auth.user;
+    const authenticationStatus = store.state.auth.authenticationStatus;
 
     let nextHasBeenCalled = false;
 

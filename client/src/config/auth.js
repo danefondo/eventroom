@@ -1,7 +1,7 @@
 import jwtDecode from "jwt-decode";
 // import axios from 'axios';
 import { authAxios } from "./axios";
-import store from "../store";
+import store from "../store/index";
 
 
 export default {
@@ -27,9 +27,9 @@ export default {
         username,
         password,
       });
-      store.commit('updateAuthenticationStatus', response.data.success);
-      store.commit('updateVerificationStatus', response.data.user.isVerified);
-      store.commit('updateUser', response.data.user);
+      store.commit('auth/updateAuthenticationStatus', response.data.success);
+      store.commit('auth/updateVerificationStatus', response.data.user.isVerified);
+      store.commit('auth/updateUser', response.data.user);
       return response;
     } catch (err) {
       console.log(err);
@@ -40,9 +40,9 @@ export default {
   async logout() {
     try {
       const response = await authAxios.get(`/api/accounts/logout`); 
-      store.commit("updateAuthenticationStatus", !response.data.success);
-      store.commit('updateVerificationStatus', false);
-      store.commit('updateUser', null);
+      store.commit("auth/updateAuthenticationStatus", !response.data.success);
+      store.commit('auth/updateVerificationStatus', false);
+      store.commit('auth/updateUser', null);
       return response;
     } catch (err) {
       console.log(err);
@@ -55,13 +55,13 @@ export default {
       const response = await authAxios.get(`/api/accounts/authenticate`);
       console.log("@isauth: data", response.data);
       if (response.data.success) {
-        store.commit("updateAuthenticationStatus", true);
-        store.commit('updateVerificationStatus', response.data.user.isVerified);
-        store.commit('updateUser', response.data.user);
+        store.commit("auth/updateAuthenticationStatus", true);
+        store.commit('auth/updateVerificationStatus', response.data.user.isVerified);
+        store.commit('auth/updateUser', response.data.user);
       } else {
-        store.commit("updateAuthenticationStatus", false);
-        store.commit('updateVerificationStatus', false);
-        store.commit('updateUser', null);
+        store.commit("auth/updateAuthenticationStatus", false);
+        store.commit('auth/updateVerificationStatus', false);
+        store.commit('auth/updateUser', null);
       }
       return { success: response.data.success, response: response.data};
     } catch (err) {

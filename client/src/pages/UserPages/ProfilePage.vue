@@ -68,12 +68,25 @@ import FollowerListComponent from './ProfilePageComponents/FollowerListComponent
 
 export default {
   name: "ProfilePage",
-  async beforeRouteUpdate(to, from, next) {
-    this.loadProfilePage(to.params.username);
-    this.$route.params.username = JSON.parse(JSON.stringify(to.params.username));
-    this.mainViewIndex = 0;
-    this.$refs.FollowerListComponent.clearLists();
-    next();
+  // async beforeRouteUpdate(to, from, next) {
+    
+  //   this.ready = false;
+  //   await this.loadProfilePage(to.params.username);
+  //   this.$route.params.username = JSON.parse(JSON.stringify(to.params.username));
+  //   this.$forceUpdate();
+  //   this.mainViewIndex = 0;
+  //   this.$refs.FollowerListComponent.clearLists();
+  //   this.ready = true;
+  //   console.log("@before route I CALLED NEXT!")
+  //   next();
+  // },
+  watch: {
+    async '$route' (to) {
+      this.ready = false;
+      await this.loadProfilePage(to.params.username);
+      this.$refs.FollowerListComponent.clearLists();
+      this.ready = true;
+    }
   },
   components: {
     BioComponent,

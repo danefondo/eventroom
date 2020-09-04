@@ -1,3 +1,25 @@
+/**
+ * 
+ * 
+ * 
+ * THIS FILE WILL BE DELETED 
+ * 
+ * 
+ * 
+ * USE STORE IN STORE FOLDER INSTEAD
+ * 
+ * 
+ * 
+ * THIS FILE IS NOT IN USE
+ * 
+ * 
+ * 
+ * DO NOT USE THIS FILE
+ * 
+ * 
+ * 
+ */
+
 import Vue from "vue";
 import Vuex from "vuex";
 

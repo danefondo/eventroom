@@ -159,9 +159,9 @@ export default {
   },
   computed: {
     ...mapState({
-      user: (state) => state.user,
-      isAuthenticated: (state) => state.authenticationStatus,
-      isVerified: (state) => state.verificationStatus,
+      user: state => state.auth.user,
+      isAuthenticated: state => state.auth.authenticationStatus,
+      isVerified: state => state.auth.verificationStatus,
     }),
   },
   components: {
@@ -177,11 +177,11 @@ export default {
     EmptyVideoPanel,
   },
   async mounted() {
-    if (!this.$store.state.authenticationStatus) {
+    if (!this.$store.state.auth.authenticationStatus) {
       this.createTempUser();
     }
 
-    if (this.$store.state.user) {
+    if (this.$store.state.auth.user) {
       this.getRoom();
     }
   },

@@ -36,7 +36,7 @@ export default {
       type: this.boxData.type,
       spotlight: this.boxData.spotlight,
     };
-    this.$store.dispatch("addReadyContainer", JSON.parse(JSON.stringify(containerData)));
+    this.$store.dispatch("session/addReadyContainer", JSON.parse(JSON.stringify(containerData)));
     console.log("Added regular container into readyContainers in Vuex store");
   },
 };

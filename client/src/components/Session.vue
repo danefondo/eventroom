@@ -39,7 +39,6 @@ export default {
   async mounted() {
     //- https://glitch.com/edit/#!/basic-video-chat
     this.session = OT.initSession(this.apiKey, this.sessionId);
-    console.log("@session", this.session);
 
     let uniquePublisherId = "box_" + this.generateUniqueId(16);
     //- Must check in case in database user is to be in spotlight by default
@@ -52,12 +51,12 @@ export default {
       spotlight: false,
     };
 
-    console.log("@participant", JSON.parse(JSON.stringify(participant)));
-
     // Set Publisher stream on hold
     this.$store.dispatch("setStreamOnHold", participant);
 
-    this.$emit("participantData", participant);
+    // Emit data to set as Eventroom data without Vuex reactivity 
+    // that comes from dispatching to Vuex store
+    this.$emit("participantData", JSON.parse(JSON.stringify(participant)));
 
     this.session.on("streamCreated", (event) => {
       let uniqueSubscriberId = "box_" + this.generateUniqueId(16);
@@ -70,7 +69,7 @@ export default {
       };
       // Set Subscriber stream on hold
       this.$store.dispatch("setStreamOnHold", subscriber);
-      this.$emit("participantData", subscriber);
+      this.$emit("participantData", JSON.parse(JSON.stringify(subscriber)));
     });
 
     this.session.on("streamDestroyed", (event) => {
@@ -105,9 +104,10 @@ export default {
         (stream) => stream.objectId === assignedContainerId
       );
 
+      // subscriberObject = JSON.parse(JSON.stringify(subscriberObject));
       let event = subscriberObject.event;
       let refToContainer = document.getElementById(assignedContainerId);
-      const subscriber = this.session.subscribe(
+      let subscriber = this.session.subscribe(
         event.stream,
         refToContainer,
         subscriberOptions,
@@ -195,6 +195,8 @@ export default {
       let streamsOnHold = this.$store.state.streamsWaitingForContainer;
       streamsOnHold.forEach(function (streamObject) {
         let assignedContainerId = streamObject.objectId;
+        // Remove Vuex reactivity
+        assignedContainerId  = JSON.parse(JSON.stringify(assignedContainerId));
         let type = streamObject.type;
         //- Prevent infinite loop upon further changes
         //- Get correct container matched with stream

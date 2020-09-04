@@ -193,8 +193,10 @@ export default {
     findAndUpdateParticipantBox(newDetails) {
       let objectId = newDetails.objectRefId;
       let obj = this.currentBoxObjects.find((e) => e.objectId === objectId);
-      obj.streamId = newDetails.streamId;
-      obj.elementId = newDetails.elementId;
+
+      // to maintain reactivity, use $set as opposed to obj.x = newValue
+      this.$set(obj, 'streamId', newDetails.streamId);
+      this.$set(obj, 'elementId', newDetails.elementId);
       console.log("participant updated", this.currentBoxObjects);
     },
     findAndRemoveParticipantBox(participantStreamId) {
@@ -211,11 +213,19 @@ export default {
         (box) => box.objectId === containerId
       );
       // container = container[0];
-      console.log("cont", container);
 
       // let uniqueBoxId = "box_" + this.generateUniqueId(16);
       // container.objectId = uniqueBoxId;
-      container.spotlight = true;
+
+      let videoElementId = container.elementId;
+      let videoFeed = document.getElementById(videoElementId);
+      let stream = videoFeed.cloneNode(true);
+
+      // container.spotlight = true;
+      this.$set(container, 'spotlight', true);
+      let containerObject = document.getElementById(containerId);
+      console.log("@videoFeed", stream);
+      containerObject.append(stream);
       // const newContainer = {
       //   elementId: container.elementId,
       //   objectId: container.objectId,
@@ -226,19 +236,16 @@ export default {
       // };
 
       // this.$store.dispatch("setStreamOnHold", container);
-      
-      // let videoElementId = container.elementId;
-      // let videoFeed = document.getElementById(videoElementId);
 
       // changing spotlight to true removes it automatically
       // videoFeed.parentNode.removeChild(videoFeed);
 
       // Get index to update container
       // https://stackoverflow.com/a/52132401/8010396
-      const index = this.currentBoxObjects.findIndex(
-        (box) => box.objectId === containerId
-      );
-      this.currentBoxObjects.splice(index, 1, container);
+      // const index = this.currentBoxObjects.findIndex(
+      //   (box) => box.objectId === containerId
+      // );
+      // this.currentBoxObjects.splice(index, 1, container);
 
       // let newContainer = document.getElementById(container.objectId);
       // this.$refs.appendChild(videoFeed);

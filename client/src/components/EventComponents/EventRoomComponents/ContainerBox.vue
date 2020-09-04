@@ -1,7 +1,11 @@
 <template>
   <div v-if="!boxData.spotlight" :id="boxData.objectId" class="container-box">
     <div class="control-buttons">
-      <div @click="addToSpotlight" class="control-button add-spotlight">Add to spotlight</div>
+      <div
+        v-if="boxData.elementId"
+        @click="addToSpotlight"
+        class="control-button add-spotlight"
+      >Add to spotlight</div>
     </div>
   </div>
 </template>
@@ -23,19 +27,18 @@ export default {
     },
   },
   mounted() {
-    console.log("@containerBox");
-    if (this.boxData) {
-      console.log("@containerBox boxData", JSON.parse(JSON.stringify(this.boxData)));
-      let testData = JSON.parse(JSON.stringify(this.boxData));
-      const containerData = {
-        objectId: testData.objectId,
-        type: testData.type,
-        spotlight: testData.spotlight,
-      };
-      this.$store.dispatch("addReadyContainer", containerData);
-      console.log("Added regular container into readyContainers in Vuex store");
-    }
-  }
+    console.log(
+      "@containerBox boxData",
+      JSON.parse(JSON.stringify(this.boxData))
+    );
+    let containerData = {
+      objectId: this.boxData.objectId,
+      type: this.boxData.type,
+      spotlight: this.boxData.spotlight,
+    };
+    this.$store.dispatch("addReadyContainer", JSON.parse(JSON.stringify(containerData)));
+    console.log("Added regular container into readyContainers in Vuex store");
+  },
 };
 </script>
 

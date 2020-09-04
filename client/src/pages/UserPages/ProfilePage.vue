@@ -68,18 +68,6 @@ import FollowerListComponent from './ProfilePageComponents/FollowerListComponent
 
 export default {
   name: "ProfilePage",
-  // async beforeRouteUpdate(to, from, next) {
-    
-  //   this.ready = false;
-  //   await this.loadProfilePage(to.params.username);
-  //   this.$route.params.username = JSON.parse(JSON.stringify(to.params.username));
-  //   this.$forceUpdate();
-  //   this.mainViewIndex = 0;
-  //   this.$refs.FollowerListComponent.clearLists();
-  //   this.ready = true;
-  //   console.log("@before route I CALLED NEXT!")
-  //   next();
-  // },
   watch: {
     async '$route' (to) {
       this.ready = false;
@@ -108,10 +96,10 @@ export default {
       mainViewIndex: 0,
       showFollowers: 0,
 
-      profileBelongsToUser: true,
+      profileBelongsToUser: true, // TODO computed
       profileUserId: "",
 
-      isUserFollowed: false,
+      isUserFollowed: false, // TODO computed
     
       numberOfFollowers: 0,
       numberOfFollowing: 0,

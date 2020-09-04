@@ -2,6 +2,7 @@
   <div v-if="boxData.spotlight" :id="boxData.objectId" class="spotlight-box">
     <div class="control-buttons">
       <div
+        v-if="boxData.elementId"
         @click="removeFromSpotlight"
         class="control-button remove-spotlight"
       >Remove from spotlight</div>
@@ -16,6 +17,8 @@ export default {
   methods: {
     removeFromSpotlight() {
       console.log("Removing.");
+      let containerId = this.boxData.objectId;
+      this.$emit("removeFromSpotlight", containerId);
     },
   },
   mounted() {
@@ -27,7 +30,7 @@ export default {
         type: this.boxData.type,
         spotlight: this.boxData.spotlight,
       };
-      this.$store.dispatch("session/addReadyContainer", containerData);
+      this.$store.dispatch("session/addReadyContainer", JSON.parse(JSON.stringify(containerData)));
     }
   },
 };

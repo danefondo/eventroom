@@ -102,9 +102,9 @@ export default {
   },
   computed: {
     ...mapState({
-      user: (state) => state.user,
-      isAuthenticated: (state) => state.authenticationStatus,
-      isVerified: (state) => state.verificationStatus,
+      user: state => state.auth.user,
+      isAuthenticated: state => state.auth.authenticationStatus,
+      isVerified: state => state.auth.verificationStatus,
     }),
   },
   methods: {

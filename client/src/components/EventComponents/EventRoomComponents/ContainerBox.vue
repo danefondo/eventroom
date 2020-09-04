@@ -32,7 +32,7 @@ export default {
         type: testData.type,
         spotlight: testData.spotlight,
       };
-      this.$store.dispatch("addReadyContainer", containerData);
+      this.$store.dispatch("session/addReadyContainer", containerData);
       console.log("Added regular container into readyContainers in Vuex store");
     }
   }

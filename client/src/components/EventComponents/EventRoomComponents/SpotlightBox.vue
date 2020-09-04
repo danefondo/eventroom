@@ -27,7 +27,7 @@ export default {
         type: this.boxData.type,
         spotlight: this.boxData.spotlight,
       };
-      this.$store.dispatch("addReadyContainer", containerData);
+      this.$store.dispatch("session/addReadyContainer", containerData);
     }
   },
 };

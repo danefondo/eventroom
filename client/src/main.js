@@ -12,7 +12,7 @@ import moment from 'moment';
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
-import store from "./store";
+import store from "./store/index";
 
 
 setGlobals();

@@ -55,7 +55,7 @@ export default {
     console.log("@participant", JSON.parse(JSON.stringify(participant)));
 
     // Set Publisher stream on hold
-    this.$store.dispatch("setStreamOnHold", participant);
+    this.$store.dispatch("session/setStreamOnHold", participant);
 
     this.$emit("participantData", participant);
 
@@ -69,7 +69,7 @@ export default {
         event: event,
       };
       // Set Subscriber stream on hold
-      this.$store.dispatch("setStreamOnHold", subscriber);
+      this.$store.dispatch("session/setStreamOnHold", subscriber);
       this.$emit("participantData", subscriber);
     });
 
@@ -100,7 +100,7 @@ export default {
         height: "100%",
         showControls: false,
       };
-      let streamsOnHold = this.$store.state.streamsWaitingForContainer;
+      let streamsOnHold = this.$store.state.session.streamsWaitingForContainer;
       let subscriberObject = streamsOnHold.find(
         (stream) => stream.objectId === assignedContainerId
       );
@@ -183,16 +183,16 @@ export default {
     },
     initRemoveFinalizedContainer(containerObjectId) {
       //- Remove from Vuex store readyContainers & streamWaitingForContainer
-      this.$store.dispatch("removeFinalizedContainer", containerObjectId);
-      this.$store.dispatch("removeStreamOnHold", containerObjectId);
+      this.$store.dispatch("session/removeFinalizedContainer", containerObjectId);
+      this.$store.dispatch("session/removeStreamOnHold", containerObjectId);
     },
   },
   watch: {
-    "$store.state.containersReady": function (readyContainers) {
+    "$store.state.session.containersReady": function (readyContainers) {
       // Check if readyContainers contains matching container
       let createAndAppendPublisher = this.createAndAppendPublisher;
       let createAndAppendSubscriber = this.createAndAppendSubscriber;
-      let streamsOnHold = this.$store.state.streamsWaitingForContainer;
+      let streamsOnHold = this.$store.state.session.streamsWaitingForContainer;
       streamsOnHold.forEach(function (streamObject) {
         let assignedContainerId = streamObject.objectId;
         let type = streamObject.type;

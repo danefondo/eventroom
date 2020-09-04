@@ -24,6 +24,14 @@ router.get('/logout', AuthController.logoutHandler);
 
 router.post('/register', AccountUtilities.usernameToLowerCase, DataValidator.register, AuthController.registerHandler);
 
+router.get('/google', AuthController.googleAuthHandler);
+
+router.get('/google/callback', AuthController.googleAuthCallback);
+
+router.get('/facebook', AuthController.facebookAuthHandler);
+
+router.get('/facebook/callback', AuthController.facebookAuthCallback);
+
 // Password reset
 router.post('/sendresetpasswordmail', DataValidator.forgotPass, PasswordResetController.sendResetPasswordMail);
 
@@ -36,16 +44,19 @@ router.post('/passreset', DataValidator.passwordReset, PasswordResetController.r
 // Profile
 router.get('/profile/:username', AuthController.confirmAuthentication, AccountController.sendProfileData);
 
+router.post('/follow', AuthController.confirmAuthentication, AccountController.followUser);
 
+router.post('/unfollow', AuthController.confirmAuthentication, AccountController.unfollowUser);
+
+router.get('/profileData/followList', AuthController.confirmAuthentication, AccountController.sendFollowList);
+
+router.post('/profileData/saveBio', AuthController.confirmAuthentication, AccountController.saveNewBioText);
+
+
+// Other 
 router.post('/createTempUser', TempUserController.createTempUser);
 
-router.get('/google', AuthController.googleAuthHandler);
 
-router.get('/google/callback', AuthController.googleAuthCallback);
-
-router.get('/facebook', AuthController.facebookAuthHandler);
-
-router.get('/facebook/callback', AuthController.facebookAuthCallback);
 
 
 

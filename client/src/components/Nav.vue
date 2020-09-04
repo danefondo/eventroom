@@ -31,7 +31,7 @@ export default {
       isVerified: state => state.verificationStatus,
     }),
     profileLink: function() {
-      return "/profile/"+this.user.username;
+      return `/profile/${this.user.username}`;
     }
   },
   data() {
@@ -42,17 +42,17 @@ export default {
   },
   methods: {
     async resendEmail() {
-        try {
-          console.log("@clicked");
-          const response = await requestWithAuthentication('post', `/api/accounts/resendemailverification`, {hostname: window.location.host, userId: this.user._id});
-          if (response.success && this.emailSentCounter < 5) {
-            this.buttonText = "Resend email again";
-            this.emailSentCounter += 1;
-          }
-        } catch(err) {
-          console.log(err);
+      try {
+        console.log("@clicked");
+        const response = await requestWithAuthentication('post', `/api/accounts/resendemailverification`, {hostname: window.location.host, userId: this.user._id});
+        if (response.success && this.emailSentCounter < 5) {
+          this.buttonText = "Resend email again";
+          this.emailSentCounter += 1;
         }
-    }
+      } catch(err) {
+        console.log(err);
+      }
+    },
   }
 }
 </script>

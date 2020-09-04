@@ -26,7 +26,7 @@ const UserSchema = new Schema({
 	verifiedStatus: Boolean,
 
     // Date
-    dateCreated: Date,
+  dateCreated: Date,
 	lastLogin: Date,
     
     // Reset

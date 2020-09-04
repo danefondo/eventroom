@@ -3,9 +3,10 @@
     Loading data...
   </div>
   <div v-else-if="!profileExists">
-    User does not exist!
+    User does not exist! Or maybe there was a server error
   </div>
   <div v-else>
+    <!-- The side view of the page -->
     <div class="left-pane"> 
       <div class="profile-picture-container">
         <div class="profile-picture">
@@ -13,19 +14,45 @@
           <img src="../../assets/images/github-profile-pic.png" style="width:100%">
         </div>
       </div>
-      <div class="profile-bio">
-        Here be your max n word bio
+      <div class="bio-section">
+        <BioComponent 
+          ref="BioComponent"
+          :bio-text="bioText" 
+          :profile-belongs-to-user="profileBelongsToUser"
+          @bioTextModification="bioTextModificationAction"
+        />
       </div>
-      <div class="followers">
-        Here be your follows
+      <div class="follow-section">
+        <FollowComponent
+          :profile-belongs-to-user="profileBelongsToUser"
+          :is-user-followed="isUserFollowed"
+          :profile-user-id="profileUserId"
+          :number-of-followers="numberOfFollowers"
+          :number-of-following="numberOfFollowing"
+          @followedUser="followedUserAction"
+          @unfollowedUser="unfollowedUserAction"
+          @showFollowers="showFollowersAction"
+        />
       </div>
     </div>
+    <!-- The main view of the app -->
     <div class="right-pane"> 
       <div class="profile-nav">
         Here be the navbar
       </div>
       <div class="profile-main">
         Here be everything else
+        <div v-if="mainViewIndex===0">
+          Here be the events
+        </div>
+        <div v-else-if="mainViewIndex===1">
+          <FollowerListComponent 
+            ref="FollowerListComponent"
+            :showFollowers="showFollowers"
+            :showFollowing="showFollowing"
+            :profileUserId="profileUserId"
+          />
+        </div> 
       </div>
     </div>
   </div>
@@ -35,8 +62,24 @@
 import { mapState } from 'vuex';
 import { requestWithAuthentication } from '../../config/api';
 
+import BioComponent from './ProfilePageComponents/BioComponent';
+import FollowComponent from './ProfilePageComponents/FollowComponent';
+import FollowerListComponent from './ProfilePageComponents/FollowerListComponent';
+
 export default {
   name: "ProfilePage",
+  async beforeRouteUpdate(to, from, next) {
+    this.loadProfilePage(to.params.username);
+    this.$route.params.username = JSON.parse(JSON.stringify(to.params.username));
+    this.mainViewIndex = 0;
+    this.$refs.FollowerListComponent.clearLists();
+    next();
+  },
+  components: {
+    BioComponent,
+    FollowComponent,
+    FollowerListComponent,
+  },
   computed: {
     ...mapState({
       user: state => state.user,
@@ -47,25 +90,68 @@ export default {
   data() {
     return {
       ready: false,
-      profileExists: false,      
+      profileExists: false, 
+      
+      mainViewIndex: 0,
+      showFollowers: 0,
+
+      profileBelongsToUser: true,
+      profileUserId: "",
+
+      isUserFollowed: false,
+    
+      numberOfFollowers: 0,
+      numberOfFollowing: 0,
+
+      bioText: "",
     }
   },
   async mounted() {
-    try {
-      console.log("@profile user:", this.user);
-      const response = await requestWithAuthentication('get', `api/accounts/profile/${this.$route.params.username}`);
-      console.log("@profile response:", response);
-      this.ready = true;
-      this.profileExists = true;
-    } catch (err) {
-      if (err.response && err.response.status===404) {
-        console.log("@profile: error 404");
-        this.ready = true;
-      }
-      console.log("@profile mount error:", err);
-    }
+    this.loadProfilePage(this.$route.params.username);
   },
-
+  methods: {
+    async loadProfilePage(paramsUsername) {
+      try {
+        const response = await requestWithAuthentication('get', `api/accounts/profile/${paramsUsername}`);
+        console.log("@profile response:", response);
+        if (response && response.data && response.data.success) {
+          this.profileBelongsToUser = response.data.userId == this.user._id;
+          this.profileUserId = response.data.userId;
+          this.numberOfFollowers = response.data.followers;
+          this.numberOfFollowing = response.data.following;
+          this.isUserFollowed = response.data.isFollowed;
+          this.bioText = response.data.bioText;
+          this.profileExists = true;
+          this.ready = true;
+        } else {
+          this.ready = true;
+        }
+        
+      } catch (err) {
+        if (err.response && err.response.status===404) {
+          console.log("@profile: error 404");
+          this.ready = true;
+        }
+        console.log("@profile mount error:", err);
+      }
+    },
+    followedUserAction() {
+      this.isUserFollowed = true;
+      this.numberOfFollowers += 1;
+    },
+    unfollowedUserAction() {
+      this.isUserFollowed = false;
+      this.numberOfFollowers -= 1;
+    },
+    showFollowersAction(showFollowers) {
+      this.mainViewIndex = 1;
+      this.showFollowers = showFollowers;
+      this.$refs.FollowerListComponent.loadFollows(showFollowers);
+    },
+    bioTextModificationAction(newBioText) {
+      this.bioText = newBioText;
+    }
+  }
 }
 
 </script>
@@ -93,11 +179,22 @@ export default {
     right: 0;
     border: 2px solid blue;
   }
-
   .right-pane {
     width: 75%;
     float: right;
     border: 2px solid blue;
+  }
+  .bio-section {
+    border: 2px solid turquoise;
+  }
+  .follow-section {
+    border: 2px solid purple;
+  }
+  .profile-nav {
+    border: 2px solid black;
+  }
+  .profile-main {
+    border: 2px solid yellow;
   }
 }
 /* For mobile */

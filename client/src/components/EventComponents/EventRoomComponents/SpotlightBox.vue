@@ -22,8 +22,9 @@ export default {
     },
   },
   mounted() {
+    // Notify when container is ready
     console.log("@spotlightBox");
-    if (this.boxData.spotlight) {
+    if (this.boxData.spotlight && !this.boxData.republishInProcess) {
       console.log("@spotlightBox box data", this.boxData);
       const containerData = {
         objectId: this.boxData.objectId,
@@ -31,6 +32,10 @@ export default {
         spotlight: this.boxData.spotlight,
       };
       this.$store.dispatch("session/addReadyContainer", JSON.parse(JSON.stringify(containerData)));
+    } else if (this.boxData.spotlight && this.boxData.republishInProcess) {
+      // Notify that container is ready for republishing use
+      let streamData = JSON.parse(JSON.stringify(this.boxData));
+      this.$emit("spotlightContainerReady", streamData);
     }
   },
 };

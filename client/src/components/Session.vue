@@ -14,7 +14,9 @@ export default {
   data() {
     return {
       publisherElementId: "",
-      streams: [],
+      publisher: null,
+      initialPublisher: null,
+      subscribers: [],
       session: null,
     };
   },
@@ -49,12 +51,13 @@ export default {
       type: "publisher",
       orderNumber: 0,
       spotlight: false,
+      republishInProcess: false,
     };
 
     // Set Publisher stream on hold
     this.$store.dispatch("session/setStreamOnHold", participant);
 
-    // Emit data to set as Eventroom data without Vuex reactivity 
+    // Emit data to set as Eventroom data without Vuex reactivity
     // that comes from dispatching to Vuex store
     this.$emit("participantData", JSON.parse(JSON.stringify(participant)));
 
@@ -65,6 +68,7 @@ export default {
         type: "subscriber",
         orderNumber: 0,
         spotlight: false,
+        republishInProcess: false,
         event: event,
       };
       // Set Subscriber stream on hold
@@ -73,11 +77,14 @@ export default {
     });
 
     this.session.on("streamDestroyed", (event) => {
+      // event.preventDefault();
+
       console.log("@steamDestroyed", event);
-      const idx = this.streams.indexOf(event.stream);
-      if (idx > -1) {
-        this.streams.splice(idx, 1);
-      }
+      // const idx = this.streams.indexOf(event.stream);
+      // if (idx > -1) {
+      //   this.streams.splice(idx, 1);
+      // }
+
       // Emit to EventRoom.vue to remove stream from currentBoxObjects
       // so that the container with buttons is also removed
       let participantStreamId = event.stream.streamId;
@@ -113,7 +120,8 @@ export default {
         subscriberOptions,
         this.handleCallback
       );
-      console.log("subscriber joined", subscriber);
+      this.subscribers.push(JSON.parse(JSON.stringify(subscriber)));
+      console.log("subscriber joined", JSON.parse(JSON.stringify(subscriber)));
       console.log("subscriber streamId", subscriber.streamId);
       console.log("subscriber id", subscriber.id);
       let streamId = subscriber.streamId;
@@ -141,12 +149,14 @@ export default {
         this.handleCallback
       );
 
-      
+      this.initialPublisher = publisher;
+
       this.session.connect(this.token, (err) => {
         if (err) {
           this.errorHandler(err);
         } else {
           this.session.publish(publisher, this.handleCallback);
+          this.publisher = JSON.parse(JSON.stringify(publisher));
           let streamId = publisher.streamId;
           let elementId = publisher.id;
           let newDetails = {
@@ -183,8 +193,61 @@ export default {
     },
     initRemoveFinalizedContainer(containerObjectId) {
       //- Remove from Vuex store readyContainers & streamWaitingForContainer
-      this.$store.dispatch("session/removeFinalizedContainer", containerObjectId);
+      this.$store.dispatch(
+        "session/removeFinalizedContainer",
+        containerObjectId
+      );
       this.$store.dispatch("session/removeStreamOnHold", containerObjectId);
+    },
+    stopPublishingStream() {
+      console.log("about to stop publishing");
+      let publisher = this.initialPublisher;
+      this.session.unpublish(publisher);
+      console.log("stopped publishing");
+    },
+    stopSubscribingToStream(elementId) {
+      let subscriber = this.subscribers.find(
+        (stream) => stream.elementId === elementId
+      );
+      this.session.unsubscribe(subscriber);
+      console.log("unsubscribed");
+    },
+    startPublishingStream(containerData) {
+      let publisherOptions = {
+        insertMode: "append",
+        width: "100%",
+        height: "100%",
+        showControls: false,
+      };
+      console.log("containerData", JSON.parse(JSON.stringify(containerData)));
+      let refToContainer = document.getElementById(containerData.objectId);
+      // let refToContainer = document.getElementById("publisher");
+      console.log("container", refToContainer);
+      let publisher = OT.initPublisher(
+        refToContainer,
+        publisherOptions,
+        this.handleCallback
+      );
+      console.log("publisher1", JSON.parse(JSON.stringify(publisher)));
+      this.session.publish(publisher, this.handleCallback);
+      console.log("publisher2", JSON.parse(JSON.stringify(publisher)));
+      let streamId = publisher.streamId;
+      let elementId = publisher.id;
+      let newDetails = {
+        streamId,
+        elementId,
+        objectRefId: containerData.objectId,
+      };
+      this.$emit("updatedParticipantData", newDetails);
+    },
+    startSubscribingToStream() {},
+    setStreamToSpotlight(streamData) {
+      let containerData = streamData;
+      if (streamData.type == "publisher") {
+        this.startPublishingStream(containerData);
+      } else if (streamData.type == "subscriber") {
+        this.startSubscribingToStream(containerData);
+      }
     },
   },
   watch: {
@@ -196,7 +259,7 @@ export default {
       streamsOnHold.forEach(function (streamObject) {
         let assignedContainerId = streamObject.objectId;
         // Remove Vuex reactivity
-        assignedContainerId  = JSON.parse(JSON.stringify(assignedContainerId));
+        assignedContainerId = JSON.parse(JSON.stringify(assignedContainerId));
         let type = streamObject.type;
         //- Prevent infinite loop upon further changes
         //- Get correct container matched with stream

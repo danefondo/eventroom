@@ -75,13 +75,14 @@
       />
     </div>
     <!-- <div class="eventroom-feed"></div> -->
-    <div v-if="currentBoxObjects.length" id="spotlight-boxes">
+    <div v-if="checkIfAnySpotlightBoxes()" id="spotlight-boxes">
       <SpotlightBox
         v-for="boxData in currentBoxObjects"
         :key="boxData.objectId"
         :boxData="boxData"
-        :ref="boxData.objectId"
+        ref="spotlight"
         @removeFromSpotlight="removeFromSpotlight"
+        @spotlightContainerReady="startPublishingSpotlightStream"
       />
     </div>
     <EmptyVideoPanel />
@@ -94,8 +95,9 @@
           v-for="boxData in currentBoxObjects"
           :key="boxData.objectId"
           :boxData="boxData"
-          :ref="boxData.objectId"
+          ref="nonspotlight"
           @addToSpotlight="addToSpotlight"
+          @containerReady="startPublishingContainerStream"
         />
       </div>
       <Session
@@ -107,6 +109,7 @@
         @participantData="addParticipantToBox"
         @updatedParticipantData="findAndUpdateParticipantBox"
         @participantLeft="findAndRemoveParticipantBox"
+        ref="session"
       ></Session>
     </div>
   </div>
@@ -159,9 +162,9 @@ export default {
   },
   computed: {
     ...mapState({
-      user: state => state.auth.user,
-      isAuthenticated: state => state.auth.authenticationStatus,
-      isVerified: state => state.auth.verificationStatus,
+      user: (state) => state.auth.user,
+      isAuthenticated: (state) => state.auth.authenticationStatus,
+      isVerified: (state) => state.auth.verificationStatus,
     }),
   },
   components: {
@@ -195,8 +198,8 @@ export default {
       let obj = this.currentBoxObjects.find((e) => e.objectId === objectId);
 
       // to maintain reactivity, use $set as opposed to obj.x = newValue
-      this.$set(obj, 'streamId', newDetails.streamId);
-      this.$set(obj, 'elementId', newDetails.elementId);
+      this.$set(obj, "streamId", newDetails.streamId);
+      this.$set(obj, "elementId", newDetails.elementId);
       console.log("participant updated", this.currentBoxObjects);
     },
     findAndRemoveParticipantBox(participantStreamId) {
@@ -207,50 +210,37 @@ export default {
       participantBoxes.splice(index, 1);
     },
     addToSpotlight(containerId) {
-      // Find correct container, make copy to not alter original
-      console.log("id", containerId);
       let container = this.currentBoxObjects.find(
         (box) => box.objectId === containerId
       );
-      // container = container[0];
 
-      // let uniqueBoxId = "box_" + this.generateUniqueId(16);
-      // container.objectId = uniqueBoxId;
+      let elementId = container.elementId;
 
-      let videoElementId = container.elementId;
-      let videoFeed = document.getElementById(videoElementId);
-      let stream = videoFeed.cloneNode(true);
+      // stop publishing / subscribing
+      if (container.type == "publisher") {
+        this.$refs.session.stopPublishingStream();
+      } else if (container.type == "subscriber") {
+        this.$refs.session.stopSubscribingToStream(elementId);
+      }
 
-      // container.spotlight = true;
-      this.$set(container, 'spotlight', true);
-      let containerObject = document.getElementById(containerId);
-      console.log("@videoFeed", stream);
-      containerObject.append(stream);
-      // const newContainer = {
-      //   elementId: container.elementId,
-      //   objectId: container.objectId,
-      //   orderNumber: container.orderNumber,
-      //   spotlight: true,
-      //   streamId: container.streamId,
-      //   type: container.type,
-      // };
-
-      this.$store.dispatch("setToSpotlight", JSON.parse(JSON.stringify(container)));
-
-      // changing spotlight to true removes it automatically
-      // videoFeed.parentNode.removeChild(videoFeed);
-
-      // Get index to update container
-      // https://stackoverflow.com/a/52132401/8010396
-      // const index = this.currentBoxObjects.findIndex(
-      //   (box) => box.objectId === containerId
-      // );
-      // this.currentBoxObjects.splice(index, 1, container);
-
-      // let newContainer = document.getElementById(container.objectId);
-      // this.$refs.appendChild(videoFeed);
+      // changing spotlight to true removes old box automatically
+      this.$set(container, "republishInProcess", true);
+      this.$set(container, "spotlight", true);
     },
     removeFromSpotlight() {},
+    startPublishingSpotlightStream(streamData) {
+      // Send element id to identify subscriber / publisher
+      let containerId = streamData.objectId;
+      this.$refs.session.setStreamToSpotlight(streamData);
+      let container = this.currentBoxObjects.find(
+        (box) => box.objectId === containerId
+      );
+      // Complete republish cycle
+      this.$set(container, "republishInProcess", false);
+    },
+    startPublishingContainerStream(streamData) {
+      console.log("streamData", streamData);
+    },
     generateUniqueId(length) {
       return parseInt(
         Math.ceil(Math.random() * Date.now())
@@ -258,6 +248,15 @@ export default {
           .toString()
           .replace(".", "")
       );
+    },
+    checkIfAnySpotlightBoxes() {
+      let boxes = this.currentBoxObjects;
+      let spotlightsExist = false;
+      if (boxes.length && boxes.some((box) => box.spotlight === true)) {
+        spotlightsExist = true;
+      }
+      console.log("wowza", spotlightsExist);
+      return spotlightsExist;
     },
     async createTempUser() {
       try {

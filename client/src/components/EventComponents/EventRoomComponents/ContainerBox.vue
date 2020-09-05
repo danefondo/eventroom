@@ -27,17 +27,21 @@ export default {
     },
   },
   mounted() {
-    console.log(
-      "@containerBox boxData",
-      JSON.parse(JSON.stringify(this.boxData))
-    );
-    let containerData = {
-      objectId: this.boxData.objectId,
-      type: this.boxData.type,
-      spotlight: this.boxData.spotlight,
-    };
-    this.$store.dispatch("session/addReadyContainer", JSON.parse(JSON.stringify(containerData)));
-    console.log("Added regular container into readyContainers in Vuex store");
+    if (!this.boxData.republishInProcess) {
+      console.log("@containerBox");
+      let containerData = {
+        objectId: this.boxData.objectId,
+        type: this.boxData.type,
+        spotlight: this.boxData.spotlight,
+      };
+      containerData = JSON.parse(JSON.stringify(containerData));
+      this.$store.dispatch("session/addReadyContainer", containerData);
+      console.log("Added regular container into readyContainers in Vuex store");
+    } else if (this.boxData.republishInProcess) {
+      // Notify that container is ready for republishing use
+      let streamData = JSON.parse(JSON.stringify(this.boxData));
+      this.$emit("containerReady", streamData);
+    }
   },
 };
 </script>

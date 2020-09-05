@@ -17,16 +17,21 @@
 </template>
 
 <script>
+import { mapState, mapGetters, mapActions } from 'vuex';
 import { requestWithAuthentication } from '../../../config/api';
 
 export default {
   name: "FollowComponent",
-  props: {
-    profileBelongsToUser: Boolean,
-    isUserFollowed: Boolean,
-    profileUserId: String,
-    numberOfFollowers: Number,
-    numberOfFollowing: Number
+  computed: {
+    ...mapState({
+      profileUserId: state => state.profile.profileUserId,
+      numberOfFollowers: state => state.profile.numberOfFollowers,
+      numberOfFollowing: state => state.profile.numberOfFollowing,
+      isUserFollowed: state => state.profile.isUserFollowed,
+    }),
+    ...mapGetters({
+      profileBelongsToUser: 'profile/profileBelongsToCurrentUser',
+    })
   },
   data() {
     return {
@@ -34,12 +39,16 @@ export default {
     }
   },
   methods: {
+    ...mapActions({
+      followThisUser: 'profile/followThisUser',
+      unfollowThisUser: 'profile/unfollowThisUser',
+    }),
     async followUser() {
       this.processing = true;
       try {
         const response = await requestWithAuthentication('post', `/api/accounts/follow`, {followUserId: this.profileUserId});
         if (response && response.data.success) {
-          this.$emit("followedUser");
+          this.followThisUser();
           this.processing = false;
         }
       } catch (err) {
@@ -52,7 +61,7 @@ export default {
       try {
         const response = await requestWithAuthentication('post', `/api/accounts/unfollow`, {unfollowUserId: this.profileUserId});
         if (response && response.data.success) {
-          this.$emit("unfollowedUser");
+          this.unfollowThisUser();
           this.processing = false;
         }
       } catch (err) {

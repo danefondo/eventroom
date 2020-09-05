@@ -19,12 +19,12 @@
           <FollowUserPreview :follow-user-data="following" />
         </div>
       </div>
-      <!-- <button @click="print"> print </button> -->
     </div>
   </div>
 </template>
 
 <script>
+import { mapState, mapActions } from 'vuex';
 import { requestWithAuthParams } from '../../../config/api';
 import FollowUserPreview from './FollowUserPreview';
 export default {
@@ -34,28 +34,43 @@ export default {
   },
   props: {
     showFollowers: Boolean,
-    profileUserId: String,
+    loadFollowersToggle: Boolean,
+  },
+  computed: {
+    ...mapState({
+      profileUserId: state => state.profile.profileUserId,
+      allFollowersLoaded: state => state.profile.allFollowersLoaded,
+      allFollowingLoaded: state => state.profile.allFollowingLoaded,
+      nrOfLoadedFollowerProfiles: state => state.profile.nrOfLoadedFollowerProfiles,
+      nrOfLoadedFollowingProfiles: state => state.profile.nrOfLoadedFollowingProfiles,
+      followerList: state => state.profile.followers,
+      followingList: state => state.profile.following,
+    })
   },
   data() {
     return {
       ready: false,
       errors: false,
-      nrOfLoadedFollowerProfiles: 0,
-      nrOfLoadedFollowingProfiles: 0,
-      allFollowersLoaded: false,
-      allFollowingLoaded: false,
-      followerList: [],
-      followingList: [],
     }
   },
-  async mounted() {
+  watch: {
+    loadFollowersToggle: function() {
+      this.loadFollows(this.showFollowers);
+    }
+  },
+  async created() {
     this.loadFollows(this.showFollowers);
     this.ready = true;
   },
 
   methods: {
+    ...mapActions({
+      loadAdditionalFollowers: 'profile/loadAdditionalFollowers',
+      loadAdditionalFollowing: 'profile/loadAdditionalFollowing',
+    }),
     async loadFollows(showFollowers) {
       if ((this.allFollowersLoaded && showFollowers) || (this.allFollowingLoaded && !showFollowers)) {
+        console.log("STOPPED");
         return;
       }
       let response;
@@ -64,8 +79,10 @@ export default {
         nrOfLoadedProfiles: showFollowers ? this.nrOfLoadedFollowerProfiles : this.nrOfLoadedFollowingProfiles, 
         followers: showFollowers, 
       };
+      // console.log("@loadfollows reqparams", requestParams);
       try {
         response = await requestWithAuthParams('get', `api/accounts/profileData/followList`, requestParams);
+        // console.log("@loadfollows response", response);
       } catch (err) {
         this.errors = true;
         console.log("Error at follower list: ", err);
@@ -74,34 +91,19 @@ export default {
         this.errors = true;
         console.log("Error at follower list, data not successful");
       } else {
+        const argumentObject = {
+          loadedProfiles: response.data.followList,
+          nrOfLoadedProfiles: response.data.followList.length,
+          allLoaded: response.data.allLoaded,
+        };
         if (showFollowers) {
-          this.followerList = this.followerList.concat(response.data.followList);
-          this.nrOfLoadedFollowerProfiles += response.data.followList.length;
-          if (response.data.allLoaded) {
-            this.allFollowersLoaded = true;
-          }
+          this.loadAdditionalFollowers(argumentObject);
         } else {
-          this.followingList = this.followingList.concat(response.data.followList);
-          this.nrOfLoadedFollowingProfiles += response.data.followList.length;
-          if (response.data.allLoaded) {
-            this.allFollowingLoaded = true;
-          }
+          this.loadAdditionalFollowing(argumentObject);
         }
       }
 
     },
-    // print() {
-    //   console.log("follower list:", this.followerList);
-    //   console.log("following list:", this.followingList);
-    // },
-    clearLists() {
-      this.followerList = [];
-      this.followingList = [];
-      this.nrOfLoadedFollowerProfiles = 0;
-      this.nrOfLoadedFollowingProfiles = 0;
-      this.allFollowersLoaded = false;
-      this.allFollowingLoaded = false;
-    }
   }
 
 }

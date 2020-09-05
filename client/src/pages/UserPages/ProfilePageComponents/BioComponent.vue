@@ -32,27 +32,30 @@
 </template>
 
 <script>
+import { mapState, mapGetters } from 'vuex';
 import { requestWithAuthentication } from '../../../config/api';
 
 export default {
   name: "BioComponent",
-  props: {
-    bioText: String,
-    profileBelongsToUser: Boolean,
+  computed: {
+    noBioText() { return !this.bioText || this.bioText.length===0; },
+    ...mapState({
+      bioText: state => state.profile.bioText,
+    }),
+    ...mapGetters({
+      profileBelongsToUser: 'profile/profileBelongsToCurrentUser',
+    }),
   },
   data() {
     return {
       modifyingBioText: false,
-      localBioText: this.bioText,
+      localBioText: "", 
       saveButtonText: "Save",
     }
   },
-  computed: {
-    noBioText() { return !this.bioText || this.bioText.length===0; }
-  },
   methods: {
     modifyBioText() {
-      this.localBioText = this.bioText;
+      this.localBioText = this.bioText; // TODO if doesn't work TODO toString()
       this.modifyingBioText = true;
     },
     async confirmBioTextChanges() {
@@ -60,7 +63,7 @@ export default {
       try {
         const result = await requestWithAuthentication('post', `/api/accounts/profileData/saveBio`, { newBioText: this.localBioText });
         if (result.data.success) {
-          this.$emit('bioTextModification', this.localBioText);
+          this.$store.commit('profile/setBioText', this.localBioText);
         } else {
           console.log("no success");
         }
@@ -70,9 +73,7 @@ export default {
       this.saveButtonText = "Save";
       this.modifyingBioText = false;
     },
-    setLocalBioText(newLocalBioText) {
-      this.localBioText = newLocalBioText;
-    }
+
   }
 }
 </script>

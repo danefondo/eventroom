@@ -41,7 +41,7 @@ const actions = {
     try {
       response = await requestWithAuthentication('get', `/api/accounts/authenticate`);
     } catch (err) {
-      console.log("@store err:", err);
+      console.log("@store auth err:", err);
       return err;
     }
     if (response && response.data && response.data.success) {

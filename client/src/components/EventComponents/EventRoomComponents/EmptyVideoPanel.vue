@@ -119,6 +119,7 @@
 <script>
 export default {
   name: "EmptyVideoPanel",
+  props: ["spotlightStreams"],
 };
 </script>
 

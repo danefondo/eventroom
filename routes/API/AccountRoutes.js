@@ -3,7 +3,7 @@ const Express = require('express');
 const { AuthController } = require('../../auth/AuthController');
 const PasswordResetController = require('../../auth/PasswordResetController');
 const AccountController = require('../../account/AccountController');
-const TempUserController = require('../../controller/TempUserController');
+const TempUserController = require('../../event/TempUserController');
 
 const AccountUtilities =  require('../../account/AccountUtilities');
 const DataValidator = require('../../auth/DataValidator');

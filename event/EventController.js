@@ -1,5 +1,5 @@
-const Event = require("../models/EventModel");
-const Room = require("../models/RoomModel");
+const Event = require("../database/event/models/EventModel");
+const Room = require("../database/room/models/RoomModel");
 const OpenTok = require("opentok");
 const axios = require("axios");
 

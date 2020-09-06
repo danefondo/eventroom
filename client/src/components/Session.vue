@@ -15,9 +15,11 @@ export default {
     return {
       publisherElementId: "",
       publisher: null,
-      initialPublisher: null,
       subscribers: [],
       session: null,
+      initialPublisher: null,
+      initialSubscribers: [],
+      initialSubscribersData: [],
     };
   },
   props: {
@@ -74,6 +76,12 @@ export default {
       // Set Subscriber stream on hold
       this.$store.dispatch("session/setStreamOnHold", subscriber);
       this.$emit("participantData", JSON.parse(JSON.stringify(subscriber)));
+      let initialSubscriberData = {
+        objectId: subscriber.objectId,
+        event: subscriber.event,
+      }
+      // Store subscriber event to later find through objectId;
+      this.initialSubscribersData.push(initialSubscriberData);
     });
 
     this.session.on("streamDestroyed", (event) => {
@@ -106,11 +114,12 @@ export default {
         height: "100%",
         showControls: false,
       };
+
       let streamsOnHold = this.$store.state.session.streamsWaitingForContainer;
       let subscriberObject = streamsOnHold.find(
         (stream) => stream.objectId === assignedContainerId
       );
-
+      
       // subscriberObject = JSON.parse(JSON.stringify(subscriberObject));
       let event = subscriberObject.event;
       let refToContainer = document.getElementById(assignedContainerId);
@@ -120,7 +129,9 @@ export default {
         subscriberOptions,
         this.handleCallback
       );
-      this.subscribers.push(JSON.parse(JSON.stringify(subscriber)));
+
+      // This is for identifying correct stream to stop subscribing to
+      this.initialSubscribers.push(subscriber);
       console.log("subscriber joined", JSON.parse(JSON.stringify(subscriber)));
       console.log("subscriber streamId", subscriber.streamId);
       console.log("subscriber id", subscriber.id);
@@ -206,9 +217,13 @@ export default {
       console.log("stopped publishing");
     },
     stopSubscribingToStream(elementId) {
-      let subscriber = this.subscribers.find(
-        (stream) => stream.elementId === elementId
+      console.log("elementId subscriber", elementId);
+      console.log("subscribers", this.initialSubscribers);
+      let subscriber = this.initialSubscribers.find(
+        (stream) => stream.id === elementId
       );
+      console.log("subs", subscriber);
+      console.log("subs JSONED", JSON.parse(JSON.stringify(subscriber)));
       this.session.unsubscribe(subscriber);
       console.log("unsubscribed");
     },
@@ -219,18 +234,14 @@ export default {
         height: "100%",
         showControls: false,
       };
-      console.log("containerData", JSON.parse(JSON.stringify(containerData)));
+
       let refToContainer = document.getElementById(containerData.objectId);
-      // let refToContainer = document.getElementById("publisher");
-      console.log("container", refToContainer);
       let publisher = OT.initPublisher(
         refToContainer,
         publisherOptions,
         this.handleCallback
       );
-      console.log("publisher1", JSON.parse(JSON.stringify(publisher)));
       this.session.publish(publisher, this.handleCallback);
-      console.log("publisher2", JSON.parse(JSON.stringify(publisher)));
       let streamId = publisher.streamId;
       let elementId = publisher.id;
       let newDetails = {
@@ -240,7 +251,35 @@ export default {
       };
       this.$emit("updatedParticipantData", newDetails);
     },
-    startSubscribingToStream() {},
+    startSubscribingToStream(containerData) {
+      let subscriberOptions = {
+        insertMode: "append",
+        width: "100%",
+        height: "100%",
+        showControls: false,
+      };
+
+      let subscriberData = this.initialSubscribersData.find(
+        (stream) => stream.objectId === containerData.objectId
+      );
+
+      let event = subscriberData.event;
+      let refToContainer = document.getElementById(containerData.objectId);
+      let subscriber = this.session.subscribe(
+        event.stream,
+        refToContainer,
+        subscriberOptions,
+        this.handleCallback
+      );
+      let streamId = subscriber.streamId;
+      let elementId = subscriber.id;
+      let newDetails = {
+        streamId,
+        elementId,
+        objectRefId: containerData.objectId,
+      };
+      this.$emit("updatedParticipantData", newDetails);
+    },
     setStreamToSpotlight(streamData) {
       let containerData = streamData;
       if (streamData.type == "publisher") {
@@ -280,9 +319,13 @@ export default {
 <style>
 .OT_subscriber {
   float: left;
+  height: 250px;
+  border-radius: 10px;
 }
 .OT_publisher {
   float: left;
+  height: 250px;
+  border-radius: 10px;
 }
 .session {
   display: flex;

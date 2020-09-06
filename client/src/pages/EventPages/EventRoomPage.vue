@@ -75,7 +75,7 @@
       />
     </div>
     <!-- <div class="eventroom-feed"></div> -->
-    <div v-if="checkIfAnySpotlightBoxes()" id="spotlight-boxes">
+    <div v-if="checkIfAnySpotlightBoxes()" id="spotlight-boxes" class="spotlight-boxes empty">
       <SpotlightBox
         v-for="boxData in currentBoxObjects"
         :key="boxData.objectId"
@@ -85,7 +85,7 @@
         @spotlightContainerReady="startPublishingSpotlightStream"
       />
     </div>
-    <EmptyVideoPanel />
+    <EmptyVideoPanel v-if="spotlightStreams.length < 1" />
     <div class="watch">
       <div class="host-bar">
         <div class="is_host">{{userIsHost ? 'You are the HOST!' : 'You are currently not a host.'}}</div>
@@ -155,7 +155,8 @@ export default {
         nextPageToken: "",
       },
       currentlyInSpotlight: 0,
-      spotlightObjects: {},
+      spotlightStreams: [],
+      regularStreams: [],
       currentParticipantsCount: 0,
       currentBoxObjects: [],
     };
@@ -226,8 +227,29 @@ export default {
       // changing spotlight to true removes old box automatically
       this.$set(container, "republishInProcess", true);
       this.$set(container, "spotlight", true);
+      let spotlightContainer = JSON.parse(JSON.stringify(container));
+      this.spotlightStreams.push(spotlightContainer);
     },
-    removeFromSpotlight() {},
+    removeFromSpotlight(containerId) {
+      let container = this.currentBoxObjects.find(
+        (box) => box.objectId === containerId
+      );
+
+      let elementId = container.elementId;
+
+      // stop publishing / subscribing
+      if (container.type == "publisher") {
+        this.$refs.session.stopPublishingStream();
+      } else if (container.type == "subscriber") {
+        this.$refs.session.stopSubscribingToStream(elementId);
+      }
+
+      // changing spotlight to true removes old box automatically
+      this.$set(container, "republishInProcess", true);
+      this.$set(container, "spotlight", false);
+      let regularContainer = JSON.parse(JSON.stringify(container));
+      this.regularStreams.push(regularContainer);
+    },
     startPublishingSpotlightStream(streamData) {
       // Send element id to identify subscriber / publisher
       let containerId = streamData.objectId;
@@ -398,6 +420,7 @@ export default {
   height: 100%;
   background-color: #242729;
   overflow: hidden;
+  padding: 20px;
 }
 .eventroom-container {
   height: 100%;
@@ -492,5 +515,38 @@ export default {
 }
 ::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.25);
+}
+
+.eventroom-container .spotlight-boxes {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  background-color: #000;
+  border-right: 1px solid #333537;
+  /* width: 100%; */
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 30px;
+}
+.eventroom-container .spotlight-boxes.empty {
+  background-color: #242729;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+/*! CSS Used keyframes */
+@keyframes infiniteMove {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 0 1200px;
+  }
+  to {
+    background-position: 0 0;
+  }
 }
 </style>

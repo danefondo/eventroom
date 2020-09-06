@@ -45,6 +45,7 @@ export default {
 .spotlight-box {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 .control-buttons {
   /* z-index: 9999;

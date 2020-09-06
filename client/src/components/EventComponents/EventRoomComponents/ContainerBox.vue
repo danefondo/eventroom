@@ -50,6 +50,7 @@ export default {
 .container-box {
   display: flex;
   flex-direction: column;
+  height: 250px;
 }
 .control-buttons {
   /* z-index: 9999;

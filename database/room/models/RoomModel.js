@@ -5,11 +5,11 @@ let Schema = mongoose.Schema;
 const RoomSchema = new Schema({
     name: String,
     description: String,
-    instructions: String,
-    hostId: String,
-    videoUrl: String,
-    videoId: String,
-    youtubeId: String,
+    instructions: String,       // future
+    hostId: String,             
+    videoUrl: String,           // future 
+    videoId: String,            
+    youtubeId: String,              
     // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
     dateCreated: Date,
     dateEnded: Date,

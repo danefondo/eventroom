@@ -75,9 +75,13 @@
       />
     </div>
     <!-- <div class="eventroom-feed"></div> -->
-    <div v-if="checkIfAnySpotlightBoxes()" id="spotlight-boxes" class="spotlight-boxes empty">
+    <div
+      v-if="filteredForSpotlightObjects.length > 0"
+      id="spotlight-boxes"
+      class="spotlight-boxes empty"
+    >
       <SpotlightBox
-        v-for="boxData in currentBoxObjects"
+        v-for="boxData in filteredForSpotlightObjects"
         :key="boxData.objectId"
         :boxData="boxData"
         ref="spotlight"
@@ -90,9 +94,9 @@
       <div class="host-bar">
         <div class="is_host">{{userIsHost ? 'You are the HOST!' : 'You are currently not a host.'}}</div>
       </div>
-      <div v-if="currentBoxObjects.length" id="container-boxes">
+      <div v-if="filteredForRegularObjects.length > 0" id="container-boxes">
         <ContainerBox
-          v-for="boxData in currentBoxObjects"
+          v-for="boxData in filteredForRegularObjects"
           :key="boxData.objectId"
           :boxData="boxData"
           ref="nonspotlight"
@@ -106,10 +110,10 @@
         :apiKey="apiKey"
         :token="token"
         :participants="currentBoxObjects"
+        ref="session"
         @participantData="addParticipantToBox"
         @updatedParticipantData="findAndUpdateParticipantBox"
         @participantLeft="findAndRemoveParticipantBox"
-        ref="session"
       ></Session>
     </div>
   </div>
@@ -159,6 +163,8 @@ export default {
       regularStreams: [],
       currentParticipantsCount: 0,
       currentBoxObjects: [],
+      filteredForSpotlightObjects: [],
+      filteredForRegularObjects: [],
     };
   },
   computed: {
@@ -167,6 +173,10 @@ export default {
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
     }),
+  },
+  beforeRouteLeave(to, from, next) {
+    this.$refs.session.disconnect();
+    next();
   },
   components: {
     Session,
@@ -192,43 +202,111 @@ export default {
   methods: {
     addParticipantToBox(participant) {
       this.currentBoxObjects.push(participant);
-      console.log("participant added", this.currentBoxObjects);
+      this.filteredForRegularObjects.push(
+        JSON.parse(JSON.stringify(participant))
+      );
+      console.log(
+        "@Publisher-6/Subscriber-5, @EventRoomPage.vue participant container object added to currentBoxObjects",
+        this.currentBoxObjects
+      );
     },
     findAndUpdateParticipantBox(newDetails) {
       let objectId = newDetails.objectRefId;
       let obj = this.currentBoxObjects.find((e) => e.objectId === objectId);
+      let regular = this.filteredForRegularObjects.find(
+        (e) => e.objectId === objectId
+      );
+      let spotlight = this.filteredForSpotlightObjects.find(
+        (e) => e.objectId === objectId
+      );
 
-      // to maintain reactivity, use $set as opposed to obj.x = newValue
-      this.$set(obj, "streamId", newDetails.streamId);
-      this.$set(obj, "elementId", newDetails.elementId);
+      if (obj) {
+        // to maintain reactivity, use $set as opposed to obj.x = newValue
+        this.$set(obj, "streamId", newDetails.streamId);
+        this.$set(obj, "elementId", newDetails.elementId);
+      }
+
+      if (regular) {
+        // to maintain reactivity, use $set as opposed to obj.x = newValue
+        this.$set(regular, "streamId", newDetails.streamId);
+        this.$set(regular, "elementId", newDetails.elementId);
+      } else if (spotlight) {
+        // to maintain reactivity, use $set as opposed to obj.x = newValue
+        this.$set(spotlight, "streamId", newDetails.streamId);
+        this.$set(spotlight, "elementId", newDetails.elementId);
+      }
+
       console.log("participant updated", this.currentBoxObjects);
     },
     findAndRemoveParticipantBox(participantStreamId) {
+      // When user has left, remove them from default boxes
       let participantBoxes = this.currentBoxObjects;
       let index = participantBoxes.findIndex(
         (box) => box.streamId === participantStreamId
       );
       participantBoxes.splice(index, 1);
+
+      // When user has left, remove them from spotlight boxes
+      let spotlightBoxes = this.filteredForSpotlightObjects;
+      let arrayIndex = spotlightBoxes.findIndex(
+        (box) => box.streamId === participantStreamId
+      );
+      spotlightBoxes.splice(arrayIndex, 1);
     },
     addToSpotlight(containerId) {
+      console.log(
+        "@2 @EventRoomPage.vue Received emit with containerId for add container to spotlight from ContainerBox.vue"
+      );
       let container = this.currentBoxObjects.find(
         (box) => box.objectId === containerId
+      );
+
+      console.log(
+        "@3 @EventRoomPage.vue Iterated over currentBoxObjects and grabbed correct container by passed containerId"
       );
 
       let elementId = container.elementId;
 
       // stop publishing / subscribing
       if (container.type == "publisher") {
+        console.log(
+          "@4 @EventRoomPage.vue About to activate function in subcomponent session to stopPublishingStream() where it is for a Publisher object"
+        );
         this.$refs.session.stopPublishingStream();
       } else if (container.type == "subscriber") {
+        console.log(
+          "@4 @EventRoomPage.vue About to activate function in subcomponent session to stopSubscribingToStream() where it is for a Subscriber object"
+        );
         this.$refs.session.stopSubscribingToStream(elementId);
       }
 
+      console.log(
+        "@7/@8 @EventRoomPage.vue, Stopped or in process of stopping publishing/subscribing"
+      );
       // changing spotlight to true removes old box automatically
       this.$set(container, "republishInProcess", true);
       this.$set(container, "spotlight", true);
+      console.log(
+        "@8/@9 @EventRoomPage.vue, Set republishing to true, set spotlight to true for container object in currentBoxObjects"
+      );
       let spotlightContainer = JSON.parse(JSON.stringify(container));
       this.spotlightStreams.push(spotlightContainer);
+      this.filteredForSpotlightObjects.push(spotlightContainer);
+      console.log(
+        "@9/@10 @EventRoomPage.vue, Pushed new spotlight container to spotlightStreams"
+      );
+
+      let regularStreams = this.regularStreams;
+      let index = regularStreams.findIndex(
+        (box) => box.objectId === containerId
+      );
+      regularStreams.splice(index, 1);
+
+      let regularBoxes = this.filteredForRegularObjects;
+      let indexArray = regularBoxes.findIndex(
+        (box) => box.objectId === containerId
+      );
+      regularBoxes.splice(indexArray, 1);
     },
     removeFromSpotlight(containerId) {
       let container = this.currentBoxObjects.find(
@@ -249,9 +327,25 @@ export default {
       this.$set(container, "spotlight", false);
       let regularContainer = JSON.parse(JSON.stringify(container));
       this.regularStreams.push(regularContainer);
+      this.filteredForRegularObjects.push(regularContainer);
+
+      let spotlightStreams = this.spotlightStreams;
+      let index = spotlightStreams.findIndex(
+        (box) => box.objectId === containerId
+      );
+      spotlightStreams.splice(index, 1);
+
+      let spotlightBoxes = this.filteredForSpotlightObjects;
+      let indexArray = spotlightBoxes.findIndex(
+        (box) => box.objectId === containerId
+      );
+      spotlightBoxes.splice(indexArray, 1);
     },
     startPublishingSpotlightStream(streamData) {
       // Send element id to identify subscriber / publisher
+      console.log(
+        "@11/@12 @EventRoomPage.vue, About to send signal to Session.vue to republish/resubscribe stream"
+      );
       let containerId = streamData.objectId;
       this.$refs.session.setStreamToSpotlight(streamData);
       let container = this.currentBoxObjects.find(
@@ -262,6 +356,13 @@ export default {
     },
     startPublishingContainerStream(streamData) {
       console.log("streamData", streamData);
+      let containerId = streamData.objectId;
+      this.$refs.session.setStreamToSpotlight(streamData);
+      let container = this.currentBoxObjects.find(
+        (box) => box.objectId === containerId
+      );
+      // Complete republish cycle
+      this.$set(container, "republishInProcess", false);
     },
     generateUniqueId(length) {
       return parseInt(
@@ -270,15 +371,6 @@ export default {
           .toString()
           .replace(".", "")
       );
-    },
-    checkIfAnySpotlightBoxes() {
-      let boxes = this.currentBoxObjects;
-      let spotlightsExist = false;
-      if (boxes.length && boxes.some((box) => box.spotlight === true)) {
-        spotlightsExist = true;
-      }
-      console.log("wowza", spotlightsExist);
-      return spotlightsExist;
     },
     async createTempUser() {
       try {

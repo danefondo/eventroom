@@ -23,7 +23,7 @@ export default {
   },
   mounted() {
     // Notify when container is ready
-    console.log("@spotlightBox");
+    console.log("debug", this.boxData.objectId, this.boxData.spotlight);
     if (this.boxData.spotlight && !this.boxData.republishInProcess) {
       console.log("@spotlightBox box data", this.boxData);
       const containerData = {
@@ -34,6 +34,7 @@ export default {
       this.$store.dispatch("session/addReadyContainer", JSON.parse(JSON.stringify(containerData)));
     } else if (this.boxData.spotlight && this.boxData.republishInProcess) {
       // Notify that container is ready for republishing use
+      console.log("@10/@11 @SpotlightBox.vue, Republish in process, about to emit spotlight container ready to EventRoomPage.vue");
       let streamData = JSON.parse(JSON.stringify(this.boxData));
       this.$emit("spotlightContainerReady", streamData);
     }

@@ -43,6 +43,7 @@ export default {
   async mounted() {
     //- https://glitch.com/edit/#!/basic-video-chat
     this.session = OT.initSession(this.apiKey, this.sessionId);
+    console.log("@2 @Session.vue, Session initialized");
 
     let uniquePublisherId = "box_" + this.generateUniqueId(16);
     //- Must check in case in database user is to be in spotlight by default
@@ -56,14 +57,25 @@ export default {
       republishInProcess: false,
     };
 
+    console.log(
+      "@3 @Session.vue, Publisher Participant container object prepared"
+    );
+
     // Set Publisher stream on hold
     this.$store.dispatch("session/setStreamOnHold", participant);
+    console.log(
+      "@4 @Session.vue, Publisher participant container object dispatched to Vuex store to set on hold"
+    );
 
     // Emit data to set as Eventroom data without Vuex reactivity
     // that comes from dispatching to Vuex store
+    console.log(
+      "@5 @Session.vue, About to emit publisher participant container object to EventRoomPage.vue to add object to currentBoxContainers"
+    );
     this.$emit("participantData", JSON.parse(JSON.stringify(participant)));
 
     this.session.on("streamCreated", (event) => {
+      console.log("@Subscriber @1 @Session.vue, streamCreated");
       let uniqueSubscriberId = "box_" + this.generateUniqueId(16);
       let subscriber = {
         objectId: uniqueSubscriberId,
@@ -73,15 +85,27 @@ export default {
         republishInProcess: false,
         event: event,
       };
+      console.log(
+        "@Subscriber @2 @Session.vue, Subscriber container object prepared"
+      );
       // Set Subscriber stream on hold
       this.$store.dispatch("session/setStreamOnHold", subscriber);
+      console.log(
+        "@Subscriber @3 @Session.vue, Subscriber participant container object dispatched to Vuex store to set on hold"
+      );
+      console.log(
+        "@Subscriber @4 @Session.vue, About to emit subscriber participant container object to EventRoomPage.vue to add object to currentBoxContainers"
+      );
       this.$emit("participantData", JSON.parse(JSON.stringify(subscriber)));
       let initialSubscriberData = {
         objectId: subscriber.objectId,
         event: subscriber.event,
-      }
+      };
       // Store subscriber event to later find through objectId;
       this.initialSubscribersData.push(initialSubscriberData);
+      console.log(
+        "@Subscriber @6 @Session.vue, Emitted subscriber participant container object to EventRoomPage.vue to add object to currentBoxContainers"
+      );
     });
 
     this.session.on("streamDestroyed", (event) => {
@@ -100,6 +124,9 @@ export default {
     });
   },
   methods: {
+    disconnect() {
+      this.session.disconnect();
+    },
     errorHandler(error) {
       if (error) {
         console.log("error: " + error.message);
@@ -119,7 +146,7 @@ export default {
       let subscriberObject = streamsOnHold.find(
         (stream) => stream.objectId === assignedContainerId
       );
-      
+
       // subscriberObject = JSON.parse(JSON.stringify(subscriberObject));
       let event = subscriberObject.event;
       let refToContainer = document.getElementById(assignedContainerId);
@@ -211,21 +238,25 @@ export default {
       this.$store.dispatch("session/removeStreamOnHold", containerObjectId);
     },
     stopPublishingStream() {
-      console.log("about to stop publishing");
+      console.log("@5 @Session.vue, About to stop publishing");
       let publisher = this.initialPublisher;
       this.session.unpublish(publisher);
-      console.log("stopped publishing");
+      console.log("@6 @Session.vue, Stopped publishing.");
     },
     stopSubscribingToStream(elementId) {
-      console.log("elementId subscriber", elementId);
-      console.log("subscribers", this.initialSubscribers);
+      console.log(
+        "@5 @Session.vue, About to find correct subscriber by passed elementId"
+      );
       let subscriber = this.initialSubscribers.find(
         (stream) => stream.id === elementId
       );
-      console.log("subs", subscriber);
-      console.log("subs JSONED", JSON.parse(JSON.stringify(subscriber)));
+      console.log("@6 @Session.vue, About to stop subscribing to subscriber");
       this.session.unsubscribe(subscriber);
-      console.log("unsubscribed");
+      console.log("@7 @Session.vue, Stopped subscribing to subscriber.");
+      let index = this.initialSubscribers.findIndex(
+        (box) => box.id === elementId
+      );
+      this.initialSubscribers.splice(index, 1);
     },
     startPublishingStream(containerData) {
       let publisherOptions = {
@@ -241,6 +272,9 @@ export default {
         publisherOptions,
         this.handleCallback
       );
+      console.log("test@")
+      this.initialPublisher = publisher;
+
       this.session.publish(publisher, this.handleCallback);
       let streamId = publisher.streamId;
       let elementId = publisher.id;
@@ -271,6 +305,8 @@ export default {
         subscriberOptions,
         this.handleCallback
       );
+
+      this.initialSubscribers.push(subscriber);
       let streamId = subscriber.streamId;
       let elementId = subscriber.id;
       let newDetails = {
@@ -283,8 +319,10 @@ export default {
     setStreamToSpotlight(streamData) {
       let containerData = streamData;
       if (streamData.type == "publisher") {
+        console.log("@12/@13 @Session.vue, About to publish stream");
         this.startPublishingStream(containerData);
       } else if (streamData.type == "subscriber") {
+        console.log("@12/@13 @Session.vue, About to subscribe stream");
         this.startSubscribingToStream(containerData);
       }
     },

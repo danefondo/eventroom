@@ -1,106 +1,66 @@
-const Event = require("../database/event/models/EventModel");
-const Room = require("../database/room/models/RoomModel");
-const OpenTok = require("opentok");
 const axios = require("axios");
 
-var apiKey = process.env.API_KEY;
-var apiSecret = process.env.API_SECRET;
+const EventUtilities = require('../database/event/EventUtilities');
+const RoomUtilities = require('../database/room/RoomUtilities');
+const OTUtilities = require('./OTUtilities');
 
-if (!apiKey || !apiSecret) {
-  console.log("You must specify API_KEY and API_SECRET environment variables");
-}
-
-const OT = new OpenTok(apiKey, apiSecret);
 
 const EventController = {
+
+  /**
+   * gets all events, to be removed
+   * @param {*} req 
+   * @param {*} res 
+   */
   async getAllEvents(req, res) {
     try {
-      let events = await Event.find({}).exec();
-      if (!events) {
-        return res.status(404).json({
-          errors: "No events found.",
-        });
-      }
-
-      res.status(200).json({
-        events: events,
-      });
+      let eventPreviews = await EventUtilities.getAllEvents();
+      res.status(200).send({ events: eventPreviews });
     } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        errors: "An unknown error occurred",
-      });
+      console.log("@getallevents", error);
+      res.status(500).send({ error: "An unknown error occurred" });
     }
   },
 
+  /**
+   * Responses with an event
+   * @param {*} req 
+   * @param {*} res 
+   */
   async getEvent(req, res) {
     try {
-      let eventId = req.params.eventId;
-      let event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({
-          message: "Video not found",
-        });
+      const eventId = req.params.eventId;
+      const event = await EventUtilities.getEvent(eventId);
+      if (!event || !event.success) {
+        return res.status(500).send({ error: "error finding event" });
       }
-
-      let room = await Room.findById(event.defaultRoomId);
-      if (!room) {
-        return res.status(404).json({
-          message: "Room not found",
-        });
-      }
-
-      res.status(200).json({
-        event: event,
-        room: room,
-      });
+      console.log("@getevent data", event);
+      res.status(200).send({event});
     } catch (error) {
       console.log(error);
-      res.status(500).json({
-        errors: "An unknown error occurred",
-      });
+      return res.status(500).send({ error: "An unknown error occurred" });
     }
   },
 
+  /**
+   * Handles event creation
+   * @param {*} req 
+   * @param {*} res 
+   */
   async createEvent(req, res) {
     try {
-      let event = new Event();
-      let eventData = req.body;
-
-      event.name = eventData.name;
-      event.description = eventData.description;
-      event.dateCreated = eventData.dateCreated;
-      event.creatorId = eventData.userId;
-      event.scheduledTime = eventData.scheduledTime;
-
-      let room = new Room();
-      room.name = event.name;
-      room.description = event.description;
-      room.dateCreated = event.dateCreated;
-      room.hostId = event.creatorId;
-      room.parentEventId = event._id;
-
-      event.defaultRoomId = room._id;
-      event.rooms.push(room._id);
-
-      //- CREATE VONAGE SESSION
-      OT.createSession({ mediaMode: "routed" }, async function (
-        error,
-        session
-      ) {
-        if (error) {
-          console.log("Error creating session:", error);
-        } else {
-          // Store the session in the database
-          room.sessionId = session.sessionId;
-          await room.save();
-          await event.save();
-          res.status(200).json({
-            event: event,
-            room: room,
-          });
-        }
+      console.log("@createevent", req.body);
+      const allowed = req.body.roomCreationAllowed == "1";
+      const event = await EventUtilities.createEvent({
+        name: req.body.name,
+        description: req.body.description,
+        creatorId: req.body.userId,
+        hostId: req.body.hostId ? req.body.hostId : req.body.userId,
+        scheduledStartTime: req.body.scheduledStartTime,            
+        roomCreationAllowed: allowed,
       });
+      
+      return res.status(200).send(event);
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -109,25 +69,88 @@ const EventController = {
     }
   },
 
+  /**
+   * Creates room using data from request
+   * @param {*} req 
+   * @param {*} res 
+   */
+  async createRoom(req, res) {
+    // REQUEST VALIDATION 
+    if (!req.params || !req.body) {
+      return res.status(400).send({ error: "invalid request" });
+    }
+    console.log("@createroom: req body", req.body);
+    
+    const eventId = req.params.eventId;
+    const hostId = req.body.hostId;
+    const userId = req.user._id;
+    console.log("@createroom stuff", eventId, hostId, userId);
+    if (!eventId || !hostId) {
+      return res.status(400).send({ error: "invalid request" });
+    }
+    let event;
+    try {
+      event = await EventUtilities.getEventById(eventId);
+      if (!event || !event.success) throw new Error("no event")
+      console.log("@createroom event: ", event);
+      event = event.event;  //lmao 
+    } catch(err) {
+      console.log("@createroom error:", err);
+    }
+    if (hostId != event.hostId.toString()) {
+      return res.status(400).send({ error: "invalid request" });
+    }
+    const userIsHost = hostId == userId;
+    console.log("@createroom userishost?", userIsHost);
+    console.log("@createroom allowcreation? ", event.roomCreationAllowed);
+    if (!event.roomCreationAllowed && !userIsHost) {
+      return res.status(401).send({ error: "unauthorized" });
+    }
+    console.log("@createroom validated!");
+    // REQUEST VALIDATION END
+     
+    
+    try {
+      sessionId = await OTUtilities.createSession(); 
+      console.log("@createroom sessiondi:", sessionId);
+      const room = await RoomUtilities.createRoom({
+        eventId,
+        hostId,             
+        sessionId
+      });      
+      console.log("@createroom room:", room);
+      await EventUtilities.addRoomToEvent(eventId, room._id);
+
+      return res.status(200).send({ room });
+      
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        errors: "An unknown error occurred",
+      });
+    }
+  },
+
+  /**
+   * Creates session id and lets user into the room
+   * @param {*} req 
+   * @param {*} res 
+   */
   async getRoom(req, res) {
     try {
-      let roomId = req.params.roomId;
-      let room = await Room.findById(roomId);
+      const roomId = req.params.roomId;
+      console.log("@getroom roomID", roomId);
+      console.log("@getroom typof roomid: ", typeof(roomId));
+      const room = await RoomUtilities.getRoomById(roomId);
       if (!room) {
         return res.status(404).json({
           message: "Room not found",
         });
       }
 
-      let hostname = req.headers.host;
+      const hostname = req.headers.host;
 
-      // Configure token options & generate Vonage token
-      const tokenOptions = {
-        role: "publisher",
-        data: `roomid=${roomId}`,
-      };
-      let sessionId = room.sessionId;
-      let token = OT.generateToken(sessionId, tokenOptions);
+      const token = OTUtilities.createToken(room)
       room.sessionTokens.push(token);
       await room.save();
 
@@ -135,7 +158,7 @@ const EventController = {
       res.status(200).json({
         room,
         hostname,
-        apiKey,
+        apiKey: OTUtilities.apiKey,
         sessionId,
         token,
       });
@@ -147,61 +170,61 @@ const EventController = {
     }
   },
 
-  async findAndUpdateEvent(req, res) {
-    try {
-      let eventData = req.body;
+  // async findAndUpdateEvent(req, res) {
+  //   try {
+  //     let eventData = req.body;
 
-      let eventId = eventData.eventId;
-      let event = await Event.findById(eventId);
-      if (!event) {
-        return res.status(404).json({
-          message: "Video not found",
-        });
-      }
+  //     let eventId = eventData.eventId;
+  //     let event = await Event.findById(eventId);
+  //     if (!event) {
+  //       return res.status(404).json({
+  //         message: "Video not found",
+  //       });
+  //     }
 
-      event.name = eventData.name;
-      event.description = eventData.description;
+  //     event.name = eventData.name;
+  //     event.description = eventData.description;
 
-      await event.save();
+  //     await event.save();
 
-      res.json({
-        event: event,
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({
-        errors: "An unknown error occurred",
-      });
-    }
-  },
+  //     res.json({
+  //       event: event,
+  //     });
+  //   } catch (error) {
+  //     console.log(error);
+  //     res.status(500).json({
+  //       errors: "An unknown error occurred",
+  //     });
+  //   }
+  // },
 
-  async deleteEvent(req, res) {
-    try {
-      let eventData = req.body;
-      let eventId = eventData.eventId;
-      if (!eventId) {
-        return res.status(404).json({
-          errors: "Event ID missing.",
-        });
-      }
+  // async deleteEvent(req, res) {
+  //   try {
+  //     let eventData = req.body;
+  //     let eventId = eventData.eventId;
+  //     if (!eventId) {
+  //       return res.status(404).json({
+  //         errors: "Event ID missing.",
+  //       });
+  //     }
 
-      Event.deleteOne({ _id: eventId }).exec(function (err, removed) {
-        if (err) {
-          return console.log("Failed to delete event: ", err);
-        }
-      });
+  //     Event.deleteOne({ _id: eventId }).exec(function (err, removed) {
+  //       if (err) {
+  //         return console.log("Failed to delete event: ", err);
+  //       }
+  //     });
 
-      res.status(200).json({
-        message: "Event permanently removed.",
-      });
-    } catch (err) {
-      console.log(err);
-      res.status(500).json({
-        message:
-          "An error occurred while deleting event, please try again later.",
-      });
-    }
-  },
+  //     res.status(200).json({
+  //       message: "Event permanently removed.",
+  //     });
+  //   } catch (err) {
+  //     console.log(err);
+  //     res.status(500).json({
+  //       message:
+  //         "An error occurred while deleting event, please try again later.",
+  //     });
+  //   }
+  // },
 
   async getYouTubeQuery(req, res) {
     try {

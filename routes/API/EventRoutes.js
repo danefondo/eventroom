@@ -15,9 +15,11 @@ router.get('/:eventId/getRoom/:roomId', EventController.getRoom);
 
 router.post('/createEvent', AuthController.confirmAuthentication, EventController.createEvent);
 
-router.post('/findAndUpdateEvent/:eventId', EventController.findAndUpdateEvent);
+router.post('/createRoom/:eventId', AuthController.confirmAuthentication, EventController.createRoom);
 
-router.delete('/deleteEvent/:eventId', EventController.deleteEvent);
+// router.post('/findAndUpdateEvent/:eventId', EventController.findAndUpdateEvent);
+
+// router.delete('/deleteEvent/:eventId', EventController.deleteEvent);
 
 
 module.exports = router;

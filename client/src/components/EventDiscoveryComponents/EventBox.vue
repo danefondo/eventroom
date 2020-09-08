@@ -7,7 +7,7 @@
       <div class="event-desc-container">
         <div class="event-desc" v-html="event.description"></div>
       </div>
-      <div v-if="event.scheduledTime" class="eventDatetime">
+      <div v-if="event.scheduledStartTime" class="eventDatetime">
         <div class="eventDate">{{ getEventDate(event)}}</div>
         <div class="eventTime">{{ getEventTime(event) }}</div>
       </div>
@@ -18,12 +18,17 @@
 <script>
 export default {
   name: "EventBox",
-  props: ["event"],
+  props: {
+    event: Object,
+  },
+  mounted() {
+    console.log("@mounted eventbox: ", this.event);
+  },
   methods: {
     getEventTime(event) {
       let time;
-      if (event.scheduledTime) {
-        time = event.scheduledTime;
+      if (event.scheduledStartTime) {
+        time = event.scheduledStartTime;
         time = new Date(time);
         const options = { hour: "2-digit", minute: "2-digit" };
         time = time.toLocaleTimeString("et-EE", options);
@@ -32,8 +37,8 @@ export default {
     },
     getEventDate(event) {
       let date;
-      if (event.scheduledTime) {
-        date = event.scheduledTime;
+      if (event.scheduledStartTime) {
+        date = event.scheduledStartTime;
         date = new Date(date);
         const options = { month: "long", day: "numeric" };
         date = date.toLocaleDateString("et-EE", options);

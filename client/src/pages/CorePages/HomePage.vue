@@ -51,6 +51,7 @@ export default {
     async getAllEvents() {
       try {
         const { data } = await axios.get(`/api/events/getAllEvents`);
+        console.log("@home data", data);
         this.events = data.events;
       } catch (error) {
         console.log("error", error);

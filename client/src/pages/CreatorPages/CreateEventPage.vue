@@ -44,6 +44,28 @@
           </div>
         </div>
       </div>
+      <div class="input-container">
+        <div class="input-title">Allow room creation by participants</div>
+        <label>
+          <input
+            class="allow-room-creation"
+            type="radio"
+            v-model="roomCreationAllowed"
+            :value="1"
+            checked
+          />
+          Yes
+        </label>
+        <label>
+          <input
+            class="allow-room-creation"
+            type="radio"
+            v-model="roomCreationAllowed"
+            :value="0"
+          />
+          No
+        </label>
+      </div>
       <div
         class="button"
         @click="createEvent"
@@ -95,6 +117,7 @@ export default {
       creatingEvent: false,
       date: "",
       time: "",
+      roomCreationAllowed: "1"
     };
   },
   components: {
@@ -111,7 +134,7 @@ export default {
     async createEvent() {
       try {
         this.creatingEvent = true;
-
+        // console.log("@createevent")
         if (
           !this.date ||
           !this.time ||
@@ -131,16 +154,13 @@ export default {
           description: this.eventDescription,
           dateCreated: new Date(),
           userId: this.user._id,
-          scheduledTime: dateTime,
+          scheduledStartTime: dateTime,
+          roomCreationAllowed: this.roomCreationAllowed,
         };
-
-        const result = await requestWithAuthentication(
-          "post",
-          `api/events/createEvent`,
-          eventData,
-          true
-        );
-        this.$router.push(`/events/${result.data.event._id}`);
+        console.log("@createevent eventData", eventData);
+        const response = await requestWithAuthentication("post", `api/events/createEvent`, eventData, true);
+        console.log("@createevent response", response);
+        this.$router.push(`/events/${response.data._id}`);
       } catch (error) {
         // TODO catch 401 error!
         console.log(error);

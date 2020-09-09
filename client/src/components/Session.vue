@@ -49,6 +49,19 @@ export default {
     //- Must check in case in database user is to be in spotlight by default
     //- Should this include UserId?
 
+    /** Some Vonage features below can almost definitely be reused */
+
+    /**
+     * Preparing container data;
+     * This is also where data needs to be pulled live from the database
+     * So that the objectId, spotlight and orderNumber would be correct
+     *
+     * 'spotlight: Boolean' later determines whether any given container is shown in a regular conatiners area or a spotlight area
+     * 'orderNumber: Number' later determines the position of a stream container, which allows for initial pre-sorting before displaying
+     * 'republishInProcess: Boolean' later helps ContainerBox.vue & SpotlightBox.vue determine
+     * whether a new box is created the first time, or whether a change of spotlight or position
+     * is happening
+     */
     let participant = {
       objectId: uniquePublisherId,
       type: "publisher",
@@ -61,19 +74,31 @@ export default {
       "@3 @Session.vue, Publisher Participant container object prepared"
     );
 
-    // Set Publisher stream on hold
+    /**
+     * Set Publisher stream creation on hold
+     * Purpose is to wait for container to be created, ready, with data loaded
+     * Else Vonage will not know where to append the stream to
+     */
     this.$store.dispatch("session/setStreamOnHold", participant);
     console.log(
       "@4 @Session.vue, Publisher participant container object dispatched to Vuex store to set on hold"
     );
 
-    // Emit data to set as Eventroom data without Vuex reactivity
-    // that comes from dispatching to Vuex store
+    /**
+     * Emit data to set as Eventroom currentBoxObjects data without Vuex reactivity
+     * that comes from dispatching to Vuex store
+     *
+     * Emit must happen later than dispatch (or when container will be ready), there won't be a matching stream on hold for creation in Session.vue
+     */
     console.log(
       "@5 @Session.vue, About to emit publisher participant container object to EventRoomPage.vue to add object to currentBoxContainers"
     );
     this.$emit("participantData", JSON.parse(JSON.stringify(participant)));
 
+    /**
+     * 'streamCreated' event will detect any newcomers to the session
+     * The event will contain the important data about the subscriber
+     */
     this.session.on("streamCreated", (event) => {
       console.log("@Subscriber @1 @Session.vue, streamCreated");
       let uniqueSubscriberId = "box_" + this.generateUniqueId(16);
@@ -121,6 +146,12 @@ export default {
       // so that the container with buttons is also removed
       let participantStreamId = event.stream.streamId;
       this.$emit("participantLeft", participantStreamId);
+    });
+
+    //- https://tokbox.com/developer/guides/signaling/js/
+    this.session.on("signal", function (event) {
+      console.log("Signal sent from connection " + event.from.id);
+      // Process the event.data property, if there is any data.
     });
   },
   methods: {
@@ -272,7 +303,7 @@ export default {
         publisherOptions,
         this.handleCallback
       );
-      console.log("test@")
+      console.log("test@");
       this.initialPublisher = publisher;
 
       this.session.publish(publisher, this.handleCallback);
@@ -325,6 +356,31 @@ export default {
         console.log("@12/@13 @Session.vue, About to subscribe stream");
         this.startSubscribingToStream(containerData);
       }
+    },
+    updateConnectedClientsData() {
+      /**
+       * Send relevant data to other clients, such as during spotlight change
+       * Either update entire data object due to few participants in room for safety
+       * Or send directly to database with
+       */
+      this.session.signal(
+        {
+          data: "hello",
+        },
+        function (error) {
+          if (error) {
+            console.log("Sending updated data to connected clients failed.");
+          } else {
+            console.log("Updated data sent to connected clients.");
+          }
+        }
+      );
+    },
+    updateConnectedClientsDataWithSocketIO() {
+      /**
+       * Alternative to signal, this is better for updating database
+       * This allows for 
+       */
     },
   },
   watch: {

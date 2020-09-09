@@ -221,7 +221,9 @@ export default {
         publisherOptions,
         this.handleCallback
       );
+      console.log("publisherBefore", JSON.parse(JSON.stringify(publisher)));
 
+      /* To later be able to unpublish stream */
       this.initialPublisher = publisher;
 
       this.session.connect(this.token, (err) => {
@@ -230,6 +232,7 @@ export default {
         } else {
           this.session.publish(publisher, this.handleCallback);
           this.publisher = JSON.parse(JSON.stringify(publisher));
+          console.log("publisherAfter", JSON.parse(JSON.stringify(publisher)));
           let streamId = publisher.streamId;
           let elementId = publisher.id;
           let newDetails = {
@@ -308,6 +311,8 @@ export default {
         this.handleCallback
       );
       console.log("test@");
+      /* As old publisher is unpublished, setting new initialPublisher
+      To later use for unpublishing */
       this.initialPublisher = publisher;
 
       this.session.publish(publisher, this.handleCallback);

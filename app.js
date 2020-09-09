@@ -126,6 +126,7 @@ IO.on("connection", function (socket) {
 
   socket.on("emitTag", function (data) {
     console.log("data from vonage");
+    //- Update data in database and when done, emit signal back to session
     let freshBakedFromDatabase;
     socket.broadcast.to(data.room_id).emit("updateStuff", freshBakedFromDatabase);
   });

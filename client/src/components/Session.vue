@@ -41,6 +41,10 @@ export default {
     },
   },
   async mounted() {
+    // this.sockets.listener.subscribe("updateStuff", (data) => {
+		// 	console.log("data", data);
+		// 	this.updateEveryone();
+		// });
     //- https://glitch.com/edit/#!/basic-video-chat
     this.session = OT.initSession(this.apiKey, this.sessionId);
     console.log("@2 @Session.vue, Session initialized");
@@ -378,9 +382,15 @@ export default {
     },
     updateConnectedClientsDataWithSocketIO() {
       /**
-       * Alternative to signal, this is better for updating database
-       * This allows for 
+       * Alternative to Vonage's signal
+       * This allows for communicating with our server
+       * You could emit data to the server, the server updates database
+       * And when that is that, the server also uses SocketIO to 
+       * push emit signal to all connected clients
+       * which are listened to
        */
+      let roomData;
+      this.$socket.emit("emitTag", roomData);
     },
   },
   watch: {

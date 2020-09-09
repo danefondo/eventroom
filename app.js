@@ -124,6 +124,12 @@ IO.on("connection", function (socket) {
     socket.broadcast.to(data.room_id).emit("reloadVideo", "reload");
   });
 
+  socket.on("emitTag", function (data) {
+    console.log("data from vonage");
+    let freshBakedFromDatabase;
+    socket.broadcast.to(data.room_id).emit("updateStuff", freshBakedFromDatabase);
+  });
+
   // socket.on("ended", function (data) {
   //   console.log("yo made ended");
   //   socket.broadcast.emit("endedVideo", "end");

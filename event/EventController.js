@@ -15,6 +15,7 @@ const EventController = {
   async getAllEvents(req, res) {
     try {
       let eventPreviews = await EventUtilities.getAllEvents();
+      console.log("@getallevents ontroller ", eventPreviews);
       res.status(200).send({ events: eventPreviews });
     } catch (error) {
       console.log("@getallevents", error);
@@ -159,7 +160,7 @@ const EventController = {
         room,
         hostname,
         apiKey: OTUtilities.apiKey,
-        sessionId,
+        sessionId: room.sessionId,
         token,
       });
     } catch (error) {

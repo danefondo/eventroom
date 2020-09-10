@@ -18,13 +18,14 @@ const globalConfig = {
 
     Returns server response, if response was successful.
 */
-export const requestWithAuthentication = async function(method, url, data=null, requiresAuthentication=true) {
+export const requestWithAuthentication = async function(method, url, data=null, params=null) {
   const instanceConfig = {
     ...globalConfig,
     method,
     data, 
     url,
-    withCredentials: requiresAuthentication,
+    params,
+    withCredentials: true,
   };
 
   const instance = axios.create(instanceConfig);

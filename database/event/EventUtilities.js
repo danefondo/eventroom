@@ -71,6 +71,7 @@ const EventUtilities = {
   async getEventPreview(eventId) {
     const event_id = mongoose.Types.ObjectId(eventId);
     let event;
+    console.log("@geteventpreview");
     try {
       event = await Event.findById(event_id).exec();
       if (!event) throw new Error("could not find event");
@@ -79,25 +80,28 @@ const EventUtilities = {
       return Promise.reject("could not find event");
     }
 
-    let hostDisplayName, hostUsername;
+    let host, hostDisplayName, hostUsername;
     try {
-      const host = await UserUtilities.getUserById(event.hostId);
-      if (!host) throw Error("no host"); 
-      hostDisplayName = host.displayName;
-      hostUsername = host.username;
+      host = await UserUtilities.getUserById(event.hostId);
+      console.log("@geteventpreview host:", host);
+      if (host) {  
+        hostDisplayName = host.displayName;
+        hostUsername = host.username;
+      }
     } catch (err) {
       console.log("@geteventprevioew error 2", err);
       return Promise.reject("could not find host");
     }
-
+    const hostId = host ? event.hostId : null;
     const eventPreviewData = {
       _id: event._id.toString(),
       name: event.name,
       description: event.description,
-      hostId: event.hostId,
+      hostId,
       hostDisplayName,
       scheduledStartTime: event.scheduledStartTime,
     }
+    console.log("@eventpreview data", eventPreviewData);
     return eventPreviewData;
   },
 
@@ -112,17 +116,19 @@ const EventUtilities = {
       event = await Event.findById(event_id).exec();
       if (!event) throw new Error("could not find event");
     } catch (err) {
-      console.log("@geteventpreview error", err);
+      console.log("@getevet error", err);
       return { success: false };
     }
 
-    let hostDisplayName, hostUsername;
+    let host, hostDisplayName, hostUsername;
     try {
-      const host = await UserUtilities.getUserById(event.hostId);
-      hostDisplayName = host.displayName;
-      hostUsername = host.username;
+      host = await UserUtilities.getUserById(event.hostId);
+      if (host) {
+        hostDisplayName = host.displayName;
+        hostUsername = host.username;
+      }
     } catch (err) {
-      console.log("@geteventprevioew error 2", err);
+      console.log("@etevent error 2", err);
       return { success: false };
     }
 
@@ -132,7 +138,7 @@ const EventUtilities = {
       _id: event._id.toString(),
       name: event.name,
       description: event.description,
-      hostId: event.hostId,
+      hostId: host ? event.hostId : null,
       hostDisplayName,
       scheduledStartTime: event.scheduledStartTime,
       rooms: event.rooms,
@@ -148,19 +154,22 @@ const EventUtilities = {
     try {
       let events = await Event.find({}).exec();
       if (!events) {
-        return res.status(404).json({
-          errors: "No events found.",
-        });
+        return Promise.reject("could not find events")
       }
       let eventPreviewPromises = [];
       for (let i=0; i<events.length; i++) {
         const eventPreviewPromise = this.getEventPreview(events[i]._id);
+        
         eventPreviewPromises.push(eventPreviewPromise);
       }
-      
+      console.log("@getallevents", eventPreviewPromises.length);
+      console.log("@getallevents", eventPreviewPromises);
       return Promise.all(eventPreviewPromises)
         .then(result => result)
-        .catch(err => err)
+        .catch(err => {
+          console.log()
+          return err;
+        })
     } catch (error) {
       console.log(error);
       return Promise.reject("error occurred");

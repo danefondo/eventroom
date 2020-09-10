@@ -1,6 +1,7 @@
 const User = require('./models/UserModel');
 
 const UserInteractionUtilities = require('./UserInteractionUtilities');
+const UserConfigurationsUtilities = require('./UserConfigurationsUtilities');
 
 async function getUserById(id) {
     return await User.findById(id).exec();
@@ -73,7 +74,11 @@ async function createUser({
         });
         console.log("@utils", typeof(newUser._id));
         return resolve(
-            Promise.all([newUser.save(), UserInteractionUtilities.createUserInteraction(newUser._id, newUser.displayName, newUser.username)])
+            Promise.all([
+                newUser.save(), 
+                UserInteractionUtilities.createUserInteraction(newUser._id, newUser.displayName, newUser.username),
+                UserConfigurationsUtilities.setDefaultUserConfigurations(newUser._id),
+            ])
         );
     });
 }

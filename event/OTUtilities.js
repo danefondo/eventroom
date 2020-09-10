@@ -39,7 +39,7 @@ const OTUtilities = {
       role: "publisher",
       data: `roomid=${room._id.toString()}`,
     };
-    console.log("@creattoken room:", room);
+    // console.log("@creattoken room:", room);
     return OT.generateToken(room.sessionId, tokenOptions);
   },
 }

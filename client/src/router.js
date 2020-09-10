@@ -5,7 +5,7 @@ import store from "./store/index";
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
 import EditEventPage from "./pages/CreatorPages/EditEventPage";
 import EventPreviewPage from "./pages/EventPages/EventPreviewPage";
-import EventRoomPage from "./pages/EventPages/EventRoomPage";
+import EventRoomPage from "./pages/EventPages2/EventRoomPage";
 import HomePage from "./pages/CorePages/HomePage";
 
 /* ====== AUTH PAGES ====== */

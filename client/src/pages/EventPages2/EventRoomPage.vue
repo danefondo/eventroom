@@ -1,6 +1,6 @@
 <template>
   <div v-if="!ready">
-    Don't worry, we'll get you into our room!
+    Don't worry, we'll get you into your room!
   </div>
   <div v-else-if="errors">
     There were some errors :(
@@ -10,6 +10,7 @@
 
     <div class="eventroom-container party">
       <Toolbar/>
+      <VideoArea/>
     </div>
   </div>
 </template>
@@ -19,10 +20,14 @@ import { mapState } from "vuex";
 import SessionController from "../../session/SessionController";
 
 import Toolbar from "./ToolbarComponent/Toolbar";
+import VideoArea from "./VideoComponent/VideoArea";
 
 export default {
   name: "EventRoomPage",
-
+  components: {
+    Toolbar,
+    VideoArea,
+  },
   data() {
     return {
       ready: false,
@@ -38,11 +43,9 @@ export default {
       isVerified: (state) => state.auth.verificationStatus,
     }),
   },
-  components: {
-    Toolbar,
-  },
+  
   async mounted() {
-
+    console.log("@eventroom mounted");
     if (this.isAuthenticated) {
       this.getRoom();
     }
@@ -61,13 +64,6 @@ export default {
       }
     },
 
-
-
-
-
-
-
-    
   }
 }
 </script>

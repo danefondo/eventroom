@@ -1,16 +1,18 @@
 // import OT from "@opentok/client";
 
+import Session from './Session';
+
 import store from "../store/index";
 import { requestWithAuthentication } from '../config/api';
 
 const SessionController = {
   async initializeRoom(eventId, roomId) {
     try {
+      console.log("@initroom");
       const { data } = await requestWithAuthentication('get', `/api/events/${eventId}/getRoom/${roomId}`);
-
-      console.log("@getroom data:", data);
+      // console.log("@sc_init data:", data);
       if (!data.room) throw new Error("no room!");
-      store.dispatch('session/setInitialData', {
+      await store.dispatch('session/setInitialData', {
         apiKey: data.apiKey,
         room: data.room,
         sessionId: data.sessionId,
@@ -20,12 +22,22 @@ const SessionController = {
         roomId: data.room._id,
         userId: store.state.auth.user._id,
       };
+      console.log("@initroom roomdata:", roomData);
       return { success: true, roomData };
     } catch (err) {
       console.log("@sc_init error:", err);
       return { success: false };
     }
   },
+  async initSession() {
+    Session.initSession();
+  },
+  async moveVideo(currentId, targetId) {
+    await Session.moveVideo(currentId, targetId);
+  },
+  setCentralLayout(newLayout) {
+    Session.setCentralLayout(newLayout);
+  }
 };
 
 export default SessionController;

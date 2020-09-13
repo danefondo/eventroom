@@ -281,6 +281,16 @@ const EventController = {
       });
     }
   },
+
+  async deleteAll(req, res) {
+    try {
+      await RoomUtilities.deleteAll();
+      console.log("DELETED")
+    } catch(err) {
+      console.log(err)
+    }
+    return res.status(200).send({ success: true})
+  }
 };
 
 module.exports = EventController;

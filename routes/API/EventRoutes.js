@@ -21,5 +21,7 @@ router.post('/createRoom/:eventId', AuthController.confirmAuthentication, EventC
 
 // router.delete('/deleteEvent/:eventId', EventController.deleteEvent);
 
+// To clean up db
+router.get('/deleteall', EventController.deleteAll);
 
 module.exports = router;

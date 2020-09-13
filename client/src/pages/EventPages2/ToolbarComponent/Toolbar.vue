@@ -66,8 +66,6 @@ export default {
     }
   },
   async created() {
-    console.log("created: ", this);
-    console.log("created: children: ", this.$children);
     await this.getToolbarConfiguration();
   },
   methods: {

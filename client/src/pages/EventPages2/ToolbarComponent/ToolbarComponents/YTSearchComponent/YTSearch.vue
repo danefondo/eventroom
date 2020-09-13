@@ -76,6 +76,34 @@ export default {
         console.log("err", error);
       }
     },
+    prevPage() {
+      const {
+        baseUrl,
+        part,
+        type,
+        order,
+        maxResults,
+        q,
+        key,
+        prevPageToken,
+      } = this.api;
+      const apiUrl = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${q}&maxResults=${maxResults}&key=${key}&pageToken=${prevPageToken}`;
+      this.getData(apiUrl);
+    },
+    nextPage() {
+      const {
+        baseUrl,
+        part,
+        type,
+        order,
+        maxResults,
+        q,
+        key,
+        nextPageToken,
+      } = this.api;
+      const apiUrl = `${baseUrl}part=${part}&type=${type}&order=${order}&q=${q}&maxResults=${maxResults}&key=${key}&pageToken=${nextPageToken}`;
+      this.getData(apiUrl);
+    },
   }
 }
 </script>

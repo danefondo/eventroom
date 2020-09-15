@@ -3,11 +3,13 @@
     Don't worry, we'll get you into your room!
   </div>
   <div v-else-if="errors">
-    There were some errors :(
+    There were some errors :( 
+      <br/>
+    {{errorMessage}}
   </div>
   <div v-else>
     You arrived here. Unbelievable! 
-
+    
     <div class="eventroom-container party">
       <Toolbar/>
       <VideoArea/>
@@ -18,6 +20,7 @@
 <script>
 import { mapState } from "vuex";
 import SessionController from "../../session/SessionController";
+import { requestWithAuthentication } from '../../config/api';
 
 import Toolbar from "./ToolbarComponent/Toolbar";
 import VideoArea from "./VideoComponent/VideoArea";
@@ -32,8 +35,7 @@ export default {
     return {
       ready: false,
       errors: false,
-
-
+      errorMessage: "",
     };
   },
   computed: {
@@ -41,6 +43,8 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      connectionID: (state) => state.session.thisConnectionId,
+      sessionID: (state) => state.session.thisSessionId,
     }),
   },
   
@@ -63,8 +67,36 @@ export default {
         this.errors = true;
       }
     },
-
+  },
+/* eslint-disable no-unused-vars */
+  async beforeRouteLeave (to, from, next) {
+    try {
+      console.log("@beforerouteleave connection id", this.connectionID, this.sessionID);
+      requestWithAuthentication('post', `/api/events/disconnectFromEvent`, {  // Probably unnecessary but idk
+        sessionId: this.sessionID,
+        connectionId: this.connectionID
+      }).then(result => {
+        console.log("@beforerouteleave response: ", result);
+        SessionController.disconnect();
+      }).then( result => { 
+        console.log("@beforerouteleave no error?", result);
+      }).catch (err => {
+          console.log("@beforerouteleave error:", err);
+        this.ready = true;
+        this.errors = true;
+        this.errorMessage = "Problem with leaving this page, please refresh page."
+      }) 
+      
+    } catch (err) {
+      // Probably if errors occur, the users will be stuck here endlessly but idc
+      console.log("@beforerouteleave error:", err);
+      this.ready = true;
+      this.errors = true;
+      this.errorMessage = "Problem with leaving this page, please refresh page."
+    }
+    next()
   }
+/* eslint-enable no-unused-vars */
 }
 </script>
 

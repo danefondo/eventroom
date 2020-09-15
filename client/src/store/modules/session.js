@@ -8,9 +8,17 @@ const state = {
   sessionId: "",
   sessionToken: "",
 
+  thisConnectionId: "",
+  thisSessionId: "",
   // Room and user data
   room: {},
   userIsHost: false,
+
+  // Errors
+  publisherFirstConnectionStatus: false,
+  publisherFirstConnectionMessage: "",
+
+  publisherNetworkDisconnected: false,
 
   // Existing container ID-s
   CENTRAL_AREA: {
@@ -31,15 +39,7 @@ const state = {
   },
 
   // Central area
-  centralLayoutType: "1",
-
-  
-
-  // Stream location data
-  
-
-  publisherSpotlighted: false,
-  
+  centralLayoutType: "1",  
   
   // Old
   containersReady: [],
@@ -77,7 +77,7 @@ const getters = {
   },
   /* eslint-enable no-unused-vars */
 
-
+  
 
   getEmptyRightKey: (state) => {
     return Object.keys(state.RIGHT_AREA).find(e => state.RIGHT_AREA[e] === null);
@@ -91,12 +91,18 @@ const getters = {
   },
   getCentralStreamKeys: (state) => {
     return Object.keys(state.CENTRAL_AREA).filter(e => state.CENTRAL_AREA[e] !== null).sort();
+  },
+  getRightStreamKeys: (state) => {
+    return Object.keys(state.RIGHT_AREA).filter(e => state.RIGHT_AREA[e] !== null).sort();
   }
 };
 
 const mutations = {
-  setSpotlighted(state) {
-    state.publisherSpotlighted = !state.publisherSpotlighted;
+  setThisConnectionId(state, newId) {
+    state.thisConnectionId = newId;
+  },
+  setThisSessionId(state, newId) {
+    state.thisSessionId = newId;
   },
   setApiKey(state, newApiKey) {
     state.apiKey = newApiKey;
@@ -112,6 +118,15 @@ const mutations = {
   },
   setUserIsHost(state, isHost) {
     state.userIsHost = isHost;
+  },
+  setPublisherFirstConnectionStatus(state, status) {
+    state.publisherFirstConnectionStatus = status;
+  },
+  setPublisherFirstConnectionMessage(state, message) {
+    state.publisherFirstConnectionMessage = message;
+  },
+  setPublisherNetworkDisconnected(state, status) {
+    state.publisherNetworkDisconnected = status;
   },
 
   addToCentral(state, payload) {
@@ -187,6 +202,13 @@ const actions = {
     return rightKey;
   },
 
+  getStreamLocation({ state, getters }, streamId) {
+    const centralKey = getters.getCentralStreamKeys.find(e => state.CENTRAL_AREA[e] === streamId)
+    if (centralKey !== undefined) return [centralKey, "central"];
+    const rightKey = getters.getRightStreamKeys.find(e => state.RIGHT_AREA[e] === streamId);
+    if (rightKey !== undefined) return [rightKey, "right"];
+    return null;
+  },
 
   moveFromCentralToCentral({ state, commit }, payload) {
     const streamId = state.CENTRAL_AREA[payload.beforeKey];

@@ -132,6 +132,17 @@ const EventController = {
     }
   },
 
+  async disconnectFromEvent(req, res) {
+
+    try {
+      await OTUtilities.disconnect(req.body.sessionId, req.body.connectionId)
+    } catch (err) {
+      console.log("err:",err);
+      return res.status(500).send({ success: false });
+    }
+  
+    return res.status(200).send({success:true});
+  },
   /**
    * Creates session id and lets user into the room
    * @param {*} req 

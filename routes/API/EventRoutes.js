@@ -17,6 +17,8 @@ router.post('/createEvent', AuthController.confirmAuthentication, EventControlle
 
 router.post('/createRoom/:eventId', AuthController.confirmAuthentication, EventController.createRoom);
 
+router.post('/disconnectFromEvent', EventController.disconnectFromEvent)
+
 // router.post('/findAndUpdateEvent/:eventId', EventController.findAndUpdateEvent);
 
 // router.delete('/deleteEvent/:eventId', EventController.deleteEvent);

@@ -1,9 +1,5 @@
 import store from '../store/index';
 
-import SubscriberHandler from './SubscriberHandler';
-import PublisherHandler from './PublisherHandler';
-
-
 const ALLOWED_CENTRAL_LAYOUT_IDS = ["0","1","2","3"];
 
 async function moveVideo(currentId, targetId, publisher, subscribers) {
@@ -14,14 +10,14 @@ async function moveVideo(currentId, targetId, publisher, subscribers) {
   });
   console.log("@movevideo layout value:", value);
   if (value === "publisher") {
-    PublisherHandler.movePublisherDom(publisher, targetId);
+    movePublisherDom(publisher, targetId);
     return "publisher"
   } else if (!value) {
     console.log("@movevideo layout NO VALUE!");
     return "nothing"
   } else {
     const currentsub = subscribers[value];
-    SubscriberHandler.moveSubscriberDom(currentsub, targetId);
+    moveSubscriberDom(currentsub, targetId);
     return "subscriber"
   }
 }
@@ -85,11 +81,34 @@ async function setCentralLayout(newLayoutId, publisher, subscribers) {
   return Promise.all(changes);
 }
 
+function moveSubscriberDom(subscriber, newDom) {
+  console.log("@movesubdomhandler", newDom);
+  document.getElementById(newDom).appendChild(subscriber.element);
+}
+
+function movePublisherDom(publisher, newDom) {
+  console.log("@publisherhandler newdom:", newDom);
+  document.getElementById(newDom).appendChild(publisher.element);
+}
+
+function removeSubscriberStream(subscriber, key) {
+  console.log("@removesubstream", key);
+  document.getElementById(key).removeChild(subscriber.element);
+}
+function removePublisherStream(publisher, key) {
+  console.log("@removepubstream", key);
+  console.log("@removepubstream", document.getElementById(key));
+  document.getElementById(key).removeChild(publisher.element);
+}
 
 const LayoutHandler = {
   moveVideo,
 
-  setCentralLayout
+  setCentralLayout,
+
+  removeSubscriberStream,
+
+  removePublisherStream
 }
 
 export default LayoutHandler;

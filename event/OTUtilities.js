@@ -20,7 +20,6 @@ const OTUtilities = {
    */
   async createSession() {
     return new Promise((resolve, reject) => {
-      let session_id;
       OT.createSession({ mediaMode: "routed" }, function (error, session) {
         if (error) {
           console.log("Error creating session:", error);
@@ -42,6 +41,19 @@ const OTUtilities = {
     // console.log("@creattoken room:", room);
     return OT.generateToken(room.sessionId, tokenOptions);
   },
+
+  async disconnect(sessionId, connectionId) {
+    return new Promise((resolve, reject) => {
+      OT.forceDisconnect(sessionId, connectionId, function(error) {
+        if (error) {
+          console.log("error:", error);
+          reject(error);
+        }
+        resolve(true);
+      });
+    })
+    
+  }
 }
 
 module.exports = OTUtilities;

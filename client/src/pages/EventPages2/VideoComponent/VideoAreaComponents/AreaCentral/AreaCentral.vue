@@ -66,7 +66,6 @@ export default {
   },
   computed: {
     ...mapState({
-      publisherSpotlighted: state => state.session.publisherSpotlighted,
       centralLayoutType: state => state.session.centralLayoutType,
     }),
     ...mapGetters({

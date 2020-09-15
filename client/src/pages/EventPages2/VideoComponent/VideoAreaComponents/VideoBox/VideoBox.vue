@@ -53,7 +53,6 @@ export default {
   },
   computed: {
     ...mapState({
-      publisherSpotlighted: state => state.session.publisherSpotlighted,
     }),
     ...mapGetters({
       currentlyAvailableCentral: 'session/currentlyAvailableCentral',

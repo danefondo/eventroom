@@ -1,10 +1,17 @@
 <template>
   <div>
-    <AreaCentral class="area-central" /> 
-    <AreaRight class="area-right" />
+    <div v-if="publisherFirstConnectionStatus">
+      {{publisherFirstConnectionMessage}}
+    </div>
+    <div v-show="!publisherFirstConnectionStatus">
+      <AreaCentral class="area-central" /> 
+      <AreaRight class="area-right" />
+    </div>
   </div>
 </template>
 <script>
+import { mapState } from 'vuex';
+
 import SessionController from "../../../session/SessionController";
 
 import AreaCentral from './VideoAreaComponents/AreaCentral/AreaCentral';
@@ -17,9 +24,11 @@ export default {
     AreaCentral,
     AreaRight,
   },
-  data() {
-    return {
-    }
+  computed: {
+    ...mapState({
+      publisherFirstConnectionStatus: state => state.session.publisherFirstConnectionStatus,
+      publisherFirstConnectionMessage: state => state.session.publisherFirstConnectionMessage,
+    }),
   },
   mounted() {
     this.$nextTick( function() {
@@ -29,7 +38,7 @@ export default {
         console.log("could not init session");
       }
     })
-  }
+  },
 }
 </script>
 <style scoped>

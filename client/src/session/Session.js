@@ -3,7 +3,7 @@ import OT from '@opentok/client';
 import store from '../store/index';
 
 import SubscriberHandler from './SubscriberHandler';
-// import PublisherHandler from './PublisherHandler';
+import PublisherHandler from './PublisherHandler';
 import LayoutHandler from './LayoutHandler';
 
 let connected = false;
@@ -17,17 +17,29 @@ let subscribers = {};
 
 const publish = function(session) {
   if (connected && publisherInitialized) {
-    console.log("@publish: stream published with id ")
-    session.publish(publisher);
+    console.log("@publish: stream published, publisher:", publisher);
+    session.publish(publisher, function(err) {
+      console.log("@cbfailure", err);
+      const cbFailure = PublisherHandler.publishCallback(publisher, err);
+      if (cbFailure) publisher = null;
+    });
   }
 }
 
-const disconnect = function(session) {
-  session.disconnect();
-}
+
 
 
 async function initSession() {
+  if (session) {
+    try {
+      console.log("@trycatch !!!!")
+      session = null;
+      publisher = null;
+      subscribers = {}
+    } catch (err) {
+      console.log("@trycatch fckn errr");
+    }
+  }
   const { apiKey, sessionId, sessionToken } = store.getters['session/getStaticSessionData'];
   let targetElement;
   try {
@@ -37,7 +49,7 @@ async function initSession() {
     throw new Error("no available element for publisher");
   }
 
-  console.log("@sessioncontroller data:", apiKey, sessionId, sessionToken);
+  // console.log("@sessioncontroller data:", apiKey, sessionId, sessionToken);
   
   let publisherOptions = {
     insertMode: "append",
@@ -47,6 +59,7 @@ async function initSession() {
 
   console.log("@sessioncontroller target element", targetElement);
   // Initialize session, publisher
+  console.log("@sessioncontroller session", session);
   session = OT.initSession(apiKey, sessionId);
   publisher = OT.initPublisher(targetElement, publisherOptions, function(err) {
     if (err) {
@@ -54,6 +67,7 @@ async function initSession() {
     } else {
       console.log("@initpublisher initialized");
       publisherInitialized = true;
+      console.log("@initpublisher publisher:", publisher);
       publish(session);
     }
   });
@@ -72,6 +86,8 @@ async function initSession() {
     },
     // this client has connected to the session
     sessionConnected: function() {
+      store.commit('session/setThisConnectionId', session.connection.connectionId);
+      store.commit('session/setThisSessionId', session.sessionId);
       console.log("session connected");
     },
     // this client has disconnected and tries to reconnect
@@ -112,8 +128,8 @@ async function initSession() {
       console.log("publisher: ", publisher);
     },
     streamDestroyed: function (event) {
-      console.log("Publisher stopped streaming. Reason: "
-        + event.reason);
+      console.log("Publisher stopped streaming. Reason: ", event.reason);
+      PublisherHandler.handleStreamDestroyed(publisher, event);
     },
   });
 
@@ -129,7 +145,9 @@ async function initSession() {
       publish(session);
     }
   });  
+  console.log("@INIT SESSION SESSION: ", session);
 }
+
 
 async function moveVideo(currentId, targetId) {
   LayoutHandler.moveVideo(currentId, targetId, publisher, subscribers);
@@ -143,7 +161,13 @@ async function setCentralLayout(newLayout) {
       console.log("@setcentrallayout call error:", err);
     })
 }
+const disconnect = async function() {
+  console.log("@session disconnecting: session:", session);
 
+  session.unpublish(publisher);
+  console.log("@session DISCONNECTING!, UNPUBLISHED!")
+  session.disconnect();
+}
 const Session = {
   initSession,
 

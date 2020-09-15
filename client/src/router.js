@@ -6,6 +6,7 @@ import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
 import EditEventPage from "./pages/CreatorPages/EditEventPage";
 import EventPreviewPage from "./pages/EventPages/EventPreviewPage";
 import EventRoomPage from "./pages/EventPages2/EventRoomPage";
+import TemporaryFix from "./pages/EventPages2/TemporaryFix";
 import HomePage from "./pages/CorePages/HomePage";
 
 /* ====== AUTH PAGES ====== */
@@ -63,6 +64,7 @@ const routes = [
   },
   { path: "/events/:id", component: EventPreviewPage },
   { path: "/events/:eventId/rooms/:roomId", component: EventRoomPage },
+  { path: "/kk", component: TemporaryFix }
 ];
 
 const router = new VueRouter({

@@ -32,6 +32,10 @@ const SessionController = {
   async initSession() {
     Session.initSession();
   },
+  async disconnect() {
+    await Session.disconnect();
+  },
+  // The functions below *HAVE* to go through Session, otherwise the handlers do not get subscriber and publisher objects
   async moveVideo(currentId, targetId) {
     await Session.moveVideo(currentId, targetId);
   },

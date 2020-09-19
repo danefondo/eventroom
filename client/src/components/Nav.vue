@@ -1,7 +1,7 @@
 <template>
   <div class="nav-container" :class="isAuthenticated ? 'authNav' : 'notAuthNav'">
     <div class="navbar">
-      <router-link to="/" class="nav-logo">Oveno</router-link>
+      <router-link to="/" class="nav-logo">Eventroom.to</router-link>
       <div v-if="isAuthenticated">
         <router-link :to="profileLink" class="nav-button">Profile</router-link>
         <router-link to="/logout" class="nav-button">Logout</router-link>
@@ -58,6 +58,7 @@ export default {
 </script>
 
 <style scoped>
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 .unverified {
   font-size: 21px;
   text-align: center;
@@ -75,16 +76,22 @@ export default {
   justify-content: space-between;
   padding: 10px;
   font-family: "Trebuchet MS", sans-serif;
+  font-family: "Nunito", sans-serif;
+  font-weight: 700;
   align-items: center;
+
 }
 .nav-button {
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
+  color: #a0a0ab;
 }
 .nav-logo {
   padding: 8px 14px;
   cursor: pointer;
+  font-weight: 600;
+  color: #a0a0ab;
 }
 .nav-logo:hover {
   color: #333;

@@ -22,9 +22,14 @@ async function handleNoUser(req, refreshToken) {
         }
 
         if (verificationResult.success) {
-            const returnUser = userInJWT(verificationResult.user);
-            const newjwtToken = await login(req, returnUser); 
-            return {newjwtToken, newRefreshToken, user: returnUser};
+            try {
+                const returnUser = userInJWT(verificationResult.user);
+                const newjwtToken = await login(req, returnUser); 
+                return {newjwtToken, newRefreshToken, user: returnUser};
+            } catch (err) {
+                console.log("@nouser errors:", err);
+                return null;
+            }
         }
         return null;
     }  

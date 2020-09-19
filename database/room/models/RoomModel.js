@@ -5,7 +5,7 @@ let Schema = mongoose.Schema;
 const RoomSchema = new Schema({
     eventId: mongoose.Types.ObjectId,
 
-    hostId: String,             
+    hostId: mongoose.Types.ObjectId,             
     // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
     dateCreated: Date,
 

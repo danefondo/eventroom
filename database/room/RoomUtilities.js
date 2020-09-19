@@ -1,4 +1,5 @@
 const Room = require('./models/RoomModel');
+const TempUser = require('./models/TempUserModel');
 const mongoose = require('mongoose');
 
 const RoomUtilities = {
@@ -8,13 +9,13 @@ const RoomUtilities = {
    * @param {*} roomData 
    */
   async createRoom(roomData) {
+    console.log("@createroomutil, roomdata", roomData)
     const room = new Room({
-      eventId: roomData.event_id,
-      hostId: roomData.host_id,             
+      eventId: roomData.eventId,
+      hostId: roomData.hostId,             
       dateCreated: new Date(),
       sessionId: roomData.sessionId,
     });
-    console.log("@createroom room:", room);
     return room.save();
   },
 
@@ -63,6 +64,17 @@ const RoomUtilities = {
 
   async getRoomById(roomId) {
     return Room.findById(roomId).exec();
+  },
+  
+  async deleteAll() {
+    try{
+      await Room.remove({}).exec();
+      await TempUser.remove({}).exec();
+    } catch (err) {
+      console.log("err")
+      return Promise.reject("error");
+    }
+    return { success: true};
   }
 }
 

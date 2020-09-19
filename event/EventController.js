@@ -15,6 +15,7 @@ const EventController = {
   async getAllEvents(req, res) {
     try {
       let eventPreviews = await EventUtilities.getAllEvents();
+      console.log("@getallevents ontroller ", eventPreviews);
       res.status(200).send({ events: eventPreviews });
     } catch (error) {
       console.log("@getallevents", error);
@@ -131,6 +132,17 @@ const EventController = {
     }
   },
 
+  async disconnectFromEvent(req, res) {
+
+    try {
+      await OTUtilities.disconnect(req.body.sessionId, req.body.connectionId)
+    } catch (err) {
+      console.log("err:",err);
+      return res.status(500).send({ success: false });
+    }
+  
+    return res.status(200).send({success:true});
+  },
   /**
    * Creates session id and lets user into the room
    * @param {*} req 
@@ -159,7 +171,7 @@ const EventController = {
         room,
         hostname,
         apiKey: OTUtilities.apiKey,
-        sessionId,
+        sessionId: room.sessionId,
         token,
       });
     } catch (error) {
@@ -280,6 +292,16 @@ const EventController = {
       });
     }
   },
+
+  async deleteAll(req, res) {
+    try {
+      await RoomUtilities.deleteAll();
+      console.log("DELETED")
+    } catch(err) {
+      console.log(err)
+    }
+    return res.status(200).send({ success: true})
+  }
 };
 
 module.exports = EventController;

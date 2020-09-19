@@ -7,4 +7,4 @@ const tempUserSchema = new Schema({
     dateCreated: Date
 });
 
-const tempUser = module.exports = mongoose.model('tempUser', tempUserSchema);
+const tempUser = module.exports = mongoose.model('TempUser', tempUserSchema);

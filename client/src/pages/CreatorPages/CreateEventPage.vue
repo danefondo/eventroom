@@ -158,7 +158,7 @@ export default {
           roomCreationAllowed: this.roomCreationAllowed,
         };
         console.log("@createevent eventData", eventData);
-        const response = await requestWithAuthentication("post", `api/events/createEvent`, eventData, true);
+        const response = await requestWithAuthentication("post", `api/events/createEvent`, eventData);
         console.log("@createevent response", response);
         this.$router.push(`/events/${response.data._id}`);
       } catch (error) {

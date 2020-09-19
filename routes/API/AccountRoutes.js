@@ -3,6 +3,7 @@ const Express = require('express');
 const { AuthController } = require('../../auth/AuthController');
 const PasswordResetController = require('../../auth/PasswordResetController');
 const AccountController = require('../../account/AccountController');
+const ConfigurationController = require('../../account/ConfigurationController');
 const TempUserController = require('../../event/TempUserController');
 
 const AccountUtilities =  require('../../account/AccountUtilities');
@@ -56,8 +57,10 @@ router.post('/profileData/saveBio', AuthController.confirmAuthentication, Accoun
 // Other 
 router.post('/createTempUser', TempUserController.createTempUser);
 
+// Configurations
+router.get('/getuserconfigurations/eventroom/toolbarconfigurations', ConfigurationController.getEventroomToolbarConfigurations);
 
-
+router.post('/setuserconfigurations/eventroom/toolbarconfigurations', ConfigurationController.setEventroomToolbarConfigurations);
 
 
 module.exports = router;

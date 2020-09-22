@@ -82,7 +82,7 @@
           </section>
           <div
             class="toggle-prereview"
-            v-if="roomType === 'open' && mediaSettings.showPreReviewOnOpenRooms"
+            v-if="roomType === 'open' && mediaSettings.showPreReviewOnOpenRooms && isAuthenticated && isVerified"
           >
             <input
               id="disable-prereview"
@@ -90,9 +90,13 @@
               @click="togglePreReviewSetting"
               class="disable-prereview-checkbox"
             />
-            <!-- <span class="disable-prereview-checkbox"></span> -->
             <label for="disable-prereview">Don't show this page next time when joining an open room.</label>
           </div>
+          <router-link
+            to="/register"
+            class="sign-up-proposal"
+            v-if="!isAuthenticated"
+          >Sign up to save default preferences.</router-link>
         </div>
         <div class="room-entrance">
           <div class="entrance">
@@ -188,6 +192,11 @@ export default {
     options() {
       return this.devices;
     },
+  },
+  beforeRouteLeave(to, from, next) {
+    this.mediaStreamInUse.getTracks().forEach(track => track.stop());
+    this.disonnectAudioContext();
+    next();
   },
   methods: {
     togglePreReviewSetting() {
@@ -634,6 +643,23 @@ export default {
   width: 300px;
   font-size: 30px;
   font-weight: bold;
+}
+
+.sign-up-proposal {
+  background-color: #ffc10742;
+  padding: 10px;
+  color: #520ed5;
+  cursor: pointer;
+  margin: 20px 0;
+  margin-bottom: 0px;
+  font-family: "Nunito", sans-serif;
+  font-weight: bold;
+  border-radius: 3px;
+}
+
+.sign-up-proposal:hover {
+  background-color: #dfa9083f;
+  color: #6111f7;
 }
 
 .toggle-prereview {

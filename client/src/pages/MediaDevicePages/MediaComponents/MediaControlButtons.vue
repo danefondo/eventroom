@@ -145,12 +145,6 @@ export default {
     turnOnVideo() {
       this.$emit("turnOnVideo");
     },
-    // turnOffAudio() {
-    //   this.$emit("turnOffAudio");
-    // },
-    // turnOnAudio() {
-    //   this.$emit("turnOnAudio");
-    // },
     toggleAudio(boolean) {
       this.$emit("toggleAudio", boolean);
     },

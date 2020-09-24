@@ -4,7 +4,7 @@
     <div class="central-controls">
       <label class="room-creator">
         <span class="eventroom">eventroom.to/</span>
-        <input class="slug" placeholder="custom-slug" autofocus="autofocus" spellcheck="false" />
+        <input class="slug" :placeholder="slug" :value="slug" autofocus="autofocus" spellcheck="false" />
       </label>
       <div v-if="isAuthenticated">
         <router-link to="/events/createEvent" class="create">Create room</router-link>
@@ -21,6 +21,7 @@ import { mapState } from "vuex";
 
 import auth from "../../config/auth";
 import axios from "axios";
+import { slug } from "../../config/slugGenerator/slug";
 // import EventBox from "../../components/EventDiscoveryComponents/EventBox";
 
 export default {
@@ -28,6 +29,7 @@ export default {
   data() {
     return {
       events: {},
+      slug: "",
     };
   },
   //   components: {
@@ -42,10 +44,18 @@ export default {
   },
   async mounted() {
     this.getAllEvents();
+    this.customSlug();
   },
   methods: {
     logout() {
       auth.logout();
+    },
+    customSlug() {
+      var AAA = /^([a-z]+){3}$/;
+      let slugWord = slug();
+      slugWord = slugWord.toLowerCase();
+      slugWord.match(AAA);
+      this.slug = slugWord;
     },
     async getAllEvents() {
       try {
@@ -75,7 +85,7 @@ lavenderblush
  } */
 
 .slug {
-  font-size: 65px;
+  font-size: 50px;
   width: 416px;
   margin-left: 3px;
   padding: 5px;

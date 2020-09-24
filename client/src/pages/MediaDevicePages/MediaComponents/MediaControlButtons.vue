@@ -167,6 +167,8 @@ export default {
         globalThis.checkAudioStatusAndToggle();
       } else if (e.which == 83) {
         globalThis.toggleSettings();
+      } else if (e.which == 13) {
+        globalThis.$emit("joinRoom");
       }
     },
   },

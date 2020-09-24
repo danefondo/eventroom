@@ -1,7 +1,7 @@
 <template>
   <div id="device-settings">
     <span class="close" @click="toggleSettings">Save & close</span>
-    <span class="save-defaults">Save as default settings</span>
+    <span class="save-defaults" @click="setDefaults">Save as default settings</span>
     <div class="device-settings-header">
       <div class="device-settings-title">Select your preferred devices</div>
     </div>
@@ -38,14 +38,14 @@
       <br />
       <div class="device-settings-subtitle">Speaker</div>
       <select
-        id="audio-options"
+        id="speaker-options"
         class="device-option"
-        v-model="audioDeviceId"
-        name="audio-options"
-        ref="audioOptions"
+        v-model="speakerDeviceId"
+        name="speaker-options"
+        ref="speakerOptions"
       >
         <option
-          v-for="device in mediaData.audioDevices"
+          v-for="device in mediaData.speakerDevices"
           :value="device.deviceId"
           :key="device.deviceId"
         >{{device.label}}</option>
@@ -78,10 +78,21 @@ export default {
         this.$emit("audioDeviceId", deviceId);
       },
     },
+    speakerDeviceId: {
+      get() {
+        return this.mediaData.speakerDeviceId;
+      },
+      set(deviceId) {
+        this.$emit("speakerDeviceId", deviceId);
+      },
+    },
   },
   methods: {
     toggleSettings() {
       this.$emit("toggleSettings");
+    },
+    setDefaults() {
+      this.$emit("setDefaults");
     },
   },
 };

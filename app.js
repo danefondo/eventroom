@@ -141,9 +141,10 @@ IO.on("connection", function (socket) {
 /* ====== ROUTES SETUP ====== */
 const AccountRoutes = require("./routes/API/AccountRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
+const UserActionRoutes = require("./routes/API/UserActionRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/events", EventRoutes);
-
+app.use("/api/userActions", UserActionRoutes);
 
 /* ====== REQUESTS HANDLING ====== */
 

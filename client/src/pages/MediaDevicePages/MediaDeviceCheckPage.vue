@@ -5,7 +5,7 @@
         <div class="media-feeds">
           <div class="video-feed">
             <div
-              v-if="!mediaSettings.cameraDetected && !mediaSettings.cameraTurnedOn && isWebsiteHasWebcamPermissions && isWebsiteHasMicrophonePermissions"
+              v-if="!cameraDetected && !mediaSettings.cameraTurnedOn && isWebsiteHasWebcamPermissions && isWebsiteHasMicrophonePermissions"
               class="media-info"
             >Your camera stream will appear here</div>
             <div
@@ -40,13 +40,16 @@
             @turnOnVideo="turnOnVideo"
             @toggleAudio="toggleAudio"
             @toggleSettings="toggleSettings"
+            @joinRoom="joinRoom"
           />
           <ChangeMediaDevice
             v-if="settingsActive && mediaData.audioDevices && mediaData.audioDevices && mediaData.audioDeviceId && mediaData.videoDeviceId"
             :mediaData="mediaData"
             @videoDeviceId="setVideoDeviceId"
             @audioDeviceId="setAudioDeviceId"
+            @speakerDeviceId="setSpeakerDeviceId"
             @toggleSettings="toggleSettings"
+            @setDefaults="setDefaults"
           />
           <section v-if="settingsActive">
             <aside class="error-message" v-if="err">
@@ -61,6 +64,7 @@
               id="disable-prereview"
               type="checkbox"
               @click="togglePreReviewSetting"
+              :checked="!userMediaPreferences.showPreScreen"
               class="disable-prereview-checkbox"
             />
             <label for="disable-prereview">Don't show this page next time when joining an open room.</label>
@@ -97,6 +101,7 @@
 import { mapState } from "vuex";
 
 import auth from "../../config/auth";
+import { requestWithAuthentication } from "../../config/api";
 import { attachMediaStream } from "../../config/mediaDevices/attachMediaStream";
 import { getUserMedia } from "../../config/mediaDevices/getUserMedia";
 import { enumerateDevices } from "../../config/mediaDevices/enumerateDevices";
@@ -134,17 +139,27 @@ export default {
       mediaData: {
         audioDeviceId: undefined,
         videoDeviceId: undefined,
+        speakerDeviceId: undefined,
         videoDevices: [],
         audioDevices: [],
+        speakerDevices: [],
       },
+      cameraDetected: false,
+      cameraAccessGranted: false,
+      selectedCameraSource: null,
+      selectedAudioSource: null,
+      selectedSpeakerSource: null,
       mediaSettings: {
-        cameraDetected: false,
-        cameraAccessGranted: false,
-        selectedCameraSource: null,
-        selectedAudioSource: null,
         cameraTurnedOn: false,
         audioTurnedOn: false,
+        speakerTurnedOn: false,
         showPreReviewOnOpenRooms: true,
+      },
+      userMediaPreferences: {
+        defaultCamera: "",
+        defaultMicrophone: "",
+        defaultSpeaker: "",
+        showPreScreen: true,
       },
     };
   },
@@ -179,17 +194,42 @@ export default {
     next();
   },
   methods: {
+    joinRoom() {
+      console.log("Joining...");
+    },
+    async setDefaults() {
+      try {
+        let mediaSettingsData = this.userMediaPreferences;
+        mediaSettingsData.userId = this.user._id;
+        const response = await requestWithAuthentication(
+          "post",
+          `api/userActions/updateUserRoomPreferences`,
+          mediaSettingsData
+        );
+        console.log("@updateUserPreferences response", response);
+      } catch (error) {
+        console.log("Setting defaults error: ", error);
+      }
+    },
     toggleSettings() {
       this.settingsActive = !this.settingsActive;
     },
     setAudioDeviceId(deviceId) {
       this.mediaData.audioDeviceId = deviceId;
+      this.userMediaPreferences.defaultMicrophone = deviceId;
     },
     setVideoDeviceId(deviceId) {
       this.mediaData.videoDeviceId = deviceId;
+      this.userMediaPreferences.defaultCamera = deviceId;
+    },
+    setSpeakerDeviceId(deviceId) {
+      this.mediaData.speakerDeviceId = deviceId;
+      this.userMediaPreferences.defaultSpeaker = deviceId;
     },
     togglePreReviewSetting() {
       // Next time don't show.
+      this.userMediaPreferences.showPreScreen = !this.userMediaPreferences
+        .showPreScreen;
     },
     checkDeviceSupport() {
       let globalThis = this;
@@ -232,9 +272,10 @@ export default {
       audioTrack.enabled = boolean;
       this.mediaSettings.audioTurnedOn = boolean;
       if (!boolean) {
-        console.log("1");
         this.disconnectAudioContext();
-        console.log("2");
+
+        //- Make sure audio feedback colors reset
+        this.resetPidBar();
       } else {
         this.getMediaWithDevices(null, true);
       }
@@ -270,12 +311,11 @@ export default {
       return mediaConstraints;
     },
     getMediaWithDevices(video = null, audio = null) {
-      console.log("vi", video);
-      console.log("aud", audio);
       let setError = this.setError;
       let globalThis = this;
       let audioWasTrue;
       let cameraWasTrue;
+      // let speakerWasTrue;
 
       if (video == null && audio == null) {
         globalThis.mediaSettings.cameraTurnedOn = true;
@@ -322,11 +362,10 @@ export default {
         let preview = globalThis.$refs.preview;
         globalThis.video = attachMediaStream(stream, preview, options);
         globalThis.updateDeviceOptions();
-        if (video !== null) {
+        let audioState = globalThis.mediaSettings.audioTurnedOn;
+        if (video !== null && audioState) {
           //- because video one also restarts audio
-          console.log("a");
           globalThis.disconnectAudioContext();
-          console.log("b");
         }
         globalThis.initAudioFeedback(stream);
         if (!audioWasTrue && video !== null && audio == null) {
@@ -350,14 +389,17 @@ export default {
           setError(null);
           var selectedAudio = globalThis.mediaData.audioDeviceId;
           var selectedVideo = globalThis.mediaData.videoDeviceId;
+          var selectedSpeaker = globalThis.mediaData.speakerDeviceId;
 
           globalThis.devices = {};
           globalThis.mediaData.videoDevices = [];
           globalThis.mediaData.audioDevices = [];
+          globalThis.mediaData.speakerDevices = [];
           globalThis.devices = devices;
 
           var audioDevicesCount = 0;
           var videoDevicesCount = 0;
+          var speakerDevicesCount = 0;
           for (var i = 0; i < globalThis.devices.length; i++) {
             var device = globalThis.devices[i];
             if (device.kind === "audioinput") {
@@ -372,6 +414,12 @@ export default {
                 device.label = "Camera " + videoDevicesCount;
               }
               globalThis.mediaData.videoDevices.push(device);
+            } else if (device.kind === "audiooutput") {
+              speakerDevicesCount++;
+              if (!device.label) {
+                device.label = "Speaker " + speakerDevicesCount;
+              }
+              globalThis.mediaData.speakerDevices.push(device);
             }
           }
 
@@ -382,8 +430,8 @@ export default {
             globalThis.mediaData.audioDeviceId = selectedAudio;
           } else {
             // let selected = document.getElementById("audio-options").selectedIndex = 0;
-            globalThis.mediaData.audioDeviceId =
-              globalThis.mediaData.audioDevices[0].deviceId;
+            let deviceId = globalThis.mediaData.audioDevices[0].deviceId;
+            globalThis.setAudioDeviceId(deviceId);
           }
 
           let videoWithId = document.querySelector(
@@ -392,9 +440,21 @@ export default {
           if (selectedVideo && videoWithId) {
             globalThis.mediaData.videoDeviceId = selectedVideo;
           } else {
-            globalThis.mediaData.videoDeviceId =
-              globalThis.mediaData.videoDevices[0].deviceId;
+            let deviceId = globalThis.mediaData.videoDevices[0].deviceId;
+            globalThis.setVideoDeviceId(deviceId);
           }
+
+          let speakerWithId = document.querySelector(
+            'select[name="speaker-options"] option[value="' + selectedSpeaker + '"]'
+          );
+          if (selectedSpeaker && speakerWithId) {
+            globalThis.mediaData.speakerDeviceId = selectedSpeaker;
+          } else {
+            let deviceId = globalThis.mediaData.speakerDevices[0].deviceId;
+            globalThis.setSpeakerDeviceId(deviceId);
+          }
+
+
         })
         .catch(function (err) {
           setError(err, videoDisplay, deviceSelection);
@@ -448,6 +508,13 @@ export default {
     },
     disconnectAudioContext() {
       this.audioContext.close();
+    },
+    resetPidBar() {
+      let all_pids = document.querySelectorAll(".pid");
+      all_pids = Array.from(all_pids);
+      for (var x = 0; x < all_pids.length; x++) {
+        all_pids[x].style.backgroundColor = "#e6e7e8";
+      }
     },
     clonePids(average) {
       let pids = document.getElementById("pids");

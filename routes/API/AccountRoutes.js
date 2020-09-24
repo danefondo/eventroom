@@ -63,4 +63,5 @@ router.get('/getuserconfigurations/eventroom/toolbarconfigurations', Configurati
 router.post('/setuserconfigurations/eventroom/toolbarconfigurations', ConfigurationController.setEventroomToolbarConfigurations);
 
 
+
 module.exports = router;

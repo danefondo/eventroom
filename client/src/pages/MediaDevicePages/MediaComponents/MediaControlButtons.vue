@@ -19,7 +19,7 @@
       <div class="tooltip_container">
         <div
           :class="audioStatus ? 'audio-button' : 'audio-button-red'"
-          @click="audioStatus ? toggleAudio(false) : toggleAudio(true)"
+          @click="toggleAudio(!audioStatus)"
         >
           <img
             :src="audioStatus ? audioIcon : audioIconWhite"
@@ -39,28 +39,22 @@
         </div>
       </div>
       <div class="tooltip_container">
-        <div class="settings-button">
+        <div class="settings-button" @click="toggleSettings">
           <img :src="settings" class="settings-icon" />
         </div>
         <div class="tooltip tooltip--top tooltip--middle">
           <span class="tooltip_tip">Open settings menu</span>
+          <span class="tooltip_shortcut">S</span>
         </div>
       </div>
     </div>
-    <div class="SettingsButton pos-rel" v-if="settingsActive">
+    <div class="SettingsButton pos-rel" v-if="settingsActive == 'blue'">
       <div class="tooltip_container">
         <div class="tooltip tooltip--top tooltip--middle">
           <span>Open settings menu</span>
         </div>
       </div>
-      <div class="VideoCallSettings" style="display: none;">
-        <button
-          class="VideoCallSettings_Close-Button knpf knpf--even knpf--flat knpf--pill knpf--secondary knpf--small"
-        >
-          <svg class="knpf_icon">
-            <use xlink:href="#icon-x" />
-          </svg>
-        </button>
+      <div class="VideoCallSettings">
         <label class="VideoCallSettings_Label">
           <span>Microphone</span>
         </label>
@@ -139,6 +133,9 @@ export default {
     window.addEventListener("keyup", this.handler);
   },
   methods: {
+    toggleSettings() {
+      this.$emit("toggleSettings");
+    },
     turnOffVideo() {
       this.$emit("turnOffVideo");
     },
@@ -168,6 +165,8 @@ export default {
         globalThis.checkVideoStatus();
       } else if (e.which == 77) {
         globalThis.checkAudioStatusAndToggle();
+      } else if (e.which == 83) {
+        globalThis.toggleSettings();
       }
     },
   },

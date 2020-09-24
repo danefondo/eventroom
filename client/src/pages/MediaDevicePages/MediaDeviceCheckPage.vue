@@ -39,46 +39,19 @@
             @turnOffVideo="turnOffVideo"
             @turnOnVideo="turnOnVideo"
             @toggleAudio="toggleAudio"
+            @toggleSettings="toggleSettings"
+          />
+          <ChangeMediaDevice
+            v-if="settingsActive && mediaData.audioDevices && mediaData.audioDevices && mediaData.audioDeviceId && mediaData.videoDeviceId"
+            :mediaData="mediaData"
+            @videoDeviceId="setVideoDeviceId"
+            @audioDeviceId="setAudioDeviceId"
+            @toggleSettings="toggleSettings"
           />
           <section v-if="settingsActive">
             <aside class="error-message" v-if="err">
               <p>{{errorMessage}}</p>
             </aside>
-            <fieldset id="device-selection" ref="deviceSelection" v-if="showDeviceSelection">
-              <legend>Select Devices</legend>
-              <select
-                id="video-options"
-                v-model="videoDeviceId"
-                name="video-options"
-                ref="videoOptions"
-              >
-                <option
-                  v-for="device in videoDevices"
-                  :value="device.deviceId"
-                  :key="device.deviceId"
-                >{{device.label}}</option>
-              </select>
-              <br />
-              <select
-                id="audio-options"
-                v-model="audioDeviceId"
-                name="audio-options"
-                ref="audioOptions"
-              >
-                <option
-                  v-for="device in audioDevices"
-                  :value="device.deviceId"
-                  :key="device.deviceId"
-                >{{device.label}}</option>
-              </select>
-              <!-- <br />
-              <button
-                class="button button-small"
-                id="refresh-video"
-                @click="refreshVideo"
-                v-if="getStarted"
-              >Get Media</button>-->
-            </fieldset>
           </section>
           <div
             class="toggle-prereview"
@@ -129,6 +102,7 @@ import { getUserMedia } from "../../config/mediaDevices/getUserMedia";
 import { enumerateDevices } from "../../config/mediaDevices/enumerateDevices";
 // import axios from "axios";
 import MediaControlButtons from "./MediaComponents/MediaControlButtons";
+import ChangeMediaDevice from "./MediaComponents/ChangeMediaDevice";
 import DetectRTC from "detectrtc";
 import openLock from "../../assets/images/padlock-unlock.png";
 import closedLock from "../../assets/images/padlock.png";
@@ -145,12 +119,7 @@ export default {
       showVideoDisplay: true,
       showDeviceSelection: true,
       devices: {},
-      videoDevices: [],
-      audioDevices: [],
       mediaStreamInUse: undefined,
-      // getStarted: true,
-      audioDeviceId: undefined,
-      videoDeviceId: undefined,
       video: null,
       audioContext: undefined,
       audioAnalyser: undefined,
@@ -162,6 +131,12 @@ export default {
       isWebsiteHasWebcamPermissions: false,
       isWebsiteHasMicrophonePermissions: false,
       settingsActive: false,
+      mediaData: {
+        audioDeviceId: undefined,
+        videoDeviceId: undefined,
+        videoDevices: [],
+        audioDevices: [],
+      },
       mediaSettings: {
         cameraDetected: false,
         cameraAccessGranted: false,
@@ -175,10 +150,11 @@ export default {
   },
   components: {
     MediaControlButtons,
+    ChangeMediaDevice,
   },
   mounted() {
     // this.updateDeviceOptions();
-    this.getVideoAndAudioWithDevices(this.audioDeviceId, this.videoDeviceId);
+    this.getMediaWithDevices();
     console.log("rtc", DetectRTC.browser);
 
     this.checkDeviceSupport();
@@ -194,11 +170,24 @@ export default {
     },
   },
   beforeRouteLeave(to, from, next) {
-    this.mediaStreamInUse.getTracks().forEach(track => track.stop());
-    this.disonnectAudioContext();
+    this.mediaStreamInUse.getTracks().forEach((track) => track.stop());
+
+    //- Must disconnect or if you change route and return
+    //- The audio bar will be double initialized
+    //- Thus it will be malfunctional
+    this.disconnectAudioContext();
     next();
   },
   methods: {
+    toggleSettings() {
+      this.settingsActive = !this.settingsActive;
+    },
+    setAudioDeviceId(deviceId) {
+      this.mediaData.audioDeviceId = deviceId;
+    },
+    setVideoDeviceId(deviceId) {
+      this.mediaData.videoDeviceId = deviceId;
+    },
     togglePreReviewSetting() {
       // Next time don't show.
     },
@@ -232,24 +221,7 @@ export default {
     },
     turnOnVideo() {
       console.log("yooo");
-      this.getVideoWithDevices(this.audioDeviceId, this.videoDeviceId);
-      // let video = this.video;
-      // let stream = this.mediaStreamInUse;
-
-      // if (typeof video.srcObject !== "undefined") {
-      //   video.srcObject = stream;
-      // } else if (typeof video.mozSrcObject !== "undefined") {
-      //   video.mozSrcObject = stream;
-      // } else if (URL && URL.createObjectURL) {
-      //   video.src = URL.createObjectURL(stream);
-      // } else {
-      //   return false;
-      // }
-
-      // video.srcObject = stream;
-      // video.mozSrcObject = stream;
-      // video.play();
-      // this.mediaSettings.cameraTurnedOn = true;
+      this.getMediaWithDevices(true);
     },
     toggleAudio(boolean) {
       let tracks = this.mediaStreamInUse.getTracks();
@@ -259,6 +231,13 @@ export default {
       console.log("audio track", audioTrack);
       audioTrack.enabled = boolean;
       this.mediaSettings.audioTurnedOn = boolean;
+      if (!boolean) {
+        console.log("1");
+        this.disconnectAudioContext();
+        console.log("2");
+      } else {
+        this.getMediaWithDevices(null, true);
+      }
     },
     setError(err, videoDisplay, deviceSelection) {
       if (videoDisplay) {
@@ -272,71 +251,44 @@ export default {
       this.err = true;
       this.errorMessage = err && err.message;
     },
-    buildConstraints(audioDeviceId, videoDeviceId) {
+    buildConstraints() {
       var mediaConstraints = {};
-      if (audioDeviceId) {
+      if (this.mediaData.audioDeviceId) {
         mediaConstraints.audio = {
-          optional: [{ sourceId: audioDeviceId }],
+          optional: [{ sourceId: this.mediaData.audioDeviceId }],
         };
       } else {
         mediaConstraints.audio = true;
       }
-      if (videoDeviceId) {
+      if (this.mediaData.videoDeviceId) {
         mediaConstraints.video = {
-          deviceId: { exact: videoDeviceId },
+          deviceId: { exact: this.mediaData.videoDeviceId },
         };
       } else {
         mediaConstraints.video = true;
       }
       return mediaConstraints;
     },
-    getVideoWithDevices(audioDeviceId, videoDeviceId) {
+    getMediaWithDevices(video = null, audio = null) {
+      console.log("vi", video);
+      console.log("aud", audio);
       let setError = this.setError;
       let globalThis = this;
-      globalThis.mediaSettings.cameraTurnedOn = true;
-      let audioWasTrue = globalThis.mediaSettings.audioTurnedOn;
-      var constraints = this.buildConstraints(audioDeviceId, videoDeviceId);
-      if (this.mediaStreamInUse && this.mediaStreamInUse !== null) {
-        this.mediaStreamInUse.getTracks()[0].stop();
+      let audioWasTrue;
+      let cameraWasTrue;
+
+      if (video == null && audio == null) {
+        globalThis.mediaSettings.cameraTurnedOn = true;
+        globalThis.mediaSettings.audioTurnedOn = true;
+      } else if (video !== null && audio == null) {
+        globalThis.mediaSettings.cameraTurnedOn = true;
+        audioWasTrue = globalThis.mediaSettings.audioTurnedOn;
+      } else if (audio !== null && video == null) {
+        globalThis.mediaSettings.audioTurnedOn = true;
+        cameraWasTrue = globalThis.mediaSettings.cameraTurnedOn;
       }
-      getUserMedia(constraints, function (err, stream) {
-        let display = globalThis.$refs.display;
-        if (setError(err, display)) return;
-        // if (err) {
-        //   setError(err, display)
-        // } else {
-        //   return;
-        // }
-        var options = {
-          mirror: true,
-          muted: false,
-          audio: false,
-          autoPlay: true,
-        };
-        if (!stream) {
-          globalThis.mediaSettings.cameraTurnedOn = false;
-          return console.log("Could not get stream!");
-        }
-        globalThis.mediaStreamInUse = stream;
-        let preview = globalThis.$refs.preview;
-        globalThis.video = attachMediaStream(stream, preview, options);
-        globalThis.updateDeviceOptions();
 
-        //- Because video & audio come from the same place, audio is temporarily disabled
-        globalThis.disonnectAudioContext();
-        globalThis.initAudioFeedback(stream);
-        if (!audioWasTrue) {
-          globalThis.toggleAudio(false);
-        }
-      });
-    },
-    getVideoAndAudioWithDevices(audioDeviceId, videoDeviceId) {
-      let setError = this.setError;
-      let globalThis = this;
-
-      globalThis.mediaSettings.cameraTurnedOn = true;
-      globalThis.mediaSettings.audioTurnedOn = true;
-      var constraints = this.buildConstraints(audioDeviceId, videoDeviceId);
+      var constraints = this.buildConstraints();
       if (this.mediaStreamInUse && this.mediaStreamInUse !== null) {
         this.mediaStreamInUse.getTracks()[0].stop();
       }
@@ -356,20 +308,37 @@ export default {
         };
         if (!stream) {
           //- If problem, revert turned on statuses set true before
-          globalThis.mediaSettings.cameraTurnedOn = false;
-          globalThis.mediaSettings.audioTurnedOn = false;
+          if (video == null && audio == null) {
+            globalThis.mediaSettings.cameraTurnedOn = false;
+            globalThis.mediaSettings.audioTurnedOn = false;
+          } else if (video !== null && audio == null) {
+            globalThis.mediaSettings.cameraTurnedOn = false;
+          } else if (((audio !== null) == video) == null) {
+            globalThis.mediaSettings.audioTurnedOn = false;
+          }
           return console.log("Could not get stream!");
         }
         globalThis.mediaStreamInUse = stream;
         let preview = globalThis.$refs.preview;
         globalThis.video = attachMediaStream(stream, preview, options);
         globalThis.updateDeviceOptions();
-        globalThis.getStarted = false;
+        if (video !== null) {
+          //- because video one also restarts audio
+          console.log("a");
+          globalThis.disconnectAudioContext();
+          console.log("b");
+        }
         globalThis.initAudioFeedback(stream);
+        if (!audioWasTrue && video !== null && audio == null) {
+          globalThis.toggleAudio(false);
+        }
+        if (!cameraWasTrue && video == null && audio !== null) {
+          globalThis.turnOffVideo();
+        }
       });
     },
     refreshVideo() {
-      this.getVideoAndAudioWithDevices(this.audioDeviceId, this.videoDeviceId);
+      this.getMediaWithDevices();
     },
     updateDeviceOptions() {
       let videoDisplay = this.$refs.display;
@@ -379,12 +348,12 @@ export default {
       enumerateDevices()
         .then(function (devices) {
           setError(null);
-          var selectedAudio = globalThis.audioDeviceId;
-          var selectedVideo = globalThis.videoDeviceId;
+          var selectedAudio = globalThis.mediaData.audioDeviceId;
+          var selectedVideo = globalThis.mediaData.videoDeviceId;
 
           globalThis.devices = {};
-          globalThis.videoDevices = [];
-          globalThis.audioDevices = [];
+          globalThis.mediaData.videoDevices = [];
+          globalThis.mediaData.audioDevices = [];
           globalThis.devices = devices;
 
           var audioDevicesCount = 0;
@@ -396,13 +365,13 @@ export default {
               if (!device.label) {
                 device.label = "Microphone " + audioDevicesCount;
               }
-              globalThis.audioDevices.push(device);
+              globalThis.mediaData.audioDevices.push(device);
             } else if (device.kind === "videoinput") {
               videoDevicesCount++;
               if (!device.label) {
                 device.label = "Camera " + videoDevicesCount;
               }
-              globalThis.videoDevices.push(device);
+              globalThis.mediaData.videoDevices.push(device);
             }
           }
 
@@ -410,19 +379,21 @@ export default {
             'select[name="audio-options"] option[value="' + selectedAudio + '"]'
           );
           if (selectedAudio && audioWithId) {
-            globalThis.audioDeviceId = selectedAudio;
+            globalThis.mediaData.audioDeviceId = selectedAudio;
           } else {
             // let selected = document.getElementById("audio-options").selectedIndex = 0;
-            globalThis.audioDeviceId = globalThis.audioDevices[0].deviceId;
+            globalThis.mediaData.audioDeviceId =
+              globalThis.mediaData.audioDevices[0].deviceId;
           }
 
           let videoWithId = document.querySelector(
             'select[name="video-options"] option[value="' + selectedVideo + '"]'
           );
           if (selectedVideo && videoWithId) {
-            globalThis.videoDeviceId = selectedVideo;
+            globalThis.mediaData.videoDeviceId = selectedVideo;
           } else {
-            globalThis.videoDeviceId = globalThis.videoDevices[0].deviceId;
+            globalThis.mediaData.videoDeviceId =
+              globalThis.mediaData.videoDevices[0].deviceId;
           }
         })
         .catch(function (err) {
@@ -475,7 +446,7 @@ export default {
         // globalThis.colorPids(average);
       };
     },
-    disonnectAudioContext() {
+    disconnectAudioContext() {
       this.audioContext.close();
     },
     clonePids(average) {
@@ -607,6 +578,7 @@ export default {
   align-items: center;
   flex-direction: column;
   box-sizing: border-box;
+  position: relative;
 }
 
 .video-feed {
@@ -709,14 +681,14 @@ export default {
 @supports (-webkit-appearance: none) or (-moz-appearance: none) {
   input[type="checkbox"],
   input[type="radio"] {
-    --active: #275efe;
+    --active: #520ed5;
     --active-inner: #fff;
-    --focus: 2px rgba(39, 94, 254, 0.3);
+    --focus: 2px #520ed55c;
     --border: #bbc1e1;
-    --border-hover: #275efe;
+    --border-hover: #520ed5;
     --background: #fff;
     --disabled: #f6f8ff;
-    --disabled-inner: #e1e6f9;
+    --disabled-inner: #eee6ff5c;
     -webkit-appearance: none;
     -moz-appearance: none;
     height: 22px;

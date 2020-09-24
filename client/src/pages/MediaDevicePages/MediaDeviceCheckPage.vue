@@ -36,6 +36,7 @@
             :videoStatus="mediaSettings.cameraTurnedOn"
             :audioStatus="mediaSettings.audioTurnedOn"
             :settingsActive="settingsActive"
+            :isAuthenticated="isAuthenticated"
             @turnOffVideo="turnOffVideo"
             @turnOnVideo="turnOnVideo"
             @toggleAudio="toggleAudio"
@@ -51,11 +52,6 @@
             @toggleSettings="toggleSettings"
             @setDefaults="setDefaults"
           />
-          <section v-if="settingsActive">
-            <aside class="error-message" v-if="err">
-              <p>{{errorMessage}}</p>
-            </aside>
-          </section>
           <div
             class="toggle-prereview"
             v-if="roomType === 'open' && mediaSettings.showPreReviewOnOpenRooms && isAuthenticated && isVerified"
@@ -211,6 +207,62 @@ export default {
         console.log("Setting defaults error: ", error);
       }
     },
+    async setPreScreenPreference() {
+      try {
+        let showPreScreen = this.userMediaPreferences.showPreScreen;
+        let mediaSettingsData = {
+          showPreScreen: showPreScreen
+        }
+        mediaSettingsData.userId = this.user._id;
+        const response = await requestWithAuthentication(
+          "post",
+          `api/userActions/updateUserPreScreenPreference`,
+          mediaSettingsData
+        );
+        console.log("@updateUserPreferences response", response);
+      } catch (error) {
+        console.log("Setting defaults error: ", error);
+      }
+    },
+    async getAndSetDefaultPreferences() {
+      try {
+        // let mediaSettingsData = this.userMediaPreferences;
+        // mediaSettingsData.userId = this.user._id;
+        if (!this.isAuthenticated) {
+          return console.log("Create an account to save defaults.");
+        }
+        let data = {
+          userId: this.user._id,
+        };
+        const response = await requestWithAuthentication(
+          "post",
+          `api/userActions/getUserRoomPreferences`,
+          data
+        );
+        let preferences = response.data.userRoomPreferences;
+        let localPreferences = this.userMediaPreferences;
+
+        if (preferences.defaultCamera) {
+          localPreferences.defaultCamera = preferences.defaultCamera;
+          this.mediaData.videoDeviceId = preferences.defaultCamera;
+        }
+
+        if (preferences.defaultMicrophone) {
+          localPreferences.defaultMicrophone = preferences.defaultMicrophone;
+          this.mediaData.audioDeviceId = preferences.defaultMicrophone;
+        }
+
+        if (preferences.defaultSpeaker) {
+          localPreferences.defaultSpeaker = preferences.defaultSpeaker;
+          this.mediaData.speakerDeviceId = preferences.defaultSpeaker;
+        }
+
+        localPreferences.showPreScreen = preferences.showPreScreen;
+
+      } catch (error) {
+        console.log("Getting defaults error: ", error);
+      }
+    },
     toggleSettings() {
       this.settingsActive = !this.settingsActive;
     },
@@ -230,6 +282,7 @@ export default {
       // Next time don't show.
       this.userMediaPreferences.showPreScreen = !this.userMediaPreferences
         .showPreScreen;
+      this.setPreScreenPreference();
     },
     checkDeviceSupport() {
       let globalThis = this;
@@ -445,7 +498,9 @@ export default {
           }
 
           let speakerWithId = document.querySelector(
-            'select[name="speaker-options"] option[value="' + selectedSpeaker + '"]'
+            'select[name="speaker-options"] option[value="' +
+              selectedSpeaker +
+              '"]'
           );
           if (selectedSpeaker && speakerWithId) {
             globalThis.mediaData.speakerDeviceId = selectedSpeaker;
@@ -453,8 +508,7 @@ export default {
             let deviceId = globalThis.mediaData.speakerDevices[0].deviceId;
             globalThis.setSpeakerDeviceId(deviceId);
           }
-
-
+          globalThis.getAndSetDefaultPreferences();
         })
         .catch(function (err) {
           setError(err, videoDisplay, deviceSelection);

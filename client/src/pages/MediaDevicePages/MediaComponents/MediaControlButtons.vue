@@ -38,65 +38,13 @@
           </div>-->
         </div>
       </div>
-      <div class="tooltip_container">
+      <div class="tooltip_container" v-if="isAuthenticated">
         <div class="settings-button" @click="toggleSettings">
           <img :src="settings" class="settings-icon" />
         </div>
         <div class="tooltip tooltip--top tooltip--middle">
           <span class="tooltip_tip">Open settings menu</span>
           <span class="tooltip_shortcut">S</span>
-        </div>
-      </div>
-    </div>
-    <div class="SettingsButton pos-rel" v-if="settingsActive == 'blue'">
-      <div class="tooltip_container">
-        <div class="tooltip tooltip--top tooltip--middle">
-          <span>Open settings menu</span>
-        </div>
-      </div>
-      <div class="VideoCallSettings">
-        <label class="VideoCallSettings_Label">
-          <span>Microphone</span>
-        </label>
-        <div class="Select_Wrapper">
-          <svg aria-hidden="true" class="knpf_icon Select_Icon">
-            <use xlink:href="#icon-mic" />
-          </svg>
-          <select class="Select Select--with-icon">
-            <option value="default">Default - MacBook Pro Microphone (Built-in)</option>
-            <option
-              value="9217f8fbfebfeaf2c9141a33b6ba4966fcd4bb15ee3b99fed7f0fd884d5973f5"
-            >MacBook Pro Microphone (Built-in)</option>
-          </select>
-        </div>
-        <hr class="VideoCallSettings_Divider" />
-        <label class="VideoCallSettings_Label">
-          <span>Speaker</span>
-        </label>
-        <div class="Select_Wrapper">
-          <svg aria-hidden="true" class="knpf_icon Select_Icon">
-            <use xlink:href="#icon-volume-2" />
-          </svg>
-          <select class="Select Select--with-icon">
-            <option value="default">Default - MacBook Pro Speakers (Built-in)</option>
-            <option
-              value="4b66b227321bda3b1c69a61479c2f6fcd68a4e5cac018c0af1e5c0080806b7d8"
-            >MacBook Pro Speakers (Built-in)</option>
-          </select>
-        </div>
-        <hr class="VideoCallSettings_Divider" />
-        <label class="VideoCallSettings_Label">
-          <span>Camera</span>
-        </label>
-        <div class="Select_Wrapper">
-          <svg aria-hidden="true" class="knpf_icon Select_Icon">
-            <use xlink:href="#icon-video" />
-          </svg>
-          <select class="Select Select--with-icon">
-            <option
-              value="93fe9537f438010d8b66b6eff54b1716cbe4444e66885ed2ba2c65dc029c3d7b"
-            >FaceTime HD Camera (Built-in) (05ac:8514)</option>
-          </select>
         </div>
       </div>
     </div>
@@ -112,7 +60,7 @@ import settings from "../../../assets/images/settings.png";
 
 export default {
   name: "MediaControlButtons",
-  props: ["videoStatus", "audioStatus", "settingsActive"],
+  props: ["videoStatus", "audioStatus", "settingsActive", "isAuthenticated"],
   data() {
     return {
       videoIcon: videoIcon,

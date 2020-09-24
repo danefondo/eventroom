@@ -9,6 +9,9 @@ const router = Express.Router();
 // Eventroom preferences configuration
 router.post('/updateUserRoomPreferences', AuthController.confirmAuthentication, UserActionUtilities.updateUserRoomPreferences);
 
-router.get('/getUserRoomPreferences', AuthController.confirmAuthentication, UserActionUtilities.getUserRoomPreferences);
+router.post('/updateUserPreScreenPreference', AuthController.confirmAuthentication, UserActionUtilities.updateUserPreScreenPreference);
+
+// Using 'post' for getting data to pass data through body
+router.post('/getUserRoomPreferences', AuthController.confirmAuthentication, UserActionUtilities.getUserRoomPreferences);
 
 module.exports = router;

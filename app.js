@@ -180,6 +180,19 @@ IO.on("connection", function (socket) {
     });
   });
 
+  socket.on("tokenAgain", function () {
+    console.log("Received token request");
+    twilio.tokens.create(function (err, response) {
+      if (err) {
+        console.log(err);
+      } else {
+        // Return the token to the browser.
+        console.log("Token generated. Returning it to the client");
+        socket.emit("tokenAgain", response);
+      }
+    });
+  });
+
   // Relay candidate messages
   socket.on("candidate", function (candidate) {
     console.log("Received candidate. Broadcasting...");

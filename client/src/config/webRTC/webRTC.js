@@ -17,7 +17,6 @@ function logIt(message, error) {
 var VideoChat = (module.exports = {
   connected: false,
   localICECandidates: [],
-  socket: undefined,
 
   // Initialise our connection to the WebSocket.
   // socket: io(),
@@ -53,6 +52,14 @@ var VideoChat = (module.exports = {
     VideoChat.localVideo.srcObject = stream;
     // Now we're ready to join the chat room.
     VideoChat.socket.emit("join", "test");
+    // VideoChat.sockets.subscribe("ready", (data) => {
+    //   console.log("data", data);
+    //   VideoChat.readyToCall();
+    // });
+    // VideoChat.sockets.subscribe("offer", (data) => {
+    //   console.log("offerData", data);
+    //   VideoChat.onOffer(data);
+    // });
     VideoChat.socket.on("ready", VideoChat.readyToCall);
     VideoChat.socket.on("offer", VideoChat.onOffer);
   },
@@ -66,7 +73,7 @@ var VideoChat = (module.exports = {
 
   // When we are ready to call, enable the Call button.
   readyToCall: function() {
-    console.log("errrrd")
+    console.log("errrrd");
     let callButton = document.getElementById("call");
     callButton.removeAttribute("disabled");
   },
@@ -76,6 +83,10 @@ var VideoChat = (module.exports = {
   startCall: function() {
     logIt(">>> Sending token request...");
     VideoChat.socket.on("token", VideoChat.onToken(VideoChat.createOffer));
+    // VideoChat.sockets.subscribe("token", (data) => {
+    //   console.log("tokenDataForOffer", data);
+    //   VideoChat.onToken(data);
+    // });
     VideoChat.socket.emit("token");
   },
 
@@ -83,12 +94,10 @@ var VideoChat = (module.exports = {
   onToken: function(callback) {
     return function(token) {
       logIt("<<< Received token");
-      console.log("token", token);
       // Set up a new RTCPeerConnection using the token's iceServers.
       VideoChat.peerConnection = new RTCPeerConnection({
         iceServers: token.iceServers,
       });
-      console.log("peerconn", VideoChat.peerConnection);
       // Add the local video stream to the peerConnection.
       VideoChat.peerConnection.addStream(VideoChat.localStream);
       // Set up callbacks for the connection generating iceCandidates or
@@ -180,7 +189,6 @@ var VideoChat = (module.exports = {
   // When a browser receives an offer, set up a callback to be run when the
   // ephemeral token is returned from Twilio.
   onOffer: function(offer) {
-    console.log("off", offer);
     logIt("<<< Received offer");
     VideoChat.socket.on(
       "token",

@@ -51,3 +51,5 @@ export const enumerateDevices = function(cb) {
     }
   });
 };
+
+//- https://github.com/xdumaine/enumerateDevices

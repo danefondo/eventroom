@@ -10,7 +10,8 @@ const Passport = require("passport");
 const DatabaseConfig = require("./config/DatabaseConfig");
 const Cors = require("cors");
 
-const initialiseAuthentication = require('./auth/index').initialiseAuthentication;
+const initialiseAuthentication = require("./auth/index")
+  .initialiseAuthentication;
 /* ====== DATABASE SETUP ====== */
 
 /* 
@@ -20,7 +21,11 @@ Mongoose.connect(TEST_DB_URI, { useNewUrlParser: true });
 */
 
 //- Mongoose production database setup
-Mongoose.connect(DatabaseConfig.DB_URI, {useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true});
+Mongoose.connect(DatabaseConfig.DB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+});
 Mongoose.set("useFindAndModify", false);
 
 //- Get default Mongoose connection
@@ -77,13 +82,13 @@ initialiseAuthentication(app);
 /* ====== SOCKET.IO SETUP ====== */
 
 IO.on("connection", function (socket) {
-  console.log('this user is connected')
+  console.log("this user is connected");
   // io.emit('test', 'lsdkfja');
   // socket.broadcast.emit("message", "whadaaaaap");
   // socket.on('message', function(msg){
   //   io.emit('message', msg);
   // });
-  socket.on("joinRoom", function(data) {
+  socket.on("joinRoom", function (data) {
     console.log("roomId: ", data.roomId);
     socket.join(data.roomId);
   });
@@ -128,15 +133,76 @@ IO.on("connection", function (socket) {
     console.log("data from vonage");
     //- Update data in database and when done, emit signal back to session
     let freshBakedFromDatabase;
-    socket.broadcast.to(data.room_id).emit("updateStuff", freshBakedFromDatabase);
+    socket.broadcast
+      .to(data.room_id)
+      .emit("updateStuff", freshBakedFromDatabase);
   });
 
   // socket.on("ended", function (data) {
   //   console.log("yo made ended");
   //   socket.broadcast.emit("endedVideo", "end");
   // });
+
+
+  
+
+  // When a client tries to join a room, only allow them if they are first or
+  // second in the room. Otherwise it is full.
+  socket.on("join", function (room) {
+    console.log("A client joined");
+    var clients = IO.sockets.adapter.rooms[room];
+    var numClients = typeof clients !== "undefined" ? clients.length : 0;
+    if (numClients == 0) {
+      socket.join(room);
+    } else if (numClients == 1) {
+      socket.join(room);
+      // When the client is second to join the room, both clients are ready.
+      console.log("Broadcasting ready message");
+      socket.emit("ready", room);
+      socket.broadcast.emit("ready", room);
+    } else {
+      socket.emit("full", room);
+    }
+  });
+
+  // When receiving the token message, use the Twilio REST API to request an
+  // token to get ephemeral credentials to use the TURN server.
+  socket.on("token", function () {
+    console.log("Received token request");
+    twilio.tokens.create(function (err, response) {
+      if (err) {
+        console.log(err);
+      } else {
+        // Return the token to the browser.
+        console.log("Token generated. Returning it to the client");
+        socket.emit("token", response);
+      }
+    });
+  });
+
+  // Relay candidate messages
+  socket.on("candidate", function (candidate) {
+    console.log("Received candidate. Broadcasting...");
+    socket.broadcast.emit("candidate", candidate);
+  });
+
+  // Relay offers
+  socket.on("offer", function (offer) {
+    console.log("Received offer. Broadcasting...");
+    socket.broadcast.emit("offer", offer);
+  });
+
+  // Relay answers
+  socket.on("answer", function (answer) {
+    console.log("Received answer. Broadcasting...");
+    socket.broadcast.emit("answer", answer);
+  });
 });
 
+let twilio = require("twilio")(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
 /* ====== ROUTES SETUP ====== */
 const AccountRoutes = require("./routes/API/AccountRoutes");
@@ -148,11 +214,9 @@ app.use("/api/userActions", UserActionRoutes);
 
 /* ====== REQUESTS HANDLING ====== */
 
-
 app.get("*", function (req, res) {
   res.sendFile(Path.join(__dirname, "client/dist/index.html"));
 });
-
 
 /* ====== SERVER SETUP ====== */
 
@@ -165,4 +229,3 @@ if (port == null || port == "") {
 HTTP.listen(port, function () {
   console.log("Server started on port " + port);
 });
-

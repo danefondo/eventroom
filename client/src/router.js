@@ -7,6 +7,9 @@ import DashboardPage from "./pages/DashboardPages/DashboardPage";
 /* ====== PRE-EVENT PAGES ====== */
 import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage";
 
+/* ====== ROOM PAGES ====== */
+import RoomPage from "./pages/RoomPages/Room";
+
 /* ====== EVENT PAGES ====== */
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
 import EditEventPage from "./pages/CreatorPages/EditEventPage";
@@ -49,6 +52,13 @@ const routes = [
     path: "/mediacheck",
     component: MediaDeviceCheckPage,
     name: "MediaDeviceCheckPage",
+  },
+
+  /* ====== ROOM ROUTES ====== */
+  {
+    path: "/testroom",
+    component: RoomPage,
+    name: "RoomPage",
   },
 
   /* ====== AUTHENTICATION ROUTES ====== */

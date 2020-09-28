@@ -1,5 +1,5 @@
-const utils = require('./Utils');
-const strategies = require('./strategies/Index');
+const utils = require('../utilities/Utils');
+const strategies = require('../strategies/Index');
 
 const pipe = (...functions) => args => functions.reduce((arg, fn) => fn(arg), args)
 

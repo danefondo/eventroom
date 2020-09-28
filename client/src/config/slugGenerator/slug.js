@@ -8,7 +8,11 @@ var NUM_ADJECTIVES = adjectives.length,
 //- https://github.com/veltman/BriefMemorableSlug
 
 export const slug = function() {
-  return generate().join('-');
+  let slugWord = generate().join("-");
+  let AAA = /^([a-z]+){3}$/;
+  slugWord = slugWord.toLowerCase();
+  slugWord.match(AAA);
+  return slugWord;
 };
 
 function generate() {

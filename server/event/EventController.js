@@ -1,7 +1,7 @@
 const axios = require("axios");
 
-const EventUtilities = require('../database/event/EventUtilities');
-const RoomUtilities = require('../database/room/RoomUtilities');
+const EventUtilities = require('../../database/event/EventUtilities');
+const RoomUtilities = require('../../database/room/RoomUtilities');
 const OTUtilities = require('./OTUtilities');
 
 

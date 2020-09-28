@@ -1,6 +1,6 @@
 const ResetPassword = require('./models/ResetPasswordModel');
 
-const { hashPassword, verifyPassword } = require('../../auth/Utils');
+const { hashPassword, verifyPassword } = require('../../server/auth/utilities/Utils');
 const { getUserByEmail } = require('./UserUtilities');
 
 const verifyResetToken = async function(email, token) {

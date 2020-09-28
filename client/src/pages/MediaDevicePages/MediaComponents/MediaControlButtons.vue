@@ -492,7 +492,7 @@ select {
   width: 100%;
   width: -moz-available;
   width: -webkit-fill-available;
-  width: fill-available;
+  width: stretch;
 }
 .Select--with-icon {
   padding-left: calc(var(--select-padding) + 32px);

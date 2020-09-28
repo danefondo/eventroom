@@ -7,10 +7,10 @@ const CookieParser = require("cookie-parser");
 const Path = require("path");
 const Enforce = require("express-sslify");
 const Passport = require("passport");
-const DatabaseConfig = require("./config/DatabaseConfig");
+const DatabaseConfig = require("./database/config/DatabaseConfig");
 const Cors = require("cors");
 
-const initialiseAuthentication = require("./auth/index")
+const initialiseAuthentication = require("./server/auth/configs/index")
   .initialiseAuthentication;
 /* ====== DATABASE SETUP ====== */
 
@@ -165,6 +165,13 @@ IO.on("connection", function (socket) {
     }
   });
 
+    // Relay candidate messages
+    socket.on("peerJoin", function () {
+      console.log("Received candidate. Broadcasting...");
+      let peer = "peer";
+      socket.broadcast.emit("peerJoined", peer);
+    });
+
   // When receiving the token message, use the Twilio REST API to request an
   // token to get ephemeral credentials to use the TURN server.
   socket.on("token", function () {
@@ -217,13 +224,16 @@ let twilio = require("twilio")(
   process.env.TWILIO_AUTH_TOKEN
 );
 
+
 /* ====== ROUTES SETUP ====== */
 const AccountRoutes = require("./routes/API/AccountRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
 const UserActionRoutes = require("./routes/API/UserActionRoutes");
+const EventroomRoutes = require("./routes/API/EventroomRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/events", EventRoutes);
 app.use("/api/userActions", UserActionRoutes);
+app.use("/api/eventroom", EventroomRoutes);
 
 /* ====== REQUESTS HANDLING ====== */
 

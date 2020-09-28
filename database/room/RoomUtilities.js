@@ -1,5 +1,5 @@
-const Room = require('./models/RoomModel');
-const TempUser = require('./models/TempUserModel');
+const Room = require('../../database/room/models/RoomModel');
+const TempUser = require('../../database/room/models/TempUserModel');
 const mongoose = require('mongoose');
 
 const RoomUtilities = {

@@ -1,13 +1,13 @@
 const { validationResult } = require('express-validator');
 const JWT = require('jsonwebtoken');
 
-const { verifyToken, generateToken, hashPassword, userInJWT } = require('./Utils');
-const { verifyResetToken, addResetToken, deleteResetTokens } = require('../database/user/ResetPasswordUtilities');
-const { getUserByEmail } = require('../database/user/UserUtilities');
+const { verifyToken, generateToken, hashPassword, userInJWT } = require('../utilities/Utils');
+const { verifyResetToken, addResetToken, deleteResetTokens } = require('../../../database/user/ResetPasswordUtilities');
+const { getUserByEmail } = require('../../../database/user/UserUtilities');
 
 const { loginWithTokens } = require('./AuthController');
 
-const { sendResetMail } = require('../utils/MailUtilities');
+const { sendResetMail } = require('../../mail/MailUtilities');
 
 
 const changePassword = async (email, newPassword) => {

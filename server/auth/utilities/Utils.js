@@ -4,8 +4,8 @@ const JWT = require('jsonwebtoken');
 const Bcrypt = require('bcryptjs')
 const Dotenv = require('dotenv');
 
-const { createNewUserRefreshToken } = require('../database/user/UserRefreshTokenUtilities');
-const { getUserById } = require('../database/user/UserUtilities');
+const { createNewUserRefreshToken } = require('../../../database/user/UserRefreshTokenUtilities');
+const { getUserById } = require('../../../database/user/UserUtilities');
 
 Dotenv.config();
 

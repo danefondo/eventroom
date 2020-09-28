@@ -1,59 +1,46 @@
 <template>
-  <div>
-    <div class="room-container">
+  <div class="room-container">
+    <RoomToolbar />
+    <div class="video-chat">
       <h1>Video Chat</h1>
-      <video id="local-video" ref="localvideo" height="150" autoplay></video>
-      <video id="remote-video" ref="remotevideo" height="150" autoplay></video>
+      <div class="video-streams">
+        <video id="local-video" ref="localvideo" height="150" autoplay></video>
+        <video
+          id="remote-video"
+          ref="remotevideo"
+          height="150"
+          autoplay
+        ></video>
+      </div>
       <div>
-        <button id="get-video" v-if="getVideo" @click="requestMediaStream">
+        <!-- <button id="get-video" v-if="getVideo" @click="requestMediaStream">
           Get Video
-        </button>
-        <button id="call" :disabled="!callReady" @click="startCall">
+        </button> -->
+        <!-- <button id="call" :disabled="!callReady" @click="startCall">
           Call
-        </button>
+        </button> -->
       </div>
-      <div class="multi-button">
-        <div class="buttonContainer">
-          <button class="hoverButton" @click="muteMicrophone">
-            <i id="mic-icon" class="fas fa-microphone fa-xs"></i>
-          </button>
-          <div class="HoverState" id="mic-text">Mute</div>
-        </div>
-        <div class="buttonContainer">
-          <button class="hoverButton" @click="pauseVideo">
-            <i class="fas fa-video fa-xs" id="video-icon"></i>
-          </button>
-          <div class="HoverState" id="video-text">Pause Video</div>
-        </div>
-        <div class="buttonContainer">
-          <button class="hoverButton" id="share-button" @click="swap">
-            <i id="swap-icon" class="fas fa-desktop fa-xs"></i>
-          </button>
-          <div class="HoverState" id="swap-text">Share Screen</div>
-        </div>
-        <div class="buttonContainer">
-          <button
-            class="hoverButton"
-            id="pip-button"
-            @click="togglePictureInPicture"
-          >
-            <i class="fas fa-external-link-alt fa-xs"></i>
-          </button>
-          <div class="HoverState" id="pip-text">Toggle Picture in Picture</div>
-        </div>
-      </div>
-      <p>Log messages:</p>
-      <div id="logs"></div>
+      <RoomBottomBar
+        :userMediaSettings="userMediaSettings"
+        :screenBeingShared="screenBeingShared"
+        :localStream="localStream"
+        :lessThanThreeInSession="lessThanThreeInSession"
+        :pictureInPictureEnabled="pictureInPictureEnabled"
+        @toggleMedia="toggleMedia"
+        @toggleScreenshare="toggleScreenshare"
+        @togglePictureInPicture="togglePictureInPicture"
+        @toggleShutRestart="toggleShutRestart"
+      />
     </div>
   </div>
 </template>
 
 <script>
 import { mapState } from "vuex";
+import RoomToolbar from "./RoomComponents/RoomToolbar";
+import RoomBottomBar from "./RoomComponents/RoomBottomBar";
 // import SessionController from "../../session/SessionController";
 // import { requestWithAuthentication } from "../../config/api";
-
-// import VideoChat from "../../config/webRTC/webRTC";
 
 export default {
   name: "RoomPage",
@@ -62,6 +49,7 @@ export default {
       // ready: false,
       // errors: false,
       // errorMessage: "",
+      type: 0,
       connected: false,
       localICECandidates: [],
       localStream: undefined,
@@ -71,6 +59,19 @@ export default {
       getVideo: true,
       peerConnection: undefined,
       offer: undefined,
+      screenBeingShared: false,
+      pictureInPictureEnabled: false,
+      lessThanThreeInSession: true,
+      userMediaSettings: {
+        cameraOn: false,
+        microphoneOn: false,
+        speakerOn: false,
+      },
+      userMediaDefaultPreferences: {
+        cameraOn: true,
+        microphoneOn: true,
+        speakerOn: true,
+      },
     };
   },
   computed: {
@@ -82,15 +83,23 @@ export default {
       // sessionID: (state) => state.session.thisSessionId,
     }),
   },
+  components: {
+    RoomToolbar,
+    RoomBottomBar,
+  },
   async mounted() {
     console.log("@eventroom mounted");
     // if (this.isAuthenticated) {
     //   this.getRoom();
     // }
-    this.sockets.subscribe("ready", (data) => {
-      console.log("data", data);
-      this.readyToCall();
+    this.getAndSetMediaPreferences();
+    this.requestMediaStream();
+
+    this.sockets.subscribe("peerJoined", (data) => {
+      console.log("peerJoined", data);
+      this.startCall();
     });
+
     this.sockets.subscribe("offer", (data) => {
       console.log("offerData", data);
       //- save data for other client(s) too
@@ -115,8 +124,50 @@ export default {
 
       this.onToken(data, "onOffer");
     });
+    this.sockets.subscribe("ready", (data) => {
+      console.log("data", data);
+      this.readyToCall();
+      this.$socket.emit("peerJoin");
+    });
   },
   methods: {
+    toggleShutRestart() {
+      if (this.type === 0) {
+        this.stopVideo();
+        this.type = 1;
+      } else if (this.type === 1) {
+        this.restartVideo();
+        this.type = 0;
+      }
+    },
+    createTemporaryDummyData() {
+      let userMediaDefaultPreferences = {
+        cameraOn: true,
+        microphoneOn: true,
+        speakerOn: true,
+      };
+      return userMediaDefaultPreferences;
+    },
+    getAndSetMediaPreferences() {
+      console.log("setting media preferences from vuex & database defaults");
+      // If user, check database
+
+      // If no user, check vuex
+
+      // Set temporary dummy data
+      let dummyData = this.createTemporaryDummyData();
+      let userPreferences = this.userMediaDefaultPreferences;
+      let mediaSettings = this.userMediaSettings;
+
+      // Synchronize local data with database / vuex
+      userPreferences.cameraOn = dummyData.cameraOn;
+      userPreferences.microphoneOn = dummyData.microphoneOn;
+      userPreferences.speakerOn = dummyData.speakerOn;
+
+      mediaSettings.cameraOn = dummyData.cameraOn;
+      mediaSettings.microphoneOn = dummyData.microphoneOn;
+      mediaSettings.speakerOn = dummyData.speakerOn;
+    },
     requestMediaStream() {
       // Start getUserMedia process
       console.log("@1: requestMediaStream");
@@ -135,6 +186,7 @@ export default {
       this.localVideo = this.$refs.localvideo;
       // Turn the volume down to 0 to avoid echoes.
       this.localVideo.volume = 0;
+      stream = this.processStream(stream);
       this.localStream = stream;
       this.getVideo = false;
 
@@ -144,6 +196,39 @@ export default {
       // Now we're ready to join the chat room.
       this.$socket.emit("join", "test");
     },
+    processStream(stream) {
+      let streamTracks = stream.getTracks();
+
+      let streamAudioTrack = streamTracks.find((track) => {
+        return track.kind === "audio";
+      });
+
+      let streamVideoTrack = streamTracks.find((track) => {
+        return track.kind === "video";
+      });
+
+      // Check user preferences for audio on / audio off
+      let preferences = this.userMediaDefaultPreferences;
+
+      if (!preferences.cameraOn) {
+        console.log("video track", streamVideoTrack);
+        // streamVideoTrack.enabled = !streamVideoTrack.enabled;
+      }
+
+      if (!preferences.microphoneOn) {
+        streamAudioTrack.enabled = !streamAudioTrack.enabled;
+      }
+
+      // if (preferences.speakerOn) {
+      //   let localTrack = localTracks.find((track) => {
+      //     return track.kind === "audio";
+      //   });
+
+      //   localTrack.enabled = !localTrack.enabled;
+      // }
+
+      return stream;
+    },
     noMediaStream(error) {
       // There's not much to do in this demo if there is no media stream. So
       // let's just stop.
@@ -152,6 +237,12 @@ export default {
     readyToCall() {
       // When we are ready to call, enable the Call button.
       this.callReady = true;
+      // Start call
+      // Set up a callback to run when we have the ephemeral token to use Twilio's
+      // TURN server.
+
+      // console.log(">>> Sending token request...");
+      // this.$socket.emit("token");
     },
     startCall() {
       // Set up a callback to run when we have the ephemeral token to use Twilio's
@@ -163,16 +254,24 @@ export default {
     onToken(token, type) {
       console.log("<<< Received token", token);
       // Set up a new RTCPeerConnection using the token's iceServers.
+      let globalThis = this;
       this.peerConnection = new RTCPeerConnection({
         iceServers: token.iceServers,
       });
       console.log("peerc", this.peerConnection);
       // Add the local video stream to the peerConnection.
-      this.peerConnection.addStream(this.localStream);
+      // this.peerConnection.addStream(this.localStream); DEPRECATED
+      this.localStream.getTracks().forEach(function (track) {
+        console.log("trackk", track);
+        globalThis.peerConnection.addTrack(track, globalThis.localStream);
+        console.log("peerctest", globalThis.peerConnection);
+      });
       // Set up callbacks for the connection generating iceCandidates or
       // receiving the remote media stream.
       this.peerConnection.onicecandidate = this.onIceCandidate;
-      this.peerConnection.onaddstream = this.onAddStream;
+      // this.peerConnection.onaddstream = this.onAddStream; DEPRECATED
+      this.peerConnection.ontrack = this.onAddStream;
+
       // Set up listeners on the socket for candidates or answers being passed
       // over the socket connection.
       if (type == "forOffer") {
@@ -242,7 +341,7 @@ export default {
       let globalThis = this;
       console.log(">>> Creating answer...", this.offer);
       this.connected = true;
-      let rtcOffer = new RTCSessionDescription(JSON.parse(this.offer));
+      let rtcOffer = new RTCSessionDescription(JSON.parse(globalThis.offer));
       this.peerConnection.setRemoteDescription(rtcOffer);
       this.peerConnection.createAnswer(
         function (answer) {
@@ -285,23 +384,229 @@ export default {
       // browser, add it to the other video element on the page.
       console.log("<<< Received new stream from remote. Adding it...", event);
       this.remoteVideo = this.$refs.remotevideo;
-      this.remoteVideo.srcObject = event.stream;
+      // this.remoteVideo.srcObject = event.stream; DEPRECATED, only worked with .onaddstream & addStream
+      this.remoteVideo.srcObject = event.streams[0];
       this.remoteVideo.volume = 0;
     },
     openFullscreen() {
       console.log("nothing for now");
     },
-    muteMicrophone() {
-      console.log("nothing for now");
+    toggleMedia(type) {
+      if (type === 0) {
+        type = "video";
+      } else if (type === 1) {
+        type = "audio";
+      }
+
+      let localTracks = this.localStream.getTracks();
+
+      // Find local stream video track
+      let localTrack = localTracks.find((track) => {
+        return track.kind === type;
+      });
+
+      // Reverse realtime state of local stream video
+      localTrack.enabled = !localTrack.enabled;
+
+      let tracks;
+
+      // Check for peerConnection
+      if (this.peerConnection) {
+        tracks = this.peerConnection.getSenders();
+      }
+
+      // Check if peerConnection & tracks already exist
+      if (tracks) {
+        // Find peerConnection video track
+        let peerTrack = tracks.find((sender) => {
+          return sender.track.kind === type;
+        });
+
+        // Reverse realtime state of peer connection audio
+        peerTrack.enabled = !peerTrack.enabled;
+      }
+
+      if (type === "video") {
+        // Update local data with realtime audio state
+        this.userMediaSettings.cameraOn = localTrack.enabled;
+      } else if (type === "audio") {
+        // Update local data with realtime audio state
+        this.userMediaSettings.microphoneOn = localTrack.enabled;
+      }
     },
-    pauseVideo() {
-      console.log("nothing for now");
+    stopVideo() {
+      this.localVideo.pause();
+      this.localVideo.src = "";
+      this.localVideo.srcObject = null;
+      this.localVideo.mozSrcObject = null;
+      let localTracks = this.localStream.getTracks();
+
+      //- Possibly need to make sure that it is also the CORRECT video stream by id?
+      var videoTrack = localTracks.find((track) => {
+        return track.kind === "video";
+      });
+      videoTrack.stop();
+
+      let tracks;
+
+      // Check for peerConnection
+      if (this.peerConnection) {
+        tracks = this.peerConnection.getSenders();
+      }
+
+      // Check if peerConnection & tracks already exist
+      if (tracks) {
+        // Find peerConnection video track
+        let peerTrack = tracks.find((sender) => {
+          return sender.track.kind === "video";
+        });
+
+        this.peerConnection.removeTrack(peerTrack);
+      }
+
+      this.userMediaSettings.cameraOn = false;
     },
+    restartVideo() {
+      // 1. Get media again
+      // 2. Get correct track
+      // 3. Replace track
+      // 4. Start sending again
+      console.log("@2: restarting stream");
+      let globalThis = this;
+
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: false })
+        .then((stream) => {
+          // Get the video element.
+          globalThis.localVideo = globalThis.$refs.localvideo;
+          // Turn the volume down to 0 to avoid echoes.
+          globalThis.localVideo.volume = 0;
+          globalThis.localStream = stream;
+
+          // Add the stream as video's srcObject.
+          // As the video has the `autoplay` attribute it will start to stream immediately.
+          globalThis.localVideo.srcObject = stream;
+
+          let localTracks = globalThis.localStream.getTracks();
+
+          let peerTracks;
+          // Check for peerConnection
+          if (globalThis.peerConnection) {
+            // Set peer senders
+            peerTracks = globalThis.peerConnection.getSenders();
+          }
+
+          // Check if peerConnection & tracks exist
+          if (peerTracks) {
+            // peerTracks.forEach((sender) => this.peerConnection.removeTrack(sender));
+            localTracks.forEach((track) =>
+              globalThis.peerConnection.addTrack(track, globalThis.localStream)
+            );
+            // this.peerConnection.ontrack = this.onAddStream;
+            globalThis.userMediaSettings.cameraOn = true;
+          }
+        })
+        .catch((error) => {
+          console.log("err", error);
+          globalThis.noMediaStream(error);
+        });
+    },
+    //Picture in picture
     togglePictureInPicture() {
-      console.log("nothing for now");
+      let remoteVideoVanilla = this.remoteVideo;
+      let globalThis = this;
+      if (
+        "pictureInPictureEnabled" in document ||
+        remoteVideoVanilla.webkitSetPresentationMode
+      ) {
+        if (document.pictureInPictureElement) {
+          document.exitPictureInPicture().catch((error) => {
+            console.log("Error exiting pip.", error);
+          });
+          globalThis.pictureInPictureEnabled = false;
+        } else if (remoteVideoVanilla.webkitPresentationMode === "inline") {
+          remoteVideoVanilla.webkitSetPresentationMode("picture-in-picture");
+          globalThis.pictureInPictureEnabled = true;
+        } else if (
+          remoteVideoVanilla.webkitPresentationMode === "picture-in-picture"
+        ) {
+          remoteVideoVanilla.webkitSetPresentationMode("inline");
+          globalThis.pictureInPictureEnabled = true;
+        } else {
+          remoteVideoVanilla.requestPictureInPicture().catch((error) => {
+            alert(
+              "You must be connected to another person to enter picture in picture.",
+              error
+            );
+          });
+        }
+      } else {
+        alert(
+          "Picture in picture is not supported in your browser. Consider using Chrome or Safari."
+        );
+      }
     },
-    swap() {
+    toggleScreenshare() {
+      let globalThis = this;
       console.log("nothing for now");
+      if (this.screenBeingShared) {
+        // Stop screenshare
+        // Stop the screen share track
+        this.localVideo.srcObject.getTracks().forEach((track) => track.stop());
+        // Get webcam input
+        navigator.mediaDevices
+          .getUserMedia({
+            video: true,
+            audio: true,
+          })
+          .then(function (stream) {
+            // Change display mode
+            globalThis.screenBeingShared = !globalThis.screenBeingShared;
+            globalThis.switchStreams(stream);
+          });
+      } else {
+        // Request screen share, note we dont want to capture audio
+        // as we already have the stream from the Webcam
+        navigator.mediaDevices
+          .getDisplayMedia({
+            video: true,
+            audio: false,
+          })
+          .then(function (stream) {
+            // Change display mode
+            globalThis.screenBeingShared = !globalThis.screenBeingShared;
+            globalThis.switchStreams(stream);
+          })
+          .catch(function (err) {
+            console.log("Error sharing screen", err);
+          });
+      }
+    },
+    switchStreams(stream) {
+      let globalThis = this;
+      // Get current video track
+      let videoTrack = stream.getVideoTracks()[0];
+      // Add listen for if the current track swaps, swap back
+      videoTrack.onended = function () {
+        globalThis.toggleScreenshare();
+      };
+      if (this.connected) {
+        // Find sender
+        const sender = this.peerConnection.getSenders().find(function (s) {
+          // make sure tack types match
+          return s.track.kind === videoTrack.kind;
+        });
+        // Replace sender track
+        sender.replaceTrack(videoTrack);
+      }
+      // Update local video stream
+      this.localStream = videoTrack;
+      // Update local video object
+      this.localVideo.srcObject = stream;
+      // // Unpause video on swap
+      // if (videoIsPaused) {
+      //   pauseVideo();
+      // }
     },
     //   async getRoom() {
     //     console.log("@getroom params:", this.$route.params);
@@ -360,4 +665,23 @@ export default {
 </script>
 
 <style scoped>
+.room-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  /* justify-content: center; */
+  align-items: center;
+}
+
+.video-chat {
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.video-streams {
+  display: flex;
+  justify-content: center;
+}
 </style>

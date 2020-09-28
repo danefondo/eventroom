@@ -1,4 +1,4 @@
-const UserConfigurationUtilities = require('../database/user/UserConfigurationsUtilities');
+const UserConfigurationUtilities = require('../../../database/user/UserConfigurationsUtilities');
 
 const ConfigurationController = {
   async getEventroomToolbarConfigurations(req, res) {

@@ -1,8 +1,8 @@
 const Passport = require('passport');
 const PassportFacebook = require('passport-facebook');
 
-const { getUserByProviderId, createUser } = require('../../database/user/UserUtilities');
-const { userInJWT } = require('../Utils');
+const { getUserByProviderId, createUser } = require('../../../database/user/UserUtilities');
+const { userInJWT } = require('../utilities/Utils');
 
 const FacebookStrategy = PassportFacebook.Strategy;
 

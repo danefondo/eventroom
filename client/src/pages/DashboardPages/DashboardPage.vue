@@ -4,10 +4,17 @@
     <div class="central-controls">
       <label class="room-creator">
         <span class="eventroom">eventroom.to/</span>
-        <input class="slug" :placeholder="slug" :value="slug" autofocus="autofocus" spellcheck="false" />
+        <input
+          class="slug"
+          :placeholder="slug"
+          :value="slug"
+          autofocus="autofocus"
+          spellcheck="false"
+        />
       </label>
       <div v-if="isAuthenticated">
-        <router-link to="/events/createEvent" class="create">Create room</router-link>
+        <!-- <router-link to="/events/createEvent" class="create">Create room</router-link> -->
+        <div class="create" @click="createEventroom">Create room</div>
       </div>
       <div v-if="!isAuthenticated">
         <p>You are not logged in.</p>
@@ -32,9 +39,6 @@ export default {
       slug: "",
     };
   },
-  //   components: {
-  //     EventBox,
-  //   },
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
@@ -50,12 +54,38 @@ export default {
     logout() {
       auth.logout();
     },
+    async createEventroom() {
+      try {
+        let slug = this.slug;
+        if (!slug) {
+          // If slug has been removed, generate new slug
+          slug = slug();
+        }
+        let eventroomData = {
+          eventroomName: slug,
+        };
+
+        if (this.isAuthenticated) {
+          eventroomData.hostId = this.user._id;
+        }
+        
+        const response = await axios.post(
+          `/api/eventroom/createEventroom`,
+          eventroomData
+        );
+        console.log("@createEventroom response", response);
+        this.$router.push(`/${response.data.roomslug}`);
+      } catch (error) {
+        alert(
+          "Well, bollocks. Here's the thing, something went wrong. Try refreshing. Helps sometimes."
+        );
+        console.log(
+          "@createEventroom: Emergency, our penguins cannot create igloos!"
+        );
+      }
+    },
     customSlug() {
-      var AAA = /^([a-z]+){3}$/;
-      let slugWord = slug();
-      slugWord = slugWord.toLowerCase();
-      slugWord.match(AAA);
-      this.slug = slugWord;
+      this.slug = slug();
     },
     async getAllEvents() {
       try {

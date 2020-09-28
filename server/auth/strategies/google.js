@@ -1,8 +1,8 @@
 const Passport = require('passport');
 const PassportGoogle = require('passport-google-oauth');
 
-const { getUserByProviderId, createUser } = require('../../database/user/UserUtilities');
-const { userInJWT } = require('../Utils');
+const { getUserByProviderId, createUser } = require('../../../database/user/UserUtilities');
+const { userInJWT } = require('../utilities/Utils');
 
 const GoogleStrategy = PassportGoogle.OAuth2Strategy
 

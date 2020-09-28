@@ -1,7 +1,7 @@
 const Crypto = require('crypto');
 const Bcrypt = require('bcryptjs');
 
-const { checkIfUserWithValueExists } = require('../database/user/UserUtilities');
+const { checkIfUserWithValueExists } = require('../../../database/user/UserUtilities');
 
 const AccountUtilities = {
 	usernameToLowerCase(req, res, next){

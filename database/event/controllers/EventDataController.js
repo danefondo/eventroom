@@ -1,7 +1,7 @@
-const Event = require('./models/EventModel');
+const Event = require('../models/EventModel');
 const mongoose = require('mongoose');
 
-const UserUtilities = require('../user/UserUtilities');
+const UserUtilities = require('../../user/utilities/UserUtilities');
 
 const EventUtilities = {
   

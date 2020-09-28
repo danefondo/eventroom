@@ -1,4 +1,4 @@
-const UserConfigurations = require('./models/UserConfigurationsModel');
+const UserConfigurations = require('../models/UserConfigurationsModel');
 const mongoose = require('mongoose');
 
 const defaults = {

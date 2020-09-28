@@ -4,7 +4,7 @@ const { AuthController } = require('../../server/auth/controllers/AuthController
 const PasswordResetController = require('../../server/auth/controllers/PasswordResetController');
 const AccountController = require('../../server/account/controllers/AccountController');
 const ConfigurationController = require('../../server/account/controllers/ConfigurationController');
-const TempUserController = require('../../server/event/TempUserController');
+const TempUserController = require('../../server/event/controllers/TempUserController');
 
 const AccountUtilities =  require('../../server/account/utilities/AccountUtilities');
 const DataValidator = require('../../server/auth/validators/DataValidator');

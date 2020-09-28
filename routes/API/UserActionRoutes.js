@@ -2,7 +2,7 @@
 const Express = require('express');
 
 const { AuthController } = require('../../server/auth/controllers/AuthController');
-const UserActionUtilities = require('../../database/user/UserActionUtilities');
+const UserActionUtilities = require('../../database/user/utilities/UserActionUtilities');
 
 const router = Express.Router();
 

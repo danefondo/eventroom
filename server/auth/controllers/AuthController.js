@@ -1,12 +1,12 @@
 const { validationResult } = require('express-validator');
 const Passport = require('passport');
 
-const { createUser, getUserByUsernameWithPassword } = require('../../../database/user/UserUtilities');
-const { verifyRefreshToken, deleteRefreshToken } = require('../../../database/user/UserRefreshTokenUtilities');
+const { createUser, getUserByUsernameWithPassword } = require('../../../database/user/utilities/UserUtilities');
+const { verifyRefreshToken, deleteRefreshToken } = require('../../../database/user/utilities/UserRefreshTokenUtilities');
 
 const { verifyPassword, hashPassword, generateToken, userInJWT, createRefreshToken, signToken } = require('../utilities/Utils');
 const { login } = require('../strategies/jwt');
-const MailUtilities = require('../../mail/MailUtilities');
+const MailUtilities = require('../../mail/utilities/MailUtilities');
 
 /*====== Authentication helpers  ======*/
 /** DO NOT move to Utils, creates circular dependency and all the accompanying sad stuff */

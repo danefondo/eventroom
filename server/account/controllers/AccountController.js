@@ -1,10 +1,10 @@
 const JWT = require('jsonwebtoken');
 
-const { getUserById, getUserByUsername, getUserByVerificationToken } = require('../../../database/user/UserUtilities');
+const { getUserById, getUserByUsername, getUserByVerificationToken } = require('../../../database/user/utilities/UserUtilities');
 const { generateToken } = require('../../auth/utilities/Utils');
 
-const UserInteractionUtilities = require('../../../database/user/UserInteractionUtilities');
-const MailUtilities = require('../../mail/MailUtilities');
+const UserInteractionUtilities = require('../../../database/user/utilities/UserInteractionUtilities');
+const MailUtilities = require('../../mail/utilities/MailUtilities');
 
 
 const AccountController = {

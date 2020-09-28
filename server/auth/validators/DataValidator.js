@@ -1,5 +1,5 @@
 const { check, validationResult } = require('express-validator');
-const { checkIfUserWithValueExists } = require('../../../database/user/UserUtilities'); // TODO to remove
+const { checkIfUserWithValueExists } = require('../../../database/user/utilities/UserUtilities'); // TODO to remove
 
 
 

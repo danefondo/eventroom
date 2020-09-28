@@ -1,4 +1,4 @@
-const UserInteraction = require('./models/UserInteractionModel');
+const UserInteraction = require('../models/UserInteractionModel');
 const mongoose = require('mongoose');
 
 const UserInteractionUtilities = {

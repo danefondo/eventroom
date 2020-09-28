@@ -1,4 +1,4 @@
-const UserRoomPreferences = require("./models/UserRoomPreferencesModel");
+const UserRoomPreferences = require("../models/UserRoomPreferencesModel");
 
 const UserActionUtilities = {
   async updateUserRoomPreferences(req, res) {

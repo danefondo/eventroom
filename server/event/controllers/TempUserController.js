@@ -1,7 +1,7 @@
-const { generateToken } = require("../auth/utilities/Utils");
+const { generateToken } = require("../../auth/utilities/Utils");
 const Dotenv = require("dotenv");
 const JWT = require('jsonwebtoken');
-const TempUser = require("../../database/room/models/TempUserModel");
+const TempUser = require("../../../database/room/models/TempUserModel");
 
 Dotenv.config();
 

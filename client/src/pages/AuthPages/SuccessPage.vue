@@ -43,7 +43,7 @@ export default {
     },
 
     async mounted() {
-        this.$router.push("/register/success");
+        this.$router.push("/account/register/success");
         try {
             const authResponse = await auth.isAuthenticated();
             if (authResponse.success) {

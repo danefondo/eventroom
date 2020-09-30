@@ -8,6 +8,18 @@ const router = Express.Router();
  */
 router.post("/createEventroom", EventroomController.createEventroom);
 
+/**
+ * Get an Eventroom initialization
+ */
+router.get("/:eventroomName", EventroomController.getEventroomByName);
+
+/**
+ * Check if Eventroom with the name already exists
+ */
+router.post(
+  "/checkIfEventroomExistsByName",
+  EventroomController.checkIfEventroomExistsByName
+);
 
 /**
  * Generate an Access Token for a chat application user provided via the url

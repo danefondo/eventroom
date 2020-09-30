@@ -1,42 +1,105 @@
-const EventroomUtilities = require("../../../database/eventroom/controllers/EventroomDataController");
+const {
+  checkIfEventroomExistsByName,
+} = require("../utilities/EventroomUtilities");
+const EventroomDataController = require("../../../database/eventroom/controllers/EventroomDataController");
 const TwilioUtilities = require("../../twilio/utilities/TwilioUtilities");
 
 const EventroomController = {
-
-  async createEventroom(req, res) {
+  async checkIfEventroomExistsByName(req, res) {
     if (!req.body) {
       return res.status(400).send({ error: "Invalid request 400" });
     }
 
     if (!req.body.eventroomName) {
       // Ideally just create a new slug here to maximize UX
-      return res.status(400).send({ error: "Invalid request: Eventroom name missing" });
+      return res
+        .status(400)
+        .send({ error: "Invalid request: Eventroom name missing" });
     }
 
-    let eventroom;
-    let eventroomData = {};
-    const userId = req.user._id;
-    const hostId = req.body.hostId;
-    let userIsHost;
     try {
+      let eventroomName = req.body.eventroomName;
 
-      // Prepare data for creating an Eventroom
-      eventroomData.eventroomName = req.body.eventroomName;
-      eventroomData.dateCreated = new Date();
+      // Check if Eventroom already exists
+      let eventroom = await checkIfEventroomExistsByName(eventroomName);
 
-      if (hostId) {
-        eventroomData.hostId = hostId;
-        userIsHost = hostId == userId;
+      let alreadyExists = false;
+      if (eventroom) {
+        alreadyExists = true;
       }
-
-      // Create Eventroom and return it
-      eventroom = await EventroomUtilities.createEventroom(eventroomData);
-
+      return res.status(200).send({ alreadyExists });
     } catch (error) {
       console.log("@createEventroom", error);
       res.status(500).send({ error: "An unknown error occurred" });
     }
   },
+
+  async createEventroom(req, res) {
+    if (!req.body) {
+      return res.status(400).send({ error: "Invalid request 400" });
+    }
+
+    let eventroomName = req.body.eventroomName;
+    if (!eventroomName) {
+      // Ideally just create a new slug here to maximize UX
+      return res
+        .status(400)
+        .send({ error: "Invalid request: Eventroom name missing" });
+    }
+    let eventroomData = {};
+    // const userId = req.user._id;
+    const hostId = req.body.hostId;
+    // let userIsHost;
+    try {
+      // Prepare data for creating an Eventroom
+      eventroomData.eventroomName = eventroomName;
+
+      // Check if Eventroom already exists
+      let eventroomExists = await checkIfEventroomExistsByName(eventroomName);
+
+
+      let alreadyExists = false;
+      if (eventroomExists) {
+        alreadyExists = true;
+        return res.status(200).send({ alreadyExists });
+      }
+
+      eventroomData.dateCreated = new Date();
+
+      if (hostId) {
+        eventroomData.hostId = hostId;
+        // userIsHost = hostId == userId;
+      }
+
+      // Create Eventroom and return it
+      let eventroom = await EventroomDataController.createEventroom(
+        eventroomData
+      );
+      return res.status(200).send({ eventroom });
+    } catch (error) {
+      console.log("@createEventroom", error);
+      res.status(500).send({ error: "An unknown error occurred" });
+    }
+  },
+
+  async getEventroomByName(req, res) {
+    try {
+      console.log("paramparam", req.params);
+      const eventroomName = req.params.eventroomName;
+      const eventroom = await EventroomDataController.getEventroomByName(
+        eventroomName
+      );
+      if (!eventroom || !eventroom.success) {
+        return res.status(500).send({ error: "Error finding event" });
+      }
+      console.log("@getevent data", eventroom);
+      res.status(200).send({ eventroom });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({ error: "An unknown error occurred" });
+    }
+  },
+
   /**
    * Generate an Access Token for a chat application user provided via the url
    */
@@ -61,7 +124,7 @@ const EventroomController = {
       console.log("@generateTwilioAccessToken", error);
       res.status(500).send({ error: "An unknown error occurred" });
     }
-  }
+  },
 };
 
 module.exports = EventroomController;

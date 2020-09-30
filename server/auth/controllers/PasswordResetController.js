@@ -57,7 +57,7 @@ const PasswordResetController = {
         return res.status(200).send({ success: true });
     }
     
-    const link = `${req.protocol}://${req.body.hostname}/resetPassword/`;
+    const link = `${req.protocol}://${req.body.hostname}/account/resetPassword/`;
     sendResetPassword(req.body.email, link);
     return res.status(200).send({ success: true});
   },

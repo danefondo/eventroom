@@ -22,6 +22,7 @@
     "axios": "^0.20.0",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
+    "connect-history-api-fallback": "^1.6.0",
     "connect-mongo": "^3.2.0",
     "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
@@ -44,6 +45,7 @@
     "pug": "^2.0.4",
     "socket.io": "^2.3.0",
     "twilio": "^3.49.3",
+    "unique-names-generator": "^4.3.1",
     "vue-select": "^3.10.8",
     "vue.js": "^0.3.2",
     "vueify": "^9.4.1"

@@ -1,10 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
 const tempUserSchema = new Schema({
-    associatedRoomId: String,
-    tempUserToken: String,
-    dateCreated: Date
+  associatedRoomName: String,
+  tempUserToken: String,
+  tempUserDisplayName: String,
+  dateCreated: Date,
+  createdAt: {
+    type: Date,
+    expires: 86400,
+    default: Date.now,
+  },
 });
 
-const tempUser = module.exports = mongoose.model('TempUser', tempUserSchema);
+const tempUser = (module.exports = mongoose.model("TempUser", tempUserSchema));

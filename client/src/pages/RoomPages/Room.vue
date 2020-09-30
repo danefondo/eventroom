@@ -1,24 +1,34 @@
 <template>
   <div class="room-container">
-    <RoomToolbar />
+    <!-- <RoomToolbar /> -->
     <div class="video-chat">
-      <h1>Video Chat</h1>
+      <!-- <h1>Video Chat</h1>
+      <div v-if="tempUser">{{ tempUser.tempUserDisplayName }}</div> -->
       <div class="video-streams">
-        <video id="local-video" ref="localvideo" height="150" autoplay></video>
-        <video
-          id="remote-video"
-          ref="remotevideo"
-          height="150"
-          autoplay
-        ></video>
+        <div class="left-side side">
+          <video
+            id="local-video"
+            class="video"
+            ref="localvideo"
+            autoplay
+          ></video>
+        </div>
+        <div class="right-side side">
+          <video
+            id="remote-video"
+            class="video"
+            ref="remotevideo"
+            autoplay
+          ></video>
+        </div>
       </div>
       <div>
         <!-- <button id="get-video" v-if="getVideo" @click="requestMediaStream">
           Get Video
         </button> -->
-        <!-- <button id="call" :disabled="!callReady" @click="startCall">
+        <button id="call" :disabled="!callReady" @click="startCall">
           Call
-        </button> -->
+        </button>
       </div>
       <RoomBottomBar
         :userMediaSettings="userMediaSettings"
@@ -37,8 +47,12 @@
 
 <script>
 import { mapState } from "vuex";
-import RoomToolbar from "./RoomComponents/RoomToolbar";
+// import RoomToolbar from "./RoomComponents/RoomToolbar";
 import RoomBottomBar from "./RoomComponents/RoomBottomBar";
+// import TwilioVideo from "./TwilioVideo/TwilioVideo";
+import axios from "axios";
+import auth from "../../config/auth";
+import { destroyTempToken, setTempToken } from "../../config/axios";
 // import SessionController from "../../session/SessionController";
 // import { requestWithAuthentication } from "../../config/api";
 
@@ -79,16 +93,41 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      tempUser: (state) => state.tempuser.tempUser,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
   },
   components: {
-    RoomToolbar,
+    // RoomToolbar,
     RoomBottomBar,
+    // TwilioVideo
+  },
+  beforeRouteLeave(to, from, next) {
+    this.$store.dispatch("tempuser/destroyTempUser");
+    destroyTempToken();
+    next();
   },
   async mounted() {
+    /**
+     * 1. Client enters room
+     * 2. If no user (no auth), create temp user
+     *   2.1 Set temporary token for the temporary user
+     *   2.2 Get room using temp user details (custom name and id)
+     * 4. If user exists, get room using user details (username and id)
+     *
+     *
+     * Check to see if user already has a temporary token for the room?
+     */
     console.log("@eventroom mounted");
+    if (!this.$store.state.auth.authenticationStatus) {
+      this.createTempUser();
+    }
+
+    if (this.$store.state.auth.user) {
+      this.getRoom();
+    }
+    this.getRoom();
     // if (this.isAuthenticated) {
     //   this.getRoom();
     // }
@@ -131,6 +170,49 @@ export default {
     });
   },
   methods: {
+    async getRoom() {
+      console.log("@getroom params:", this.$route.params.eventroomName);
+      const result = await axios.get(
+        `/api/eventroom/${this.$route.params.eventroomName}`
+      );
+      if (result.success) {
+        this.$socket.emit("joinRoom", result.roomData);
+        this.ready = true;
+      } else {
+        this.ready = true;
+        this.errors = true;
+      }
+    },
+    async createTempUser() {
+      let globalThis = this;
+      try {
+        //- Get room parameter
+        const eventroomData = {
+          eventroomName: this.$route.params.eventroomName,
+        };
+
+        const { data } = await axios.post(
+          `/api/accounts/createTempUser`,
+          eventroomData
+        );
+
+        console.log("tempUserData", data);
+
+        setTempToken(data.tempToken);
+        localStorage.tempUser = JSON.stringify(data.tempUser);
+
+        if (auth.checkTempToken()) {
+          let temporary = auth.checkTempToken();
+          console.log("temporary", temporary);
+          await globalThis.$store.dispatch(
+            "tempuser/addNewTempUser",
+            temporary
+          );
+        }
+      } catch (error) {
+        console.log("Failed to create temporary user", error);
+      }
+    },
     toggleShutRestart() {
       if (this.type === 0) {
         this.stopVideo();
@@ -608,22 +690,6 @@ export default {
       //   pauseVideo();
       // }
     },
-    //   async getRoom() {
-    //     console.log("@getroom params:", this.$route.params);
-    //     const result = await SessionController.initializeRoom(
-    //       this.$route.params.eventId,
-    //       this.$route.params.roomId
-    //     );
-    //     console.log("result: ", result);
-    //     if (result.success) {
-    //       this.$socket.emit("joinRoom", result.roomData);
-    //       this.ready = true;
-    //     } else {
-    //       this.ready = true;
-    //       this.errors = true;
-    //     }
-    //   },
-    // },
     // /* eslint-disable no-unused-vars */
     // async beforeRouteLeave(to, from, next) {
     //   try {
@@ -661,6 +727,14 @@ export default {
     //   }
     //   next();
   },
+  watch: {
+    "$store.state.tempuser.tempUser": function (temporaryUser) {
+      if (temporaryUser) {
+        console.log("tempUserMapping", temporaryUser);
+        this.getRoom();
+      }
+    },
+  },
 };
 </script>
 
@@ -680,8 +754,29 @@ export default {
   position: relative;
 }
 
+.video {
+  width: 90%;
+  border-radius: 6px;
+}
+
 .video-streams {
   display: flex;
   justify-content: center;
+  /* height: 100%; */
+  width: 100%;
+}
+
+.side {
+  width: 50%;
+  padding: 25px;
+  display: flex;
+  justify-content: center;
+}
+
+#call {
+  border: 1px solid #eee;
+  outline: none;
+  font-size: 16px;
+  background-color: #f2f2f2;
 }
 </style>

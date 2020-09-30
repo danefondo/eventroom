@@ -4,11 +4,11 @@
       <router-link to="/" class="nav-logo">Eventroom.to</router-link>
       <div v-if="isAuthenticated">
         <router-link :to="profileLink" class="nav-button">Profile</router-link>
-        <router-link to="/logout" class="nav-button">Logout</router-link>
+        <router-link to="/account/logout" class="nav-button">Logout</router-link>
       </div>
       <div v-else-if="!isAuthenticated">
-        <router-link to="/login" class="nav-button">Login</router-link>
-        <router-link to="/register" class="nav-button">Register</router-link>
+        <router-link to="/account/login" class="nav-button">Login</router-link>
+        <router-link to="/account/register" class="nav-button">Register</router-link>
       </div>
     </div>
     <div v-if="isAuthenticated&&!isVerified" class="unverified">

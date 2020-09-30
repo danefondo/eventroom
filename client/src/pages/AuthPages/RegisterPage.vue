@@ -96,7 +96,7 @@
             />
           </div>
         </form>
-        <router-link class="auth-alt-button" to="/login">{{ $t("register.already-have-account")}}</router-link>
+        <router-link class="auth-alt-button" to="/account/login">{{ $t("register.already-have-account")}}</router-link>
         
       </div>
     </div>

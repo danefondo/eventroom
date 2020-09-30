@@ -3,7 +3,7 @@
         <p> Verified! </p> 
         <br/>
         <p> For security purposes, you'll need to sign in again.</p>
-        <router-link to="/login"> Sign in </router-link>
+        <router-link to="/account/login"> Sign in </router-link>
 
     </div>
     <div v-else-if="verifying"> Verifying... </div>

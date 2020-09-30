@@ -87,7 +87,7 @@ const AuthController = {
         newUser = newUser[0];
         console.log("@register newUser 2: ", newUser);
         // Sending mail
-        const link = `${req.protocol}://${req.body.hostname}/verify/${verificationToken}`;
+        const link = `${req.protocol}://${req.body.hostname}/account/verify/${verificationToken}`;
         MailUtilities.sendVerificationMail(req.body.email, link);
         
         // Logging in
@@ -161,7 +161,7 @@ const AuthController = {
             .user === returnUser if user found
     */
     async authenticationHandler(req, res, next) {
-        Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, async function (err, user, info) {
+        Passport.authenticate('jwt', { session: false, failureRedirect: "/account/login" }, async function (err, user, info) {
             if (err) {
                 res.status(500).send({error: "Internal server error"});
             }
@@ -198,7 +198,7 @@ const AuthController = {
             calls next if authentication was successful i.e. user is logged in
     */
     async confirmAuthentication(req, res, next) {
-        Passport.authenticate('jwt', { session: false, failureRedirect: "/login" }, async function (err, user, info) {
+        Passport.authenticate('jwt', { session: false, failureRedirect: "/account/login" }, async function (err, user, info) {
             if (err) {
                 res.status(500).send({error: "Internal server error"});
             }
@@ -242,7 +242,7 @@ const AuthController = {
     },
 
     async googleAuthCallback(req, res, next) {
-        Passport.authenticate('google', { failureRedirect: '/login' }, async function(err,user,info) {
+        Passport.authenticate('google', { failureRedirect: '/account/login' }, async function(err,user,info) {
 
             if (!user) {
                 return res.status(401).send({ error: "could not authenticate" });
@@ -269,7 +269,7 @@ const AuthController = {
     },
 
     async facebookAuthCallback(req, res, next) {
-        Passport.authenticate('facebook', { failureRedirect: '/login' }, async function(err,user,info) {
+        Passport.authenticate('facebook', { failureRedirect: '/account/login' }, async function(err,user,info) {
             let refreshToken;
             if (!user) {
                 return res.status(401).send({ error: "could not authenticate" });

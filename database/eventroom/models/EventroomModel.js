@@ -1,21 +1,26 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
-
 const EventroomSchema = new Schema({
-    eventroomName: String,
+  eventroomName: String,
 
-    // eventId: mongoose.Types.ObjectId,
+  // eventId: mongoose.Types.ObjectId,
 
-    hostId: String,             
-    // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
-    dateCreated: Date,
+  hostId: String,
+  // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
+  dateCreated: Date,
 
-    // sessionId: String,
-    // sessionTokens: [String],
-    
+  createdAt: {
+    type: Date,
+    expires: 86400,
+    default: Date.now,
+  },
+
+  // sessionId: String,
+  // sessionTokens: [String],
 });
 
-
-
-const Eventroom = module.exports = mongoose.model('Eventroom', EventroomSchema);
+const Eventroom = (module.exports = mongoose.model(
+  "Eventroom",
+  EventroomSchema
+));

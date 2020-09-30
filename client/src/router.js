@@ -32,56 +32,51 @@ import PassResetRedirect from "./pages/AuthPages/PassResetRedirect";
 import ProfilePage from "./pages/UserPages/ProfilePage";
 
 const routes = [
-  { path: "/", component: HomePage },
+  { path: "/discover/home", component: HomePage },
 
   /* ====== DASHBOARD ROUTES ====== */
 
   {
-    path: "/dashboard",
+    path: "/",
     component: DashboardPage,
     name: "DashboardPage",
-    meta: {
-      requireAuthentication: true,
-      requireVerification: true,
-    },
   },
 
   /* ====== PRE-EVENT ROUTES ====== */
 
   {
-    path: "/mediacheck",
+    path: "/:eventroomName/check",
     component: MediaDeviceCheckPage,
     name: "MediaDeviceCheckPage",
   },
 
-  /* ====== ROOM ROUTES ====== */
-  {
-    path: "/testroom",
-    component: RoomPage,
-    name: "RoomPage",
-  },
+  /* ====== EVENTROOM ROUTES ====== */
+
+  { path: "/:eventroomName", component: RoomPage, name: "RoomPage" },
+
+
 
   /* ====== AUTHENTICATION ROUTES ====== */
-  { path: "/login", component: LoginPage, name: "LoginPage" },
-  { path: "/logout", component: LogoutPage, name: "LogoutPage" },
+  { path: "/account/login", component: LoginPage, name: "LoginPage" },
+  { path: "/account/logout", component: LogoutPage, name: "LogoutPage" },
   {
-    path: "/register",
+    path: "/account/register",
     component: RegisterPage,
     name: "RegisterPage",
     children: [{ path: "success", component: SuccessPage, name: "Success" }],
   },
   {
-    path: "/verify/:token",
+    path: "/account/verify/:token",
     component: VerificationPage,
     name: "VerificationPage",
   },
   {
-    path: "/verificationRequired",
+    path: "/account/verificationRequired",
     component: RequireVerificationPage,
     name: "RequireVerificationPage",
   },
-  { path: "/resetpassword/:token", component: PassResetRedirect },
-  { path: "/resetpassword", component: PassResetPage },
+  { path: "/account/resetpassword/:token", component: PassResetRedirect },
+  { path: "/account/resetpassword", component: PassResetPage },
 
   /* ====== PROFILE ROUTES ====== */
   {
@@ -112,7 +107,7 @@ const routes = [
   },
   { path: "/events/:id", component: EventPreviewPage },
   { path: "/events/:eventId/rooms/:roomId", component: EventRoomPage },
-  { path: "/kk", component: TemporaryFix },
+  { path: "/temp/fix", component: TemporaryFix },
 ];
 
 const router = new VueRouter({

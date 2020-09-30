@@ -50,7 +50,7 @@ export default {
 .toolbar-container {
   height: 100%;
   width: 48px;
-  border: 2px solid red;
+  /* border: 2px solid red; */
 }
 /* .toolbar {
   float: left;

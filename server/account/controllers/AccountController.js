@@ -32,7 +32,7 @@ const AccountController = {
 					const verificationToken = await generateToken();
 					user.verificationToken = verificationToken;
 					await user.save();
-					const link = `${req.protocol}://${req.body.hostname}/verify/${verificationToken}`;
+					const link = `${req.protocol}://${req.body.hostname}/account/verify/${verificationToken}`;
 					MailUtilities.sendVerificationMail(user.email, link);
 					return res.status(200).send({ success: true });
 				}

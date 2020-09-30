@@ -21,13 +21,13 @@ export default {
     try {
       const response = await requestWithAuthentication('get', `/api/accounts/passresetredirect/${this.$route.params.token}`);
       if (response && response.status === 303) {
-        this.$route.push("/resetpassword");
+        this.$route.push("/account/resetpassword");
       } 
     } catch (err) {
       if (err.response) {
         if (err.response.status === 303) {
           console.log(err);
-          this.$router.push("/resetpassword");
+          this.$router.push("/account/resetpassword");
         } else if (err.response.status === 401) {
           console.log("internal server error");
         }

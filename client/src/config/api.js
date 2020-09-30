@@ -38,7 +38,7 @@ export const requestWithAuthentication = async function(method, url, data=null, 
     // TODO handle case, where user is logged in, but does not have admin access or smth
     if (error.response && error.response.status === 401) {
       await auth.logout();
-      router.push("/login");
+      router.push("/account/login");
     }
     return Promise.reject(error);
   })
@@ -78,7 +78,7 @@ export const requestWithAuthParams = async function(method, url, params, data=nu
     // TODO handle case, where user is logged in, but does not have admin access or smth
     if (error.response && error.response.status === 401) {
       await auth.logout();
-      router.push("/login");
+      router.push("/account/login");
     }
     return Promise.reject(error);
   })

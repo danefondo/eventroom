@@ -57,7 +57,7 @@
         </div>
       <div class="auth-alt-buttons">
         <div v-if="success" class="successMessage">{{$t("login.pass-success")}}</div>
-        <router-link class="auth-alt-button" to="/register">{{$t("login.or-create-account")}}</router-link>
+        <router-link class="auth-alt-button" to="/account/register">{{$t("login.or-create-account")}}</router-link>
       </div>
     </div>
   </div>

@@ -5,13 +5,25 @@
         <div class="media-feeds">
           <div class="video-feed">
             <div
-              v-if="!cameraDetected && !mediaSettings.cameraTurnedOn && isWebsiteHasWebcamPermissions && isWebsiteHasMicrophonePermissions"
+              v-if="
+                !cameraDetected &&
+                !mediaSettings.cameraTurnedOn &&
+                isWebsiteHasWebcamPermissions &&
+                isWebsiteHasMicrophonePermissions
+              "
               class="media-info"
-            >Your camera stream will appear here</div>
+            >
+              Your camera stream will appear here
+            </div>
             <div
-              v-if="!isWebsiteHasWebcamPermissions || !isWebsiteHasMicrophonePermissions"
+              v-if="
+                !isWebsiteHasWebcamPermissions ||
+                !isWebsiteHasMicrophonePermissions
+              "
               class="media-info"
-            >Please allow camera and audio access.</div>
+            >
+              Please allow camera and audio access.
+            </div>
             <video
               id="video-preview"
               v-if="mediaSettings.cameraTurnedOn"
@@ -44,7 +56,13 @@
             @joinRoom="joinRoom"
           />
           <ChangeMediaDevice
-            v-if="settingsActive && mediaData.audioDevices && mediaData.audioDevices && mediaData.audioDeviceId && mediaData.videoDeviceId"
+            v-if="
+              settingsActive &&
+              mediaData.audioDevices &&
+              mediaData.audioDevices &&
+              mediaData.audioDeviceId &&
+              mediaData.videoDeviceId
+            "
             :mediaData="mediaData"
             @videoDeviceId="setVideoDeviceId"
             @audioDeviceId="setAudioDeviceId"
@@ -54,7 +72,12 @@
           />
           <div
             class="toggle-prereview"
-            v-if="roomType === 'open' && mediaSettings.showPreReviewOnOpenRooms && isAuthenticated && isVerified"
+            v-if="
+              roomType === 'open' &&
+              mediaSettings.showPreReviewOnOpenRooms &&
+              isAuthenticated &&
+              isVerified
+            "
           >
             <input
               id="disable-prereview"
@@ -63,13 +86,16 @@
               :checked="!userMediaPreferences.showPreScreen"
               class="disable-prereview-checkbox"
             />
-            <label for="disable-prereview">Don't show this page next time when joining an open room.</label>
+            <label for="disable-prereview"
+              >Don't show this page next time when joining an open room.</label
+            >
           </div>
           <router-link
-            to="/register"
+            to="/account/register"
             class="sign-up-proposal"
             v-if="!isAuthenticated"
-          >Sign up to save default preferences.</router-link>
+            >Sign up to save default preferences.</router-link
+          >
         </div>
         <div class="room-entrance">
           <div class="entrance">
@@ -77,15 +103,17 @@
             <div class="eventroom-link">
               <img
                 :src="roomType === 'open' ? openLock : closedLock"
-                :class="roomType === 'closed' ? 'open-lock-icon' : 'closed-lock-icon'"
+                :class="
+                  roomType === 'closed' ? 'open-lock-icon' : 'closed-lock-icon'
+                "
               />
               <span class="eventroom-slash">eventroom.to/</span>
-              <span class="eventroom-to">blue-squirrel</span>
+              <span class="eventroom-to">{{slug}}</span>
             </div>
             <!-- <div>request / knock / password (based on case) / join (you're in invite list, open for you)</div> -->
-            <div
-              :class="roomType === 'open' ? 'join-room' : 'request-to-join'"
-            >{{roomType === 'open' ? 'Join room' : 'Request to join'}}</div>
+            <div @click="joinRoom" :class="roomType === 'open' ? 'join-room' : 'request-to-join'">
+              {{ roomType === "open" ? "Join room" : "Request to join" }}
+            </div>
           </div>
         </div>
       </div>
@@ -97,6 +125,7 @@
 import { mapState } from "vuex";
 
 import auth from "../../config/auth";
+import axios from "axios";
 import { requestWithAuthentication } from "../../config/api";
 import { attachMediaStream } from "../../config/mediaDevices/attachMediaStream";
 import { getUserMedia } from "../../config/mediaDevices/getUserMedia";
@@ -112,6 +141,7 @@ export default {
   name: "MediaDeviceCheckPage",
   data() {
     return {
+      slug: "blue-squirrel",
       openLock: openLock,
       closedLock: closedLock,
       err: false,
@@ -165,6 +195,7 @@ export default {
   },
   mounted() {
     // this.updateDeviceOptions();
+    this.getRoom();
     this.getMediaWithDevices();
     console.log("rtc", DetectRTC.browser);
 
@@ -192,6 +223,15 @@ export default {
   methods: {
     joinRoom() {
       console.log("Joining...");
+      this.$router.push(`/${this.$route.params.eventroomName}`);
+    },
+    async getRoom() {
+      console.log("@getroom params:", this.$route.params.eventroomName);
+      const result = await axios.get(
+        `/api/eventroom/${this.$route.params.eventroomName}`
+      );
+      this.slug = result.data.eventroom.eventroom[0].eventroomName;
+      console.log(result);
     },
     async setDefaults() {
       try {
@@ -211,8 +251,8 @@ export default {
       try {
         let showPreScreen = this.userMediaPreferences.showPreScreen;
         let mediaSettingsData = {
-          showPreScreen: showPreScreen
-        }
+          showPreScreen: showPreScreen,
+        };
         mediaSettingsData.userId = this.user._id;
         const response = await requestWithAuthentication(
           "post",
@@ -258,7 +298,6 @@ export default {
         }
 
         localPreferences.showPreScreen = preferences.showPreScreen;
-
       } catch (error) {
         console.log("Getting defaults error: ", error);
       }

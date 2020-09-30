@@ -37,7 +37,7 @@ export default {
       roomName: null,
     };
   },
-  props: ["username"], // props that will be passed to this component
+  props: ["userId"], // props that will be passed to this component
   created() {
     this.$on("show_room", (room_name) => {
       this.createChat(room_name);
@@ -53,7 +53,7 @@ export default {
   methods: {
     async getAccessToken() {
       try {
-        return await axios.get(`api/token?identity=${this.username}`);
+        return await axios.get(`api/token?identity=${this.userId}`);
       } catch (error) {
         console.log("Failed to get access token", error);
       }

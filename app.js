@@ -9,7 +9,6 @@ const Enforce = require("express-sslify");
 const Passport = require("passport");
 const DatabaseConfig = require("./database/config/DatabaseConfig");
 const Cors = require("cors");
-
 const initialiseAuthentication = require("./server/auth/configs/index")
   .initialiseAuthentication;
 /* ====== DATABASE SETUP ====== */

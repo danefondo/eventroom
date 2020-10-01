@@ -1,6 +1,7 @@
 <template>
   <div class="room-container">
-    <!-- <RoomToolbar /> -->
+    <RoomToolbar />
+    <RoomLeftSidebar v-if="leftSidebar" />
     <div class="video-chat">
       <!-- <h1>Video Chat</h1>
       <div v-if="tempUser">{{ tempUser.tempUserDisplayName }}</div> -->
@@ -8,15 +9,18 @@
         <div class="left-side side">
           <video
             id="local-video"
-            class="video"
+            :class="localStream == undefined ? 'video hide' : 'video'"
             ref="localvideo"
             autoplay
           ></video>
         </div>
         <div class="right-side side">
+          <div v-if="!remoteVideo" class="no-remote-video">
+            Looks like it's just you in here!
+          </div>
           <video
             id="remote-video"
-            class="video"
+            :class="remoteVideo == undefined ? 'video hide' : 'video'"
             ref="remotevideo"
             autoplay
           ></video>
@@ -26,7 +30,12 @@
         <!-- <button id="get-video" v-if="getVideo" @click="requestMediaStream">
           Get Video
         </button> -->
-        <button id="call" :disabled="!callReady" @click="startCall">
+        <button
+          id="call"
+          v-if="callReady"
+          :disabled="!callReady"
+          @click="startCall"
+        >
           Call
         </button>
       </div>
@@ -34,7 +43,9 @@
         :userMediaSettings="userMediaSettings"
         :screenBeingShared="screenBeingShared"
         :localStream="localStream"
-        :lessThanThreeInSession="lessThanThreeInSession"
+        :moreThanOneAndLessThanThreeInSession="
+          moreThanOneAndLessThanThreeInSession
+        "
         :pictureInPictureEnabled="pictureInPictureEnabled"
         @toggleMedia="toggleMedia"
         @toggleScreenshare="toggleScreenshare"
@@ -47,8 +58,9 @@
 
 <script>
 import { mapState } from "vuex";
-// import RoomToolbar from "./RoomComponents/RoomToolbar";
+import RoomToolbar from "./RoomComponents/RoomToolbar";
 import RoomBottomBar from "./RoomComponents/RoomBottomBar";
+import RoomLeftSidebar from "./RoomComponents/RoomLeftSidebar";
 // import TwilioVideo from "./TwilioVideo/TwilioVideo";
 import axios from "axios";
 import auth from "../../config/auth";
@@ -63,6 +75,9 @@ export default {
       // ready: false,
       // errors: false,
       // errorMessage: "",
+      sideBarConfigs: {
+        leftSidebar: false,
+      },
       type: 0,
       connected: false,
       localICECandidates: [],
@@ -75,7 +90,7 @@ export default {
       offer: undefined,
       screenBeingShared: false,
       pictureInPictureEnabled: false,
-      lessThanThreeInSession: true,
+      moreThanOneAndLessThanThreeInSession: false,
       userMediaSettings: {
         cameraOn: false,
         microphoneOn: false,
@@ -94,13 +109,15 @@ export default {
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
       tempUser: (state) => state.tempuser.tempUser,
+      leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
   },
   components: {
-    // RoomToolbar,
+    RoomToolbar,
     RoomBottomBar,
+    RoomLeftSidebar,
     // TwilioVideo
   },
   beforeRouteLeave(to, from, next) {
@@ -175,6 +192,9 @@ export default {
       const result = await axios.get(
         `/api/eventroom/${this.$route.params.eventroomName}`
       );
+      let name = result.data.eventroom.eventroom[0].eventroomName;
+      console.log("name", name);
+      this.$store.dispatch("eventroom/updateEventroomName", name);
       if (result.success) {
         this.$socket.emit("joinRoom", result.roomData);
         this.ready = true;
@@ -268,8 +288,10 @@ export default {
       this.localVideo = this.$refs.localvideo;
       // Turn the volume down to 0 to avoid echoes.
       this.localVideo.volume = 0;
+
       stream = this.processStream(stream);
       this.localStream = stream;
+
       this.getVideo = false;
 
       // Add the stream as video's srcObject.
@@ -750,25 +772,40 @@ export default {
 
 .video-chat {
   height: 100%;
-  width: 100%;
+  margin: 0 auto;
+  /* width: 100%; */
   position: relative;
 }
 
-.video {
-  width: 90%;
+.video,
+.no-remote-video {
+  width: 94%;
+  height: 100%;
+  object-fit: cover;
   border-radius: 6px;
+}
+
+.no-remote-video {
+  background-color: #eceff4;
+  border: 1px solid #e0e4f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #1e2f58;
+  font-weight: bold;
 }
 
 .video-streams {
   display: flex;
   justify-content: center;
-  /* height: 100%; */
+  height: 90%;
   width: 100%;
 }
 
 .side {
   width: 50%;
-  padding: 25px;
+  padding: 25px 0px;
   display: flex;
   justify-content: center;
 }
@@ -776,7 +813,21 @@ export default {
 #call {
   border: 1px solid #eee;
   outline: none;
-  font-size: 16px;
   background-color: #f2f2f2;
+  padding: 4px 10px;
+  font-size: 21px;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-left: 25px;
+  cursor: pointer;
+}
+
+#call:hover {
+  color: #444;
+}
+
+.hide {
+  width: 0px;
+  height: 0px;
 }
 </style>

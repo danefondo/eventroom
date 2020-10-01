@@ -6,6 +6,8 @@ import session from "./modules/session";
 import profile from "./modules/profile";
 import roomlogs from "./modules/roomlogs";
 import tempuser from "./modules/tempuser";
+import toolbar from "./modules/toolbar";
+import eventroom from "./modules/eventroom";
 
 Vue.use(Vuex);
 
@@ -16,6 +18,8 @@ const store = new Vuex.Store({
     profile,
     roomlogs,
     tempuser,
+    toolbar,
+    eventroom,
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production

@@ -52,9 +52,12 @@ const routes = [
 
   /* ====== EVENTROOM ROUTES ====== */
 
-  { path: "/:eventroomName", component: RoomPage, name: "RoomPage" },
-
-
+  {
+    path: "/:eventroomName",
+    component: RoomPage,
+    name: "RoomPage",
+    meta: { hideNavigation: true },
+  },
 
   /* ====== AUTHENTICATION ROUTES ====== */
   { path: "/account/login", component: LoginPage, name: "LoginPage" },

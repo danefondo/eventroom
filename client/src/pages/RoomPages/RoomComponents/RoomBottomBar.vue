@@ -6,15 +6,41 @@
           <i id="mic-icon" class="fas fa-microphone fa-xs">+ Invite</i>
         </button>
       </div> -->
-      <div class="media-buttons">
+      <div class="media-buttons" v-if="localStream">
+        <div class="tooltip_container" v-if="localStream">
+          <div
+            :class="screenBeingShared ? 'screen-button-green' : 'screen-button'"
+            @click="toggleScreenshare"
+          >
+            <img
+              :src="screenBeingShared ? screenIconWhite : screenIcon"
+              :class="screenBeingShared ? 'screen-icon-white' : 'screen-icon'"
+            />
+          </div>
+          <div class="tooltip tooltip--top tooltip--middle">
+            <span class="tooltip_tip">{{
+              screenBeingShared ? "Stop screenshare" : "Share screen"
+            }}</span>
+            <span class="tooltip_shortcut">Z</span>
+          </div>
+        </div>
+
         <div class="tooltip_container">
           <div
-            :class="userMediaSettings.cameraOn ? 'video-call-button' : 'video-call-button-red'"
+            :class="
+              userMediaSettings.cameraOn
+                ? 'video-call-button'
+                : 'video-call-button-red'
+            "
             @click="toggleMedia(0)"
           >
             <img
               :src="userMediaSettings.cameraOn ? videoIcon : videoIconWhite"
-              :class="userMediaSettings.cameraOn ? 'video-call-icon' : 'video-call-icon-white'"
+              :class="
+                userMediaSettings.cameraOn
+                  ? 'video-call-icon'
+                  : 'video-call-icon-white'
+              "
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
@@ -26,12 +52,20 @@
         </div>
         <div class="tooltip_container">
           <div
-            :class="userMediaSettings.microphoneOn ? 'audio-button' : 'audio-button-red'"
+            :class="
+              userMediaSettings.microphoneOn
+                ? 'audio-button'
+                : 'audio-button-red'
+            "
             @click="toggleMedia(1)"
           >
             <img
               :src="userMediaSettings.microphoneOn ? audioIcon : audioIconWhite"
-              :class="userMediaSettings.microphoneOn ? 'audio-icon' : 'audio-icon-white'"
+              :class="
+                userMediaSettings.microphoneOn
+                  ? 'audio-icon'
+                  : 'audio-icon-white'
+              "
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
@@ -41,6 +75,33 @@
             <span class="tooltip_shortcut">M</span>
           </div>
         </div>
+
+        <div class="tooltip_container" v-if="moreThanOneAndLessThanThreeInSession">
+          <div
+            :class="
+              pictureInPictureEnabled
+                ? 'pip-button-green'
+                : 'pip-button'
+            "
+            @click="togglePictureInPicture"
+          >
+            <img
+              :src="pictureInPictureEnabled ? pipIconWhite : pipIcon"
+              :class="
+                pictureInPictureEnabled
+                  ? 'pip-icon-white'
+                  : 'pip-icon'
+              "
+            />
+          </div>
+          <div class="tooltip tooltip--top tooltip--middle">
+            <span class="tooltip_tip">{{
+              pictureInPictureEnabled ? "Pop back video" : "Pop out video"
+            }}</span>
+            <span class="tooltip_shortcut">P</span>
+          </div>
+        </div>
+
         <!-- <div class="tooltip_container" v-if="isAuthenticated">
           <div class="settings-button" @click="toggleSettings">
             <img :src="settings" class="settings-icon" />
@@ -51,76 +112,6 @@
           </div>
         </div> -->
       </div>
-      <div class="video-control-buttons" v-if="localStream">
-        <div class="buttonContainer">
-          <button
-            class="hoverButton"
-            id="share-button"
-            @click="toggleScreenshare"
-          >
-            <i id="swap-icon" class="fas fa-desktop fa-xs">{{
-              screenBeingShared ? "Stop screenshare" : "Share screen"
-            }}</i>
-          </button>
-        </div>
-        <!-- <div class="tooltip_container">
-          <div
-            :class="videoStatus ? 'video-call-button' : 'video-call-button-red'"
-            @click="videoStatus ? turnOffVideo() : turnOnVideo()"
-          >
-            <img
-              :src="videoStatus ? videoIcon : videoIconWhite"
-              :class="videoStatus ? 'video-call-icon' : 'video-call-icon-white'"
-            />
-          </div>
-          <div class="tooltip tooltip--top tooltip--middle">
-            <span class="tooltip_tip">{{
-              videoStatus ? "Turn camera off" : "Turn camera on"
-            }}</span>
-            <span class="tooltip_shortcut">C</span>
-          </div>
-        </div> -->
-
-
-        <!-- <div class="buttonContainer">
-          <button class="hoverButton" @click="toggleMedia(0)">
-            <i class="fas fa-video fa-xs" id="video-icon">{{
-              userMediaSettings.cameraOn ? "Pause video" : "Unpause video"
-            }}</i>
-          </button>
-        </div>
-        <div class="buttonContainer">
-          <button class="hoverButton" @click="toggleMedia(1)">
-            <i id="mic-icon" class="fas fa-microphone fa-xs">{{
-              userMediaSettings.microphoneOn ? "Mute" : "Unmute"
-            }}</i>
-          </button>
-        </div> -->
-
-
-        <div class="buttonContainer" v-if="lessThanThreeInSession">
-          <button
-            class="hoverButton"
-            id="pip-button"
-            @click="togglePictureInPicture"
-          >
-            <i class="fas fa-external-link-alt fa-xs">{{
-              pictureInPictureEnabled
-                ? "Quit Picture In Picture"
-                : "Picture In Picture"
-            }}</i>
-          </button>
-        </div>
-
-        <!-- <div class="buttonContainer">
-          <button class="hoverButton" @click="toggleShutRestart">
-            <i class="fas fa-video fa-xs" id="video-icon">{{
-              userMediaSettings.cameraOn ? "Turn off video" : "Turn video on"
-            }}</i>
-          </button>
-        </div> -->
-      </div>
-
       <!-- <div class="buttonContainer leave-room">
         <button class="hoverButton">
           <i id="mic-icon" class="fas fa-microphone fa-xs">Leave room</i>
@@ -136,6 +127,10 @@ import videoIcon from "../../../assets/images/video-call.png";
 import videoIconWhite from "../../../assets/images/video-call-white.png";
 import audioIcon from "../../../assets/images/microphone.png";
 import audioIconWhite from "../../../assets/images/microphone-white.png";
+import screenIcon from "../../../assets/images/screen.png";
+import screenIconWhite from "../../../assets/images/screen-white.png";
+import pipIcon from "../../../assets/images/pip.png";
+import pipIconWhite from "../../../assets/images/pip-white.png";
 // import settings from "../../../assets/images/settings.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
@@ -151,6 +146,10 @@ export default {
       videoIconWhite: videoIconWhite,
       audioIcon: audioIcon,
       audioIconWhite: audioIconWhite,
+      screenIcon: screenIcon,
+      screenIconWhite: screenIconWhite,
+      pipIcon: pipIcon,
+      pipIconWhite: pipIconWhite,
     };
   },
   computed: {
@@ -158,11 +157,18 @@ export default {
       user: (state) => state.auth.user,
     }),
   },
+  created() {
+    let globalThis = this;
+    globalThis.handler = function (e) {
+      globalThis.keyboardEvent(e);
+    };
+    window.addEventListener("keyup", this.handler);
+  },
   props: [
     "userMediaSettings",
     "localStream",
     "screenBeingShared",
-    "lessThanThreeInSession",
+    "moreThanOneAndLessThanThreeInSession",
     "pictureInPictureEnabled",
   ],
   methods: {
@@ -178,6 +184,16 @@ export default {
     toggleShutRestart() {
       this.$emit("toggleShutRestart");
     },
+    keyboardEvent(e) {
+      let globalThis = this;
+      if (e.which == 67) {
+        globalThis.toggleMedia(0);
+      } else if (e.which == 77) {
+        globalThis.toggleMedia(1);
+      } else if (e.which == 90) {
+        globalThis.toggleScreenshare();
+      }
+    },
   },
 };
 </script>
@@ -192,6 +208,8 @@ export default {
   /* border: 2px solid red; */
   position: absolute;
   bottom: 0;
+  padding: 15px;
+  box-sizing: unset !important;
 }
 
 .toolbar {
@@ -201,6 +219,8 @@ export default {
   height: 100%;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: unset !important;
 }
 
 .video-control-buttons {
@@ -212,29 +232,15 @@ export default {
   right: 5px;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .media-buttons {
   display: flex;
   flex-direction: row;
-  margin-top: 20px;
 }
 .video-call-button,
 .audio-button,
-.settings-button {
+.settings-button,
+.screen-button,
+.pip-button {
   border: 1px solid #ececec;
   border-radius: 4px;
   display: flex;
@@ -250,14 +256,20 @@ export default {
   background-color: #f3f2f2;
 }
 .video-call-button:hover,
-.audio-button:hover {
+.audio-button:hover,
+.screen-button:hover
+.pip-button:hover {
   background-color: #f3f2f2;
 }
 .video-call-icon,
 .video-call-icon-white,
 .audio-icon,
 .audio-icon-white,
-.settings-icon {
+.settings-icon,
+.screen-icon,
+.screen-icon-white,
+.pip-icon,
+.pip-icon-white {
   width: 28px;
   height: 28px;
   margin: auto;
@@ -279,6 +291,25 @@ export default {
 .audio-button-red:hover {
   background-color: #a72143;
 }
+
+.screen-button-green,
+.pip-button-green {
+  border-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 45px;
+  width: 45px;
+  cursor: pointer;
+  background-color: #1be691;
+  position: relative;
+  box-sizing: border-box;
+}
+.screen-button-green:hover,
+.pip-button-green:hover {
+  background-color: #15c27a;
+}
+
 *,
 ::before,
 ::after {

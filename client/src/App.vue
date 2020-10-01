@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
-    <Nav/>
-    <div class="page-container">
+    <Nav v-if="!$route.meta.hideNavigation"/>
+    <div :class="$route.meta.hideNavigation ? 'page-container full' : 'page-container'">
       <router-view></router-view>
     </div>
   </div>
@@ -70,6 +70,10 @@ a:visited {
 
 .page-container {
   height: calc(100vh - 52px);
+}
+
+.full {
+  height: 100vh;
 }
 
 /* Button styles */

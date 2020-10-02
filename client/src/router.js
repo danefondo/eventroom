@@ -1,5 +1,11 @@
 import VueRouter from "vue-router";
 import store from "./store/index";
+import axios from "axios";
+import { BASE_PATH } from "./constants";
+
+const http = axios.create({
+  baseURL: BASE_PATH,
+});
 
 /* ====== DASHBOARD PAGES ====== */
 import DashboardPage from "./pages/DashboardPages/DashboardPage";
@@ -9,6 +15,10 @@ import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage"
 
 /* ====== ROOM PAGES ====== */
 import RoomPage from "./pages/RoomPages/Room";
+
+/* ====== ERROR PAGES ====== */
+import Error404Page from "./pages/ErrorPages/Error404Page";
+import RoomNotFound from "./pages/RoomPages/RoomNotFound";
 
 /* ====== EVENT PAGES ====== */
 import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
@@ -57,6 +67,25 @@ const routes = [
     component: RoomPage,
     name: "RoomPage",
     meta: { hideNavigation: true },
+    beforeEnter(to, from, next) {
+      
+      let eventroomName = to.params.eventroomName;
+      console.log("eventroomNAIM", eventroomName);
+      let routeData = {
+        eventroomName: to.params.eventroomName
+      }
+      http
+        .post(`/api/eventroom/checkIfEventroomExistsByName`, routeData)
+        .then((response) => {
+          console.log("responssss", response);
+          if (!response.data.alreadyExists) {
+            router.push("/");
+          } else {
+            next();
+          }
+        })
+        .catch((err) => console.log("error", err));
+    },
   },
 
   /* ====== AUTHENTICATION ROUTES ====== */
@@ -111,6 +140,20 @@ const routes = [
   { path: "/events/:id", component: EventPreviewPage },
   { path: "/events/:eventId/rooms/:roomId", component: EventRoomPage },
   { path: "/temp/fix", component: TemporaryFix },
+
+  {
+    path: "/errors/eventroomNotFound",
+    name: "RoomNotFound",
+    component: RoomNotFound,
+  },
+
+  {
+    path: "/errors/404",
+    name: "Error404Page",
+    component: Error404Page,
+  },
+
+  { path: "*", redirect: "/errors/404" },
 ];
 
 const router = new VueRouter({

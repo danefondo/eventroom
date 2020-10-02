@@ -10,16 +10,17 @@ const EventroomController = {
       return res.status(400).send({ error: "Invalid request 400" });
     }
 
-    if (!req.body.eventroomName) {
+    let eventroomName = req.body.eventroomName;
+    if (!eventroomName || eventroomName.length == 0 || eventroomName == "") {
       // Ideally just create a new slug here to maximize UX
       return res
         .status(400)
         .send({ error: "Invalid request: Eventroom name missing" });
     }
 
-    try {
-      let eventroomName = req.body.eventroomName;
+    // eventroomName = eventroomName.replace(/[^0-9a-z]/gi, "");
 
+    try {
       // Check if Eventroom already exists
       let eventroom = await checkIfEventroomExistsByName(eventroomName);
 
@@ -29,7 +30,34 @@ const EventroomController = {
       }
       return res.status(200).send({ alreadyExists });
     } catch (error) {
-      console.log("@createEventroom", error);
+      console.log("@checkIfEventroomExistsByName", error);
+      res.status(500).send({ error: "An unknown error occurred" });
+    }
+  },
+
+  async checkIfEventroomExistsById(req, res) {
+    if (!req.body) {
+      return res.status(400).send({ error: "Invalid request 400" });
+    }
+
+    let eventroomId = req.body.eventroomId;
+    if (!eventroomId) {
+      return res
+        .status(400)
+        .send({ error: "Invalid request: Eventroom ID missing" });
+    }
+
+    try {
+      // Check if Eventroom exists
+      let eventroom = await checkIfEventroomExistsById(eventroomId);
+
+      let eventroomExists = false;
+      if (eventroom) {
+        eventroomExists = true;
+      }
+      return res.status(200).send({ eventroomExists });
+    } catch (error) {
+      console.log("@checkIfEventroomExistsById", error);
       res.status(500).send({ error: "An unknown error occurred" });
     }
   },
@@ -46,6 +74,7 @@ const EventroomController = {
         .status(400)
         .send({ error: "Invalid request: Eventroom name missing" });
     }
+    eventroomName = eventroomName.replace(/[^0-9a-z_-]/gi, "");
     let eventroomData = {};
     // const userId = req.user._id;
     const hostId = req.body.hostId;
@@ -56,7 +85,6 @@ const EventroomController = {
 
       // Check if Eventroom already exists
       let eventroomExists = await checkIfEventroomExistsByName(eventroomName);
-
 
       let alreadyExists = false;
       if (eventroomExists) {
@@ -85,15 +113,58 @@ const EventroomController = {
   async getEventroomByName(req, res) {
     try {
       console.log("paramparam", req.params);
-      const eventroomName = req.params.eventroomName;
-      const eventroom = await EventroomDataController.getEventroomByName(
+      let eventroomName = req.params.eventroomName;
+      eventroomName = eventroomName.replace(/[^0-9a-z_-]/gi, "");
+      const response = await EventroomDataController.getEventroomByName(
         eventroomName
       );
-      if (!eventroom || !eventroom.success) {
+      if (!response || !response.success) {
         return res.status(500).send({ error: "Error finding event" });
       }
-      console.log("@getevent data", eventroom);
-      res.status(200).send({ eventroom });
+      console.log("@getevent data", response);
+      res.status(200).send({ response });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).send({ error: "An unknown error occurred" });
+    }
+  },
+
+  async changeEventroomName(req, res) {
+    if (!req.body) {
+      return res.status(400).send({ error: "Invalid request 400" });
+    }
+
+    let oldEventroomName = req.body.oldEventroomName;
+    let newEventroomName = req.body.newEventroomName;
+    oldEventroomName = oldEventroomName.replace(/[^0-9a-z_-]/gi, "");
+    newEventroomName = newEventroomName.replace(/[^0-9a-z_-]/gi, "");
+    if (
+      (!oldEventroomName && !newEventroomName) ||
+      newEventroomName.length == 0 ||
+      newEventroomName == ""
+    ) {
+      // Ideally just create a new slug here to maximize UX
+      return res.status(400).send({ error: "Old or new name not provided!" });
+    }
+    try {
+      let eventroomData = {
+        oldEventroomName: oldEventroomName,
+        newEventroomName: newEventroomName,
+      };
+      const response = await EventroomDataController.changeEventroomName(
+        eventroomData
+      );
+
+      if (!response || !response.success) {
+        return res.status(500).send({ error: "Error finding event" });
+      }
+      console.log(
+        "@getevent eventroom name successfully changed",
+        response.eventroom
+      );
+      let success = response.success;
+      let updatedEventroomName = response.eventroom.eventroomName;
+      res.status(200).send({ success, updatedEventroomName });
     } catch (error) {
       console.log(error);
       return res.status(500).send({ error: "An unknown error occurred" });

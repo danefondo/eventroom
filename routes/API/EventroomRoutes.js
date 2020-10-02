@@ -22,6 +22,22 @@ router.post(
 );
 
 /**
+ * Check if Eventroom exists by Id
+ */
+router.post(
+  "/checkIfEventroomExistsById",
+  EventroomController.checkIfEventroomExistsById
+);
+
+/**
+ * Change existing Eventroom name
+ */
+router.post(
+  "/changeEventroomName",
+  EventroomController.changeEventroomName
+);
+
+/**
  * Generate an Access Token for a chat application user provided via the url
  */
 router.get(

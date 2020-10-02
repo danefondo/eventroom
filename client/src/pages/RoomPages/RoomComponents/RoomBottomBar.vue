@@ -257,7 +257,7 @@ export default {
 }
 .video-call-button:hover,
 .audio-button:hover,
-.screen-button:hover
+.screen-button:hover,
 .pip-button:hover {
   background-color: #f3f2f2;
 }

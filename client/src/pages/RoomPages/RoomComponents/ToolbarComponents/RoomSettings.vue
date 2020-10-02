@@ -33,14 +33,16 @@ export default {
   },
   methods: {
     toggleToolbar(toolbarTool) {
-        console.log("helllo");
-        console.log("setttin", this.settings);
+      let data = {
+        toolbarTool,
+      };
+
       if (this.settings == true) {
-        this.$store.dispatch("toolbar/toggleToolbar", toolbarTool, false);
-        this.$store.dispatch("toolbar/toggleContainer", "leftSidebar", false);
+        data.boolean = false;
+        this.$store.dispatch("toolbar/toggleToolbar", data);
       } else if (this.settings == false) {
-        this.$store.dispatch("toolbar/toggleContainer", "leftSidebar", true);
-        this.$store.dispatch("toolbar/toggleToolbar", toolbarTool, true);
+        data.boolean = true;
+        this.$store.dispatch("toolbar/toggleToolbar", data);
       }
     },
   },

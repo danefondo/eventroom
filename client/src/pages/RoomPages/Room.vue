@@ -68,40 +68,41 @@ import { destroyTempToken, setTempToken } from "../../config/axios";
 // import SessionController from "../../session/SessionController";
 // import { requestWithAuthentication } from "../../config/api";
 
+function initialState() {
+  return {
+    sideBarConfigs: {
+      leftSidebar: false,
+    },
+    type: 0,
+    connected: false,
+    localICECandidates: [],
+    localStream: undefined,
+    localVideo: undefined,
+    remoteVideo: undefined,
+    callReady: false,
+    getVideo: true,
+    peerConnection: undefined,
+    offer: undefined,
+    screenBeingShared: false,
+    pictureInPictureEnabled: false,
+    moreThanOneAndLessThanThreeInSession: false,
+    userMediaSettings: {
+      cameraOn: false,
+      microphoneOn: false,
+      speakerOn: false,
+    },
+    userMediaDefaultPreferences: {
+      cameraOn: true,
+      microphoneOn: true,
+      speakerOn: true,
+    },
+  };
+}
+
 export default {
   name: "RoomPage",
-  data() {
-    return {
-      // ready: false,
-      // errors: false,
-      // errorMessage: "",
-      sideBarConfigs: {
-        leftSidebar: false,
-      },
-      type: 0,
-      connected: false,
-      localICECandidates: [],
-      localStream: undefined,
-      localVideo: undefined,
-      remoteVideo: undefined,
-      callReady: false,
-      getVideo: true,
-      peerConnection: undefined,
-      offer: undefined,
-      screenBeingShared: false,
-      pictureInPictureEnabled: false,
-      moreThanOneAndLessThanThreeInSession: false,
-      userMediaSettings: {
-        cameraOn: false,
-        microphoneOn: false,
-        speakerOn: false,
-      },
-      userMediaDefaultPreferences: {
-        cameraOn: true,
-        microphoneOn: true,
-        speakerOn: true,
-      },
-    };
+  data: function () {
+    return initialState();
   },
   computed: {
     ...mapState({
@@ -123,6 +124,10 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch("tempuser/destroyTempUser");
     destroyTempToken();
+    this.$store.dispatch("eventroom/clearEventroom");
+    this.localStream.getTracks().forEach((track) => track.stop());
+    // this.removeVideo = undefined;
+    initialState();
     next();
   },
   async mounted() {
@@ -187,14 +192,19 @@ export default {
     });
   },
   methods: {
+    resetWindow: function () {
+      Object.assign(this.$data, initialState());
+    },
     async getRoom() {
       console.log("@getroom params:", this.$route.params.eventroomName);
       const result = await axios.get(
         `/api/eventroom/${this.$route.params.eventroomName}`
       );
-      let name = result.data.eventroom.eventroom[0].eventroomName;
+      let name = result.data.response.eventroom[0].eventroomName;
       console.log("name", name);
+      let eventroomData = result.data.response.eventroom[0];
       this.$store.dispatch("eventroom/updateEventroomName", name);
+      this.$store.dispatch("eventroom/addEventroomData", eventroomData);
       if (result.success) {
         this.$socket.emit("joinRoom", result.roomData);
         this.ready = true;

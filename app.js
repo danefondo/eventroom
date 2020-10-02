@@ -216,6 +216,14 @@ IO.on("connection", function (socket) {
     console.log("Received answer. Broadcasting...");
     socket.broadcast.emit("answer", answer);
   });
+
+
+
+  // Relay answers
+  socket.on("newEventroomName", function (eventroomName) {
+    console.log("Received new Eventroom name. Broadcasting...");
+    socket.broadcast.emit("eventroomNameChange", eventroomName);
+  });
 });
 
 let twilio = require("twilio")(

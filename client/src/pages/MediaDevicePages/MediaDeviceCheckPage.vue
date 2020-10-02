@@ -230,7 +230,7 @@ export default {
       const result = await axios.get(
         `/api/eventroom/${this.$route.params.eventroomName}`
       );
-      this.slug = result.data.eventroom.eventroom[0].eventroomName;
+      this.slug = result.data.response.eventroom[0].eventroomName;
       console.log(result);
     },
     async setDefaults() {

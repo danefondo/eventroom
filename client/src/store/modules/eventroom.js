@@ -1,5 +1,5 @@
 const state = {
-    eventroomInfo: {
+    eventroom: {
         eventroomName: '',
     },
   };
@@ -7,7 +7,12 @@ const state = {
   // Synchronous
   const mutations = {
     updateEventroomName(state, eventroomName) {
-      state.eventroomInfo["eventroomName"] = eventroomName;
+      state.eventroom["eventroomName"] = eventroomName;
+    },
+    clearEventroom(state) {
+      for (var key in state.eventroom) {
+        state.eventroom[key] = '';
+      }
     },
   };
   
@@ -15,6 +20,9 @@ const state = {
   const actions = {
     updateEventroomName(state, eventroomName) {
       state.commit("updateEventroomName", eventroomName);
+    },
+    clearEventroom(state) {
+      state.commit("updateEventroomName");
     },
   };
   

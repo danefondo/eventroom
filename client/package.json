@@ -20,6 +20,7 @@
     "portal-vue": "^2.1.7",
     "socket.io-client": "^2.3.0",
     "twilio-video": "^2.7.2",
+    "v-hotkey": "^0.8.0",
     "vue": "^2.6.11",
     "vue-cookies": "^1.7.3",
     "vue-i18n": "^8.17.4",

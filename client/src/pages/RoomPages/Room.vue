@@ -1,5 +1,10 @@
 <template>
   <div class="room-container">
+    <RoomShortcuts
+      v-hotkey="keymap"
+      v-show="showShortcutsModal"
+      @wrapperClick="toggleShowShortcuts"
+    />
     <RoomToolbar />
     <RoomLeftSidebar v-if="leftSidebar" />
     <div class="video-chat">
@@ -51,6 +56,7 @@
         @toggleScreenshare="toggleScreenshare"
         @togglePictureInPicture="togglePictureInPicture"
         @toggleShutRestart="toggleShutRestart"
+        @leaveRoom="leaveRoom"
       />
     </div>
   </div>
@@ -61,6 +67,7 @@ import { mapState } from "vuex";
 import RoomToolbar from "./RoomComponents/RoomToolbar";
 import RoomBottomBar from "./RoomComponents/RoomBottomBar";
 import RoomLeftSidebar from "./RoomComponents/RoomLeftSidebar";
+import RoomShortcuts from "./RoomComponents/RoomShortcuts";
 // import TwilioVideo from "./TwilioVideo/TwilioVideo";
 import axios from "axios";
 import auth from "../../config/auth";
@@ -73,7 +80,9 @@ function initialState() {
     sideBarConfigs: {
       leftSidebar: false,
     },
+    ready: false,
     type: 0,
+    showShortcutsModal: false,
     connected: false,
     localICECandidates: [],
     localStream: undefined,
@@ -111,14 +120,26 @@ export default {
       isVerified: (state) => state.auth.verificationStatus,
       tempUser: (state) => state.tempuser.tempUser,
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
+      eventroom: (state) => state.eventroom.eventroomData,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
+    keymap() {
+      // https://github.com/Dafrok/v-hotkey
+      return {
+        "alt+s": this.toggleShowShortcuts,
+        // 'enter': {
+        //   keydown: this.hide,
+        //   keyup: this.show
+        // }
+      };
+    },
   },
   components: {
     RoomToolbar,
     RoomBottomBar,
     RoomLeftSidebar,
+    RoomShortcuts,
     // TwilioVideo
   },
   beforeRouteLeave(to, from, next) {
@@ -192,6 +213,16 @@ export default {
     });
   },
   methods: {
+    leaveRoom() {
+      if (!this.isAuthenticated) {
+        this.$router.push("/");
+      } else {
+        this.$router.push("/account/dashboard");
+      }
+    },
+    toggleShowShortcuts() {
+      this.showShortcutsModal = !this.showShortcutsModal;
+    },
     resetWindow: function () {
       Object.assign(this.$data, initialState());
     },
@@ -200,18 +231,20 @@ export default {
       const result = await axios.get(
         `/api/eventroom/${this.$route.params.eventroomName}`
       );
-      let name = result.data.response.eventroom[0].eventroomName;
-      console.log("name", name);
+      console.log("Result", result);
+      // let name = result.data.response.eventroom[0].eventroomName;
       let eventroomData = result.data.response.eventroom[0];
-      this.$store.dispatch("eventroom/updateEventroomName", name);
-      this.$store.dispatch("eventroom/addEventroomData", eventroomData);
-      if (result.success) {
-        this.$socket.emit("joinRoom", result.roomData);
-        this.ready = true;
-      } else {
-        this.ready = true;
-        this.errors = true;
-      }
+      console.log("Initial Eventroom data", eventroomData);
+      // this.$store.dispatch("eventroom/updateEventroomName", name);
+      this.$store.dispatch("eventroom/setInitialEventroomData", eventroomData);
+      console.log("VUEX NEW Eventroom data", this.eventroom);
+      // if (result.data.response.success) {
+      //   this.$socket.emit("joinRoom", result.roomData);
+      //   this.ready = true;
+      // } else {
+      //   this.ready = true;
+      //   this.errors = true;
+      // }
     },
     async createTempUser() {
       let globalThis = this;

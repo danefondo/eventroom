@@ -76,22 +76,17 @@
           </div>
         </div>
 
-        <div class="tooltip_container" v-if="moreThanOneAndLessThanThreeInSession">
+        <div
+          class="tooltip_container"
+          v-if="moreThanOneAndLessThanThreeInSession"
+        >
           <div
-            :class="
-              pictureInPictureEnabled
-                ? 'pip-button-green'
-                : 'pip-button'
-            "
+            :class="pictureInPictureEnabled ? 'pip-button-green' : 'pip-button'"
             @click="togglePictureInPicture"
           >
             <img
               :src="pictureInPictureEnabled ? pipIconWhite : pipIcon"
-              :class="
-                pictureInPictureEnabled
-                  ? 'pip-icon-white'
-                  : 'pip-icon'
-              "
+              :class="pictureInPictureEnabled ? 'pip-icon-white' : 'pip-icon'"
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
@@ -112,6 +107,22 @@
           </div>
         </div> -->
       </div>
+      <div class="media-buttons leave" v-if="localStream">
+        <div class="tooltip_container" v-if="localStream">
+          <div
+            :class="screenBeingShared ? 'screen-button-green' : 'screen-button'"
+            @click="leaveRoom"
+          >
+            <img
+              :src="hangUpIcon"
+              :class="screenBeingShared ? 'screen-icon-white' : 'screen-icon'"
+            />
+          </div>
+          <div class="tooltip tooltip--top tooltip--middle">
+            <span class="tooltip_tip">Leave room</span>
+          </div>
+        </div>
+      </div>
       <!-- <div class="buttonContainer leave-room">
         <button class="hoverButton">
           <i id="mic-icon" class="fas fa-microphone fa-xs">Leave room</i>
@@ -131,6 +142,7 @@ import screenIcon from "../../../assets/images/screen.png";
 import screenIconWhite from "../../../assets/images/screen-white.png";
 import pipIcon from "../../../assets/images/pip.png";
 import pipIconWhite from "../../../assets/images/pip-white.png";
+import hangUpIcon from "../../../assets/images/hangup.png";
 // import settings from "../../../assets/images/settings.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
@@ -150,6 +162,7 @@ export default {
       screenIconWhite: screenIconWhite,
       pipIcon: pipIcon,
       pipIconWhite: pipIconWhite,
+      hangUpIcon: hangUpIcon,
     };
   },
   computed: {
@@ -172,6 +185,9 @@ export default {
     "pictureInPictureEnabled",
   ],
   methods: {
+    leaveRoom() {
+      this.$emit("leaveRoom");
+    },
     toggleMedia(type) {
       this.$emit("toggleMedia", type);
     },
@@ -208,7 +224,7 @@ export default {
   /* border: 2px solid red; */
   position: absolute;
   bottom: 0;
-  padding: 15px;
+  padding: 18px 15px;;
   box-sizing: unset !important;
 }
 
@@ -227,7 +243,7 @@ export default {
   display: flex;
   flex-direction: row;
 }
-.leave-room {
+.leave {
   position: absolute;
   right: 5px;
 }
@@ -235,6 +251,7 @@ export default {
 .media-buttons {
   display: flex;
   flex-direction: row;
+  align-items: center;
 }
 .video-call-button,
 .audio-button,

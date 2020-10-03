@@ -2,16 +2,14 @@ const EventroomModel = require("../models/EventroomModel");
 
 const EventroomDataController = {
   async checkIfEventroomExistsByName(eventroomName) {
-    const doesEventroomExist = await EventroomModel.exists({
-      eventroomName: eventroomName,
-    });
+    const query = {eventroomName: eventroomName};
+    const doesEventroomExist = await EventroomModel.exists(query);
     return doesEventroomExist;
   },
 
   async checkIfEventroomExistsById(eventroomId) {
-    const doesEventroomExist = await EventroomModel.exists({
-      _id: eventroomId,
-    });
+    const query = {_id: eventroomId};
+    const doesEventroomExist = await EventroomModel.exists(query);
     return doesEventroomExist;
   },
 
@@ -49,9 +47,9 @@ const EventroomDataController = {
   },
 
   async changeEventroomName(eventroomData) {
-    console.log("@Changing Eventroom name, old name:", eventroomData);
+    console.log("@Changing Eventroom new name and id:", eventroomData);
     let eventroom;
-    let filter = { eventroomName: eventroomData.oldEventroomName };
+    let filter = { _id: eventroomData.eventroomId };
     let update = { eventroomName: eventroomData.newEventroomName };
 
     try {

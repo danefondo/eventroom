@@ -1,7 +1,7 @@
 <template>
   <div class="central-control-station">
     <div class="controls-container">
-      <span class="welcome">Welcome to your home.</span>
+      <span class="welcome">Create meetings faster than you can blink.</span>
       <div class="central-controls">
         <label class="room-creator">
           <span class="eventroom">eventroom.to/</span>

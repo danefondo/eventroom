@@ -12,3 +12,10 @@ npm rebuild node-sass
 npm run build 
 Then cd .. back and run 
 npm run dev 
+
+
+# attributions
+- hang up icon: https://www.flaticon.com/free-icon/phone_134852
+- close icon: https://www.flaticon.com/free-icon/close_1828778
+- screenshare icon: https://www.flaticon.com/free-icon/screen_808574
+- info icon: https://www.flaticon.com/free-icon/information_157933

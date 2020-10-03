@@ -66,7 +66,7 @@ export default {
     ...mapState({
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       info: (state) => state.toolbar.toolbarConfig.info,
-      eventroom: (state) => state.eventroom.eventroom,
+      eventroom: (state) => state.eventroom.eventroomData,
     }),
   },
   components: {
@@ -115,7 +115,7 @@ export default {
 
         let eventroomData = {
           newEventroomName: this.eventroomName,
-          oldEventroomName: this.eventroom.eventroomName,
+          eventroomId: this.eventroom.eventroomId,
         };
         console.log("eveData", eventroomData);
         const response = await axios.post(

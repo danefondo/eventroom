@@ -134,12 +134,11 @@ const EventroomController = {
       return res.status(400).send({ error: "Invalid request 400" });
     }
 
-    let oldEventroomName = req.body.oldEventroomName;
+    let eventroomId = req.body.eventroomId;
     let newEventroomName = req.body.newEventroomName;
-    oldEventroomName = oldEventroomName.replace(/[^0-9a-z_-]/gi, "");
     newEventroomName = newEventroomName.replace(/[^0-9a-z_-]/gi, "");
     if (
-      (!oldEventroomName && !newEventroomName) ||
+      (!eventroomId && !newEventroomName) ||
       newEventroomName.length == 0 ||
       newEventroomName == ""
     ) {
@@ -148,7 +147,7 @@ const EventroomController = {
     }
     try {
       let eventroomData = {
-        oldEventroomName: oldEventroomName,
+        eventroomId: eventroomId,
         newEventroomName: newEventroomName,
       };
       const response = await EventroomDataController.changeEventroomName(

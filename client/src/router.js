@@ -7,6 +7,9 @@ const http = axios.create({
   baseURL: BASE_PATH,
 });
 
+/* ====== LANDING PAGES ====== */
+import LandingPage from "./pages/LandingPages/LandingPage";
+
 /* ====== DASHBOARD PAGES ====== */
 import DashboardPage from "./pages/DashboardPages/DashboardPage";
 
@@ -48,8 +51,8 @@ const routes = [
 
   {
     path: "/",
-    component: DashboardPage,
-    name: "DashboardPage",
+    component: LandingPage,
+    name: "LandingPage",
   },
 
   /* ====== PRE-EVENT ROUTES ====== */
@@ -68,12 +71,11 @@ const routes = [
     name: "RoomPage",
     meta: { hideNavigation: true },
     beforeEnter(to, from, next) {
-      
       let eventroomName = to.params.eventroomName;
       console.log("eventroomNAIM", eventroomName);
       let routeData = {
-        eventroomName: to.params.eventroomName
-      }
+        eventroomName: to.params.eventroomName,
+      };
       http
         .post(`/api/eventroom/checkIfEventroomExistsByName`, routeData)
         .then((response) => {
@@ -85,6 +87,16 @@ const routes = [
           }
         })
         .catch((err) => console.log("error", err));
+    },
+  },
+
+  /* ====== DASHBOARD ROUTES ====== */
+  {
+    path: "/account/dashboard",
+    component: DashboardPage,
+    name: "DashboardPage",
+    meta: {
+      requireAuthentication: true,
     },
   },
 

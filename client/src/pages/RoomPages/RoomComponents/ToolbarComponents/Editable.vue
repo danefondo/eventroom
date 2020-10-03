@@ -28,7 +28,7 @@ export default {
   },
   computed: {
     ...mapState({
-      eventroom: (state) => state.eventroom.eventroom,
+      eventroom: (state) => state.eventroom.eventroomData,
     }),
   },
   methods: {

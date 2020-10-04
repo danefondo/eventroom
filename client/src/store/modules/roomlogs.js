@@ -5,7 +5,14 @@ const state = {
 
 // Synchronous
 const mutations = {
-  addNewLog(state, logItem) {
+  addNewLog(state, logMessage) {
+    let length = state.allLogs.length + 1;
+    console.log("leeeength", length);
+    let logItem = {
+        logNumber: length,
+        logMessage: logMessage,
+    }
+    console.log("logggoitme", logItem);
     state.allLogs.push(logItem);
     state.lastLog = logItem;
   },
@@ -14,11 +21,7 @@ const mutations = {
 // Asynchronous
 const actions = {
   addNewLog(state, logMessage) {
-    let logItem = {
-        logNumber: state.allLogs.length + 1,
-        logMessage: logMessage,
-    }
-    state.commit("addNewLog", logItem);
+    state.commit("addNewLog", logMessage);
   },
 };
 

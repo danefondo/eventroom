@@ -40,7 +40,7 @@ router.post(
 /**
  * Generate an Access Token for a chat application user provided via the url
  */
-router.get(
+router.post(
   "/generateTwilioAccessToken",
   EventroomController.generateTwilioAccessToken
 );

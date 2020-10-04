@@ -10,6 +10,11 @@
     <div class="video-chat">
       <!-- <h1>Video Chat</h1>
       <div v-if="tempUser">{{ tempUser.tempUserDisplayName }}</div> -->
+      <TwilioVideo
+        v-if="RTCConfig.twilio && userId && eventroom.eventroomId"
+        :eventroomId="eventroom.eventroomId"
+        :userId="userId"
+      />
       <div class="video-streams">
         <div class="left-side side">
           <video
@@ -68,7 +73,7 @@ import RoomToolbar from "./RoomComponents/RoomToolbar";
 import RoomBottomBar from "./RoomComponents/RoomBottomBar";
 import RoomLeftSidebar from "./RoomComponents/RoomLeftSidebar";
 import RoomShortcuts from "./RoomComponents/RoomShortcuts";
-// import TwilioVideo from "./TwilioVideo/TwilioVideo";
+import TwilioVideo from "./Twilio/TwilioVideo";
 import axios from "axios";
 import auth from "../../config/auth";
 import { destroyTempToken, setTempToken } from "../../config/axios";
@@ -95,6 +100,11 @@ function initialState() {
     screenBeingShared: false,
     pictureInPictureEnabled: false,
     moreThanOneAndLessThanThreeInSession: false,
+    userId: "",
+    RTCConfig: {
+      twilio: true,
+      vanillaRTC: false,
+    },
     userMediaSettings: {
       cameraOn: false,
       microphoneOn: false,
@@ -140,7 +150,7 @@ export default {
     RoomBottomBar,
     RoomLeftSidebar,
     RoomShortcuts,
-    // TwilioVideo
+    TwilioVideo,
   },
   beforeRouteLeave(to, from, next) {
     this.$store.dispatch("tempuser/destroyTempUser");
@@ -167,10 +177,15 @@ export default {
       this.createTempUser();
     }
 
+    if (this.user && this.isAuthenticated) {
+      console.log("userMOUNTED", this.user);
+      this.userId = this.user._id;
+    }
+
     if (this.$store.state.auth.user) {
       this.getRoom();
     }
-    this.getRoom();
+    // this.getRoom();
     // if (this.isAuthenticated) {
     //   this.getRoom();
     // }
@@ -265,12 +280,14 @@ export default {
         localStorage.tempUser = JSON.stringify(data.tempUser);
 
         if (auth.checkTempToken()) {
-          let temporary = auth.checkTempToken();
-          console.log("temporary", temporary);
+          let temporaryUser = auth.checkTempToken();
+          console.log("temporary", temporaryUser);
           await globalThis.$store.dispatch(
             "tempuser/addNewTempUser",
-            temporary
+            temporaryUser
           );
+          this.userId = temporaryUser._id;
+          this.getRoom();
         }
       } catch (error) {
         console.log("Failed to create temporary user", error);

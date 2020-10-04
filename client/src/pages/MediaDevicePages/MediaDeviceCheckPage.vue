@@ -226,7 +226,7 @@ export default {
       this.$router.push(`/${this.$route.params.eventroomName}`);
     },
     async getRoom() {
-      console.log("@getroom params:", this.$route.params.eventroomName);
+      console.log("@getroom params yes:", this.$route.params.eventroomName);
       const result = await axios.get(
         `/api/eventroom/${this.$route.params.eventroomName}`
       );

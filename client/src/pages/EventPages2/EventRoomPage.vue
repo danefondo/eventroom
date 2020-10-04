@@ -56,7 +56,7 @@ export default {
   },
   methods: {
     async getRoom() {
-      console.log("@getroom params:", this.$route.params);
+      console.log("@getroom params!!!!!!!:", this.$route.params);
       const result = await SessionController.initializeRoom(this.$route.params.eventId, this.$route.params.roomId);
       console.log("result: ", result);
       if (result.success) {

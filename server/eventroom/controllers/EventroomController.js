@@ -175,7 +175,7 @@ const EventroomController = {
    */
   async generateTwilioAccessToken(req, res) {
     try {
-      var identity = req.query["identity"];
+      var identity = req.body.identity;
 
       if (!identity) {
         return res.status(400).send({

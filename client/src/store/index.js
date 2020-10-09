@@ -9,6 +9,7 @@ import tempuser from "./modules/tempuser";
 import toolbar from "./modules/toolbar";
 import eventroom from "./modules/eventroom";
 import twilio from "./modules/twilio";
+import mediastates from "./modules/mediastates";
 
 Vue.use(Vuex);
 
@@ -22,6 +23,7 @@ const store = new Vuex.Store({
     toolbar,
     eventroom,
     twilio,
+    mediastates
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production

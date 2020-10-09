@@ -100,4 +100,8 @@ a:visited {
   background-color: #493effd1;
 }
 
+.mb-20 {
+  margin-bottom: 20px !important;
+}
+
 </style>

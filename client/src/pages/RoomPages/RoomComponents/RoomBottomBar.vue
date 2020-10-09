@@ -6,20 +6,37 @@
           <i id="mic-icon" class="fas fa-microphone fa-xs">+ Invite</i>
         </button>
       </div> -->
-      <div class="media-buttons" v-if="localStream">
-        <div class="tooltip_container" v-if="localStream">
+      <div class="media-buttons" v-if="localStream || twilioLocalVideoTrack">
+        <div
+          class="tooltip_container"
+          v-if="localStream || twilioLocalVideoTrack"
+        >
           <div
-            :class="screenBeingShared ? 'screen-button-green' : 'screen-button'"
-            @click="toggleScreenshare"
+            :class="
+              userMediaSettings.screenBeingShared
+                ? 'screen-button-green'
+                : 'screen-button'
+            "
+            @click="toggleMedia(2)"
           >
             <img
-              :src="screenBeingShared ? screenIconWhite : screenIcon"
-              :class="screenBeingShared ? 'screen-icon-white' : 'screen-icon'"
+              :src="
+                userMediaSettings.screenBeingShared
+                  ? screenIconWhite
+                  : screenIcon
+              "
+              :class="
+                userMediaSettings.screenBeingShared
+                  ? 'screen-icon-white'
+                  : 'screen-icon'
+              "
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
-              screenBeingShared ? "Stop screenshare" : "Share screen"
+              userMediaSettings.screenBeingShared
+                ? "Stop screenshare"
+                : "Share screen"
             }}</span>
             <span class="tooltip_shortcut">Z</span>
           </div>
@@ -81,17 +98,31 @@
           v-if="moreThanOneAndLessThanThreeInSession"
         >
           <div
-            :class="pictureInPictureEnabled ? 'pip-button-green' : 'pip-button'"
-            @click="togglePictureInPicture"
+            :class="
+              userMediaSettings.pictureInPictureEnabled
+                ? 'pip-button-green'
+                : 'pip-button'
+            "
+            @click="toggleMedia(3)"
           >
             <img
-              :src="pictureInPictureEnabled ? pipIconWhite : pipIcon"
-              :class="pictureInPictureEnabled ? 'pip-icon-white' : 'pip-icon'"
+              :src="
+                userMediaSettings.pictureInPictureEnabled
+                  ? pipIconWhite
+                  : pipIcon
+              "
+              :class="
+                userMediaSettings.pictureInPictureEnabled
+                  ? 'pip-icon-white'
+                  : 'pip-icon'
+              "
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
-              pictureInPictureEnabled ? "Pop back video" : "Pop out video"
+              userMediaSettings.pictureInPictureEnabled
+                ? "Pop back video"
+                : "Pop out video"
             }}</span>
             <span class="tooltip_shortcut">P</span>
           </div>
@@ -107,15 +138,23 @@
           </div>
         </div> -->
       </div>
-      <div class="media-buttons leave" v-if="localStream">
-        <div class="tooltip_container" v-if="localStream">
+      <div class="media-buttons leave">
+        <div class="tooltip_container">
           <div
-            :class="screenBeingShared ? 'screen-button-green' : 'screen-button'"
+            :class="
+              userMediaSettings.screenBeingShared
+                ? 'screen-button-green'
+                : 'screen-button'
+            "
             @click="leaveRoom"
           >
             <img
               :src="hangUpIcon"
-              :class="screenBeingShared ? 'screen-icon-white' : 'screen-icon'"
+              :class="
+                userMediaSettings.screenBeingShared
+                  ? 'screen-icon-white'
+                  : 'screen-icon'
+              "
             />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
@@ -168,6 +207,11 @@ export default {
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
+      userMediaSettings: (state) => state.mediastates.userMediaSettings,
+      localStream: (state) => state.mediastates.vanillaRTC.localStream,
+      twilioLocalVideoTrack: (state) =>
+        state.mediastates.twilioVideo.localVideoTrack,
+      RTCConfig: (state) => state.mediastates.RTCConfig,
     }),
   },
   created() {
@@ -177,25 +221,17 @@ export default {
     };
     window.addEventListener("keyup", this.handler);
   },
-  props: [
-    "userMediaSettings",
-    "localStream",
-    "screenBeingShared",
-    "moreThanOneAndLessThanThreeInSession",
-    "pictureInPictureEnabled",
-  ],
+  props: ["moreThanOneAndLessThanThreeInSession"],
   methods: {
     leaveRoom() {
       this.$emit("leaveRoom");
     },
     toggleMedia(type) {
+      // 0 - video
+      // 1 - audio
+      // 2 - screenshare
+      // 3 - picture-in-picture
       this.$emit("toggleMedia", type);
-    },
-    toggleScreenshare() {
-      this.$emit("toggleScreenshare");
-    },
-    togglePictureInPicture() {
-      this.$emit("togglePictureInPicture");
     },
     toggleShutRestart() {
       this.$emit("toggleShutRestart");
@@ -207,7 +243,7 @@ export default {
       } else if (e.which == 77) {
         globalThis.toggleMedia(1);
       } else if (e.which == 90) {
-        globalThis.toggleScreenshare();
+        globalThis.toggleMedia(2);
       }
     },
   },
@@ -224,7 +260,7 @@ export default {
   /* border: 2px solid red; */
   position: absolute;
   bottom: 0;
-  padding: 18px 15px;;
+  padding: 18px 15px;
   box-sizing: unset !important;
 }
 

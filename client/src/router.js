@@ -12,6 +12,10 @@ import LandingPage from "./pages/LandingPages/LandingPage";
 
 /* ====== DASHBOARD PAGES ====== */
 import DashboardPage from "./pages/DashboardPages/DashboardPage";
+import AccountSettings from "./pages/DashboardPages/AccountSettings";
+import AccountPreferences from "./pages/DashboardPages/AccountPreferences";
+import AccountPassword from "./pages/DashboardPages/AccountPassword";
+import AccountDangerZone from "./pages/DashboardPages/AccountDangerZone";
 
 /* ====== PRE-EVENT PAGES ====== */
 import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage";
@@ -99,6 +103,43 @@ const routes = [
       requireAuthentication: true,
     },
   },
+
+  {
+    path: "/account/settings",
+    component: AccountSettings,
+    name: "AccountSettings",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
+  {
+    path: "/account/settings/preferences",
+    component: AccountPreferences,
+    name: "AccountPreferences",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
+  {
+    path: "/account/settings/password",
+    component: AccountPassword,
+    name: "AccountPassword",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
+  {
+    path: "/account/settings/danger",
+    component: AccountDangerZone,
+    name: "AccountDangerZone",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
 
   /* ====== AUTHENTICATION ROUTES ====== */
   { path: "/account/login", component: LoginPage, name: "LoginPage" },

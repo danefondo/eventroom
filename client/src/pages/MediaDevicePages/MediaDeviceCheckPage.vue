@@ -124,7 +124,6 @@
 <script>
 import { mapState } from "vuex";
 
-import auth from "../../config/auth";
 import axios from "axios";
 import { requestWithAuthentication } from "../../config/api";
 import { attachMediaStream } from "../../config/mediaDevices/attachMediaStream";
@@ -626,9 +625,6 @@ export default {
       for (var y = 0; y < elem_range.length; y++) {
         elem_range[y].style.backgroundColor = "#5207d6";
       }
-    },
-    logout() {
-      auth.logout();
     },
   },
 };

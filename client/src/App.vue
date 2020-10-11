@@ -121,4 +121,8 @@ a:visited {
 .mb-20 {
   margin-bottom: 20px !important;
 }
+
+.flex {
+  display: flex;
+}
 </style>

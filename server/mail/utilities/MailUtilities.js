@@ -9,7 +9,7 @@ const Mailgun = require('mailgun-js')({apiKey: apiKey, domain: domain});
 module.exports = {
 	sendVerificationMail(email, link) {
 		const data = {
-		  from: 'FitX Ninja <noreply@fitx.ninja>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
 		  subject: 'Please verify your email address',
 		  html: '',
@@ -22,11 +22,11 @@ module.exports = {
 
 	sendWelcomeEmail(email, link) {
 		const data = {
-		  from: 'FitX Ninja <noreply@fitx.ninja>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
-		  subject: 'Welcome to FitX Ninja!',
+		  subject: 'Welcome to Eventroom.to!',
 		  html: '',
-		  text: `Welcome to FitX Ninja! We're glad you've decided to join us. We're still new and just starting to flap our unicorn wings, which is why we especially value that you join us! Take a peak and stay tuned for new features will be popping up left and right! Enjoy your stay and enjoy fitness!`
+		  text: `Welcome to Eventroom.to! We're glad you've decided to join us. We're still new and just starting to flap our unicorn wings, which is why we especially value that you join us! Take a peak and stay tuned for new features will be popping up left and right! Enjoy your stay and enjoy fitness!`
 		};
 		Mailgun.messages().send(data, function (error, body) {
 		  console.log(body);
@@ -35,7 +35,7 @@ module.exports = {
 
 	sendVideoSignUpEmail(email, streamName, link) {
 		const data = {
-		  from: 'Eeter.tv <noreply@eeter.tv>',
+		  from: 'Eventroom.to <noreply@eventroom.to',
 		  to: email,
 		  subject: `Registreerisid vaatama ${streamName}`,
 		  html: '',
@@ -49,7 +49,7 @@ module.exports = {
 
 	sendVideoSignUpReminderEmail30(email, link) {
 		const data = {
-		  from: 'Eeter.tv <noreply@eeter.tv>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
 		  subject: `Kohe eetris: ${stream_name}`,
 		  html: '',
@@ -62,7 +62,7 @@ module.exports = {
 
 	sendVideoSignUpReminderEmail(email, stream, link) {
 		const data = {
-		  from: 'Eeter.tv <noreply@eeter.tv>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
 		  subject: `${stream.stream_name} on eetris!`,
 		  html: '',
@@ -76,9 +76,9 @@ module.exports = {
 
 	sendResetMail(email, link) {
 		const data = {
-		  from: 'FitX Ninja <noreply@fitx.ninja>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
-		  subject: 'Reset password for your FitX Ninja account',
+		  subject: 'Reset password for your Eventroom.to account',
 		  html: '',
 		  text: `To reset your password, click on this link ${link}. The link expires in 30 minutes.`
 		};
@@ -89,7 +89,7 @@ module.exports = {
 
 	sendInterestReceived(email, stream) {
 		const data = {
-		  from: 'Eeter.tv <noreply@eeter.tv>',
+		  from: 'Eventroom.to <noreply@eventroom.to>',
 		  to: email,
 		  subject: `Soovisid minna eetrisse?`,
 		  html: '',

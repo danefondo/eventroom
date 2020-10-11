@@ -24,13 +24,13 @@
             <a
               class="room-name_button knpf knpf--link knpf--small knpf--secondary"
             >
-              <div class="url">
+              <div class="url" @click="copyLink">
                 <span class="room-name">eventroom.to/</span
                 ><span class="room-name">{{ eventroom.eventroomName }}</span>
               </div></a
             >
             <div class="tooltip tooltip--bottom tooltip--middle">
-              <span class="tooltip_tip"> Copy URL </span>
+              <span class="tooltip_tip"> {{copiedState ? 'Copied!' : 'Copy URL'}} </span>
             </div>
           </div>
         </header>
@@ -51,7 +51,6 @@ import { mapState } from "vuex";
 import Editable from "./Editable";
 import axios from "axios";
 
-
 export default {
   name: "RoomInfo",
   data() {
@@ -60,6 +59,7 @@ export default {
       eventroomName: "",
       awaitingTyping: false,
       nameExists: false,
+      copiedState: false,
     };
   },
   computed: {
@@ -163,6 +163,19 @@ export default {
           "@checkIfSlugExists: Emergency, our penguins cannot find igloos to check!"
         );
       }
+    },
+    copyLink() {
+      var input = document.createElement("textarea");
+      input.innerHTML = window.location.href;
+      document.body.appendChild(input);
+      input.select();
+      var result = document.execCommand("copy");
+      document.body.removeChild(input);
+      this.copiedState = true;
+      setTimeout(() => {
+        this.copiedState = false;
+      }, 1000);
+      return result;
     },
     changeURL() {
       let slash = "/" + this.eventroom.eventroomName;

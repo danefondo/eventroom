@@ -56,7 +56,7 @@ import videoIcon from "../../../assets/images/video-call.png";
 import videoIconWhite from "../../../assets/images/video-call-white.png";
 import audioIcon from "../../../assets/images/microphone.png";
 import audioIconWhite from "../../../assets/images/microphone-white.png";
-import settings from "../../../assets/images/settings.png";
+import settings from "../../../assets/images/settings-purple.png";
 
 export default {
   name: "MediaControlButtons",

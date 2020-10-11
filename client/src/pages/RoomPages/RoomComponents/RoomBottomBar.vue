@@ -182,7 +182,6 @@ import screenIconWhite from "../../../assets/images/screen-white.png";
 import pipIcon from "../../../assets/images/pip.png";
 import pipIconWhite from "../../../assets/images/pip-white.png";
 import hangUpIcon from "../../../assets/images/hangup.png";
-// import settings from "../../../assets/images/settings.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
 export default {

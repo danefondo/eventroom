@@ -10,7 +10,7 @@
                 class="settings-button toolbar-icon-container"
                 @click="toggleToolbar('participants')"
               >
-                <img :src="infoIcon" class="toolbar-icon info-icon" />
+                <img :src="groupIcon" class="toolbar-icon group-icon" />
               </div>
               <div class="tooltip tooltip--top tooltip--middle">
                 <span class="tooltip_tip">{{
@@ -69,8 +69,9 @@
 
 <script>
 import { mapState } from "vuex";
-import settingsIcon from "../../../assets/images/settings1.png";
+import settingsIcon from "../../../assets/images/settings.png";
 import infoIcon from "../../../assets/images/info.png";
+import groupIcon from "../../../assets/images/group.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
 export default {
@@ -80,6 +81,7 @@ export default {
       errors: false,
       settingsIcon: settingsIcon,
       infoIcon: infoIcon,
+      groupIcon: groupIcon,
       //   toolbarConfiguration: [],
       //   toolOpened: false,
       //   openedComponent: "",
@@ -140,7 +142,7 @@ export default {
   height: 100%;
   width: 48px;
   width: 50px;
-  background-color: #edeff5;
+  /* background-color: #edeff5; */
   position: relative;
   border-right: 1px solid #e0e4f0;
   flex: 0 0 auto;
@@ -162,8 +164,13 @@ export default {
 }
 
 .info-icon {
-  width: 27px;
-  height: 27px;
+  width: 24px;
+  height: 24px;
+}
+
+.group-icon {
+  width: 24px;
+  height: 24px;
 }
 
 .icon-separator {
@@ -217,6 +224,10 @@ export default {
   bottom: 15px;
   position: absolute;
   width: 100%;
+}
+
+.toolbar-top {
+  padding-top: 35px;
 }
 
 .tooltip_tip {
@@ -273,7 +284,9 @@ export default {
 
 .e {
   padding: 6px;
+  padding-top: 8px;
   font-size: 24px;
   font-weight: 600;
+  color: #1E2F58;
 }
 </style>

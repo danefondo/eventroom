@@ -15,7 +15,7 @@
 
 <script>
 import axios from 'axios';
-import auth from '../../config/auth';
+// import auth from '../../config/auth';
 
 export default {
     name: "VerificationPage",
@@ -41,7 +41,7 @@ export default {
                 );
                 if (data.message === "verification.verified") {
                     this.verified = true;
-                    auth.logout();
+                    // auth.logout();
                 } else {
                     this.verified = false;
                     this.error_message = "Verification unsuccessful"

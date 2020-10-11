@@ -237,6 +237,8 @@ export default {
       let participants = this.participants;
       let arrayIndex = participants.findIndex((p) => p.sid === participant.sid);
       participants.splice(arrayIndex, 1);
+      this.$refs.remotevideo.innerHTML = '';
+      this.remoteParticipantData = null;
     },
 
     /**

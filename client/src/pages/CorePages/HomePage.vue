@@ -20,7 +20,6 @@
 <script>
 import { mapState } from 'vuex';
 
-import auth from "../../config/auth";
 import axios from "axios";
 import EventBox from "../../components/EventDiscoveryComponents/EventBox";
 
@@ -45,9 +44,6 @@ export default {
     this.getAllEvents();
   },
   methods: {
-    logout() {
-      auth.logout();
-    },
     async getAllEvents() {
       try {
         const { data } = await axios.get(`/api/events/getAllEvents`);

@@ -92,7 +92,6 @@ export default {
           // Redirect to custom page saying 'Thanks for being a part of Eventroom.'
           // Simple page, having no taste of desperation or trying to get anyone back;
 
-          // this.user.logout();
           this.generalError = false;
           this.generalErrorMessage = "";
           this.exceptionError = false;

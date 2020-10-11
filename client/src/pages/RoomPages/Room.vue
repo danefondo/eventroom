@@ -327,7 +327,7 @@ export default {
 .video-chat {
   height: 100%;
   margin: 0 auto;
-  /* width: 100%; */
+  width: 100%;
   position: relative;
 }
 </style>

@@ -256,7 +256,7 @@ export default {
 }
 .toolbar-container {
   height: 48px;
-  width: 100%;
+  width: calc(100% - 50px);
   /* border: 2px solid red; */
   position: absolute;
   bottom: 0;

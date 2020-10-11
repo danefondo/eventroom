@@ -1,16 +1,35 @@
 <template>
-  <div class="col-md-6 box">
-    <div class="roomTitle">
+  <div class="video-streams">
+    <!-- <div class="roomTitle">
       <span v-if="loading"> Loading... {{ eventroomId }}</span>
       <span v-else-if="!loading && eventroomId">
         Connected to {{ eventroomId }}</span
       >
+    </div> -->
+    <div class="left-side side">
+      <div
+        v-if="localParticipantData"
+        id="local-video"
+        class="video"
+        ref="localvideo"
+      ></div>
+    </div>
+    <div class="right-side side">
+      <div v-if="!remoteParticipantData" class="no-remote-video">
+        Looks like it's just you in here!
+      </div>
+      <div
+        v-else-if="remoteParticipantData"
+        id="remote-video"
+        :class="remoteParticipantData == undefined ? 'video hide' : 'video'"
+        ref="remotevideo"
+      ></div>
     </div>
     <div class="row remote_video_container">
       <!-- <div id="remoteTrack" ref="localVideoBlock"></div> -->
       <div class="remote-containers">
         <div
-          class="remote-container"
+          class="remote-container video"
           v-for="participant in participants"
           :id="participant.identity"
           :key="participant.sid"
@@ -37,6 +56,8 @@ import { mapState } from "vuex";
 
 function initialState() {
   return {
+    localParticipantData: null,
+    remoteParticipantData: null,
     loading: false,
     data: {},
     localTrack: false,
@@ -126,6 +147,23 @@ export default {
       let container = document.getElementById(containerRef);
       console.log("@attachTrack, container:", container);
 
+      if (this.localParticipantData && participant.identity == this.userId) {
+        container = this.$refs.localvideo;
+        return container.appendChild(track.attach());
+      }
+
+      let participantsLength = this.participants.length;
+
+      if (
+        participantsLength < 3 &&
+        participantsLength > 0 &&
+        participant.identity !== this.userId &&
+        this.remoteParticipantData
+      ) {
+        container = this.$refs.remotevideo;
+        return container.appendChild(track.attach());
+      }
+
       // Attach Participant's track to the element.
       container.appendChild(track.attach());
 
@@ -214,6 +252,16 @@ export default {
       // let containerRef = participant.identity;
 
       console.log("participant & room", participant, room);
+      if (participant.identity == globalThis.userId) {
+        globalThis.localParticipantData = participant;
+      }
+
+      let participantsLength = globalThis.participants.length;
+
+      if (participantsLength < 2 && participantsLength > 0) {
+        globalThis.remoteParticipantData = participant;
+      }
+
       globalThis.participants.push(participant);
 
       globalThis.$nextTick(() => {
@@ -629,7 +677,7 @@ export default {
         if (!profiles) throw { ProfilesNotFound: true };
 
         profiles.forEach(function (profile) {
-           globalThis.$store.dispatch("participants/addParticipant", profile);
+          globalThis.$store.dispatch("participants/addParticipant", profile);
         });
       } catch (error) {
         console.log(error);
@@ -730,7 +778,7 @@ When RemoteParticipant disconnects from the Room
 </script>
 
 <style >
-.remote_video_container {
+/* .remote_video_container {
   left: 0;
   margin: 0;
   border: 1px solid rgb(124, 129, 124);
@@ -744,10 +792,57 @@ When RemoteParticipant disconnects from the Room
 .spacing {
   padding: 20px;
   width: 100%;
-}
-.roomTitle {
+} */
+/* .roomTitle {
   border: 1px solid rgb(124, 129, 124);
   padding: 4px;
   color: dodgerblue;
+} */
+
+.video-streams {
+  display: flex;
+  justify-content: center;
+  height: 90%;
+  width: 100%;
+}
+
+.left-side {
+  margin-left: 20px;
+}
+
+.right-side {
+  margin-right: 20px;
+}
+
+.video video,
+.video,
+.no-remote-video {
+  width: 97%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.no-remote-video {
+  background-color: #eceff4;
+  border: 1px solid #e0e4f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  color: #1e2f58;
+  font-weight: bold;
+}
+
+.side {
+  width: 50%;
+  padding: 25px 0px;
+  display: flex;
+  justify-content: center;
+}
+
+.hide {
+  width: 0px;
+  height: 0px;
 }
 </style>

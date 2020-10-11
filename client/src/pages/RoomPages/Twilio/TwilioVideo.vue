@@ -28,7 +28,7 @@
 <script>
 import {
   connect,
-  LocalVideoTrack
+  LocalVideoTrack,
   // createLocalTracks,
   // createLocalVideoTrack,
 } from "twilio-video";
@@ -49,6 +49,9 @@ function initialState() {
     room: null,
     localVideoBlock: null,
     participants: [],
+    participantsData: [],
+    NoParticipantsFoundError: false,
+    ProfilesNotFound: false,
     remoteParticipant: {
       identity: "",
       sid: "",
@@ -297,9 +300,11 @@ export default {
     trackPublished(publication, participant) {
       let globalThis = this;
 
-      console.log("trackname screen", publication.track, publication.track.name);
-      if (publication.track.name && publication.track.name == "screen") {
-        return;
+      console.log("publicationyyy", publication);
+      if (publication && publication.track) {
+        if (publication.track.name && publication.track.name == "screen") {
+          return;
+        }
       }
 
       // If the RemoteTrackPublication is already subscribed to, then attach the Track to the DOM.
@@ -546,7 +551,7 @@ export default {
           // let screenPreview = globalThis.$refs.localscreenshare;
           let screenTrack = await globalThis.createScreenshareTrack(720, 1280);
           // screenTrack.attach(screenPreview);
-          console.log("screen", screenTrack)
+          console.log("screen", screenTrack);
           screenPreview.appendChild(screenTrack.attach());
 
           globalThis.localScreenTrack = screenTrack;
@@ -583,11 +588,63 @@ export default {
         })
         .then(function (stream) {
           let track = stream.getVideoTracks()[0];
-          return new LocalVideoTrack(track, {name: 'screen'});
+          return new LocalVideoTrack(track, { name: "screen" });
         });
     },
 
     togglePictureInPicture() {},
+
+    async getManyProfilesByUserIds() {
+      // Run every time someone is pushed into participants
+      console.log("@getManyProfilesByUserIds");
+      let participants = this.participants; // get their ids
+      let participantIds = [];
+      let errors = {};
+      let globalThis = this;
+
+      participants.forEach(function (participant) {
+        console.log("@singleParticipant", participant);
+        let userId = participant.identity;
+        if (userId) {
+          participantIds.push(userId);
+        }
+      });
+      console.log("@participantIds", participantIds);
+
+      try {
+        if (!participantIds) throw { NoParticipantsFoundError: true };
+
+        let requestData = {
+          participantIds,
+        };
+
+        const query = `/api/profiles/getManyProfilesByUserIds`;
+        let response = await axios.post(query, requestData);
+
+        let profiles = response.data.result;
+        console.log("profiles", response);
+
+        if (!profiles) throw { ProfilesNotFound: true };
+
+        profiles.forEach(function (profile) {
+          globalThis.participantsData.push(profile);
+        });
+      } catch (error) {
+        console.log(error);
+        if (errors.NoParticipantsFoundError) {
+          this.NoParticipantsFoundError = true;
+        }
+
+        if (errors.ProfilesNotFound) {
+          this.ProfilesNotFound = true;
+        }
+      }
+    },
+  },
+  watch: {
+    participants: function () {
+      this.getManyProfilesByUserIds();
+    },
   },
 };
 

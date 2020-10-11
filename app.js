@@ -142,9 +142,6 @@ IO.on("connection", function (socket) {
   //   socket.broadcast.emit("endedVideo", "end");
   // });
 
-
-  
-
   // When a client tries to join a room, only allow them if they are first or
   // second in the room. Otherwise it is full.
   socket.on("join", function (room) {
@@ -164,12 +161,12 @@ IO.on("connection", function (socket) {
     }
   });
 
-    // Relay candidate messages
-    socket.on("peerJoin", function () {
-      console.log("Received candidate. Broadcasting...");
-      let peer = "peer";
-      socket.broadcast.emit("peerJoined", peer);
-    });
+  // Relay candidate messages
+  socket.on("peerJoin", function () {
+    console.log("Received candidate. Broadcasting...");
+    let peer = "peer";
+    socket.broadcast.emit("peerJoined", peer);
+  });
 
   // When receiving the token message, use the Twilio REST API to request an
   // token to get ephemeral credentials to use the TURN server.
@@ -217,8 +214,6 @@ IO.on("connection", function (socket) {
     socket.broadcast.emit("answer", answer);
   });
 
-
-
   // Relay answers
   socket.on("newEventroomName", function (eventroomName) {
     console.log("Received new Eventroom name. Broadcasting...");
@@ -231,13 +226,16 @@ let twilio = require("twilio")(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-
 /* ====== ROUTES SETUP ====== */
 const AccountRoutes = require("./routes/API/AccountRoutes");
+const AccountSettings = require("./routes/API/AccountSettingsRoutes");
+const ProfileRoutes = require("./routes/API/ProfileRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
 const UserActionRoutes = require("./routes/API/UserActionRoutes");
 const EventroomRoutes = require("./routes/API/EventroomRoutes");
 app.use("/api/accounts", AccountRoutes);
+app.use("/api/settings", AccountSettings);
+app.use("/api/profiles", ProfileRoutes);
 app.use("/api/events", EventRoutes);
 app.use("/api/userActions", UserActionRoutes);
 app.use("/api/eventroom", EventroomRoutes);

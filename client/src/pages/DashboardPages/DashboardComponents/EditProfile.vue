@@ -2,7 +2,7 @@
   <div class="profile-settings">
     <div class="settings-title">Profile settings</div>
     <div class="profile-rows">
-      <div class="settings-subtitle" style="margin-bottom:30px;">Avatar</div>
+      <div class="settings-subtitle" style="margin-bottom: 30px">Avatar</div>
       <div class="profile-row">
         <ImageUpload v-model="image" :uploading="uploadingImage" />
       </div>
@@ -74,9 +74,8 @@ export default {
     return {
       updatingSettings: false,
       uploadingImage: false,
-      thumbnailKey: null,
-      thumbnailUrl: null,
-      thumbnailName: null,
+      fileName: null,
+      fileUrl: null,
       image: null,
       displayName: "",
       location: "",
@@ -180,11 +179,33 @@ export default {
             processData: false,
           },
         });
+
         console.log("upres", uploadResult);
-        this.thumbnailKey = returnData.fileName;
-        this.thumbnailUrl = returnData.url;
+        this.fileName = returnData.fileName;
+        this.fileUrl = returnData.url;
+        this.saveProfileImageReference();
       } catch (error) {
         this.uploadingImage = false;
+      }
+    },
+    async saveProfileImageReference() {
+      let imageData = {};
+      try {
+        if (this.fileName && this.fileUrl) {
+          imageData.fileName = this.fileName;
+          imageData.fileUrl = this.fileUrl;
+          imageData.userId = this.user._id;
+        } else {
+          throw { ImageDataMissingError: true };
+        }
+        let result = await requestWithAuthentication(
+          `post`,
+          `api/settings/saveProfileImageReference`,
+          imageData
+        );
+        console.log("successfully saved reference", result);
+      } catch (error) {
+        console.log("error", error);
       }
     },
   },

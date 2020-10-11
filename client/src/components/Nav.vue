@@ -82,21 +82,25 @@ export default {
 
 }
 .nav-button {
-  padding: 8px 14px;
-  border-radius: 4px;
+  padding: 7px 14px;
+  border-radius: 3px;
   cursor: pointer;
-  color: #a0a0ab;
+  color: #ABADB9
+;
+  font-weight: 600;
 }
 .nav-logo {
   padding: 8px 14px;
   cursor: pointer;
   font-weight: 600;
-  color: #a0a0ab;
+  color: #ABADB9
+;
 }
 .nav-logo:hover {
-  color: #333;
+  color: #3E3A54;
 }
 .nav-button:hover {
-  background-color: #f7f7fb;
+  /* background-color: #f7f7fb; */
+  color: #3E3A54;
 }
 </style>

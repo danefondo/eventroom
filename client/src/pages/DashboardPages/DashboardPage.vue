@@ -280,7 +280,7 @@ lavenderblush
   align-items: center;
   text-align: center;
   padding: 125px 100px;
-  background-color: #fbfbfb;
+  /* background-color: #fbfbfb; */
   margin-bottom: 50px;
 }
 

@@ -1,14 +1,18 @@
 <template>
-  <div class="app-container">
-    <Nav v-if="!$route.meta.hideNavigation"/>
-    <div :class="$route.meta.hideNavigation ? 'page-container full' : 'page-container'">
+  <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
+    <Nav v-if="!$route.meta.hideNavigation" />
+    <div
+      :class="
+        $route.meta.hideNavigation ? 'page-container full' : 'page-container'
+      "
+    >
       <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState } from "vuex";
 
 import Nav from "./components/Nav";
 
@@ -17,10 +21,10 @@ export default {
 
   computed: {
     ...mapState({
-      user: state => state.auth.user,
-      isAuthenticated: state => state.auth.authenticationStatus,
-      isVerified: state => state.auth.verificationStatus,
-    })
+      user: (state) => state.auth.user,
+      isAuthenticated: (state) => state.auth.authenticationStatus,
+      isVerified: (state) => state.auth.verificationStatus,
+    }),
   },
 
   components: {
@@ -46,14 +50,17 @@ $button-hover-color: #493effd1;
   margin-top: 60px;
 }
 
-html, body {
+html,
+body {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
-  font-family: "Nunito", 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  font-family: "Nunito", "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
 }
 
 a {
@@ -68,6 +75,17 @@ a:visited {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: scroll;
+}
+
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 30px);
+  border: 1px solid #eee;
+  margin: 15px;
+  border-radius: 3px;
+  background-color: #fbfbfb;
 }
 
 .page-container {
@@ -103,5 +121,4 @@ a:visited {
 .mb-20 {
   margin-bottom: 20px !important;
 }
-
 </style>

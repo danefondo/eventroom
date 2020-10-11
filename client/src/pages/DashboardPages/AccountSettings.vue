@@ -465,6 +465,7 @@ export default {
 .settings-left,
 .settings-right {
   padding-top: 75px;
+  padding-bottom: 75px;
 }
 
 .resend_verif_message,

@@ -56,6 +56,7 @@ const routes = [
   {
     path: "/",
     component: LandingPage,
+    meta: { landingPage: true },
     name: "LandingPage",
   },
 

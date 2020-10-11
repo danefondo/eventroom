@@ -3,13 +3,25 @@
     class="nav-container"
     :class="isAuthenticated ? 'authNav' : 'notAuthNav'"
   >
-    <div class="navbar">
+    <div class="navbar" v-if="authDetermined">
       <router-link to="/" class="nav-logo">Eventroom.to</router-link>
       <div v-if="isAuthenticated" class="flex">
-        <router-link :to="profileLink" class="nav-button">Profile</router-link>
-        <div @click="logUserOut" class="nav-button"
-          >Logout</div
+        <div
+          class="nav-button username"
+          @mouseover="mouseOver"
+          @mouseout="mouseOut"
         >
+          {{ user.username }}
+          <img
+            @click="toggleDropdown"
+            :src="navHover ? darkDownArrow : lightDownArrow"
+            :class="navDropdown ? 'dropdow-icon active' : 'dropdown-icon'"
+          />
+        </div>
+
+        <!-- <div @click="logUserOut" class="nav-button"
+          >Logout</div
+        > -->
       </div>
       <div v-else-if="!isAuthenticated">
         <router-link to="/account/login" class="nav-button">Login</router-link>
@@ -18,17 +30,19 @@
         >
       </div>
     </div>
-    <div v-if="isAuthenticated && !isVerified" class="unverified">
+    <!-- <div v-if="isAuthenticated && !isVerified" class="unverified">
       <p>Your account is not verified!</p>
       <button @click="resendEmail">{{ buttonText }}</button>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script>
 import { mapState } from "vuex";
 import { requestWithAuthentication } from "../config/api";
-import auth from '../config/auth';
+import auth from "../config/auth";
+import lightDownArrow from "../assets/images/down-arrow-light-sharp.png";
+import darkDownArrow from "../assets/images/down-arrow-dark-sharp.png";
 
 export default {
   name: "Nav",
@@ -46,14 +60,28 @@ export default {
     return {
       buttonText: "Resend email",
       emailSentCounter: 0,
+      authDetermined: false,
+      lightDownArrow: lightDownArrow,
+      darkDownArrow: darkDownArrow,
+      navDropdown: false,
+      navHover: false,
     };
   },
   methods: {
+    toggleDropdown() {
+      console.log("wow");
+    },
+    mouseOut() {
+      this.navHover = !this.navHover;
+    },
+    mouseOver() {
+      this.navHover = !this.navHover;
+    },
     async logUserOut() {
       try {
         const response = await auth.logout();
         if (response.data.success) {
-          this.$router.push('/');
+          this.$router.push("/");
         }
       } catch (err) {
         console.log(err);
@@ -76,6 +104,13 @@ export default {
       }
     },
   },
+  watch: {
+    isAuthenticated: function () {
+      if (this.isAuthenticated) {
+        this.authDetermined = true;
+      }
+    },
+  },
 };
 </script>
 
@@ -88,11 +123,12 @@ export default {
   color: white;
   padding: 5px;
 }
-/* .nav-container {
-  position: absolute;
+.nav-container {
+  z-index: 9999;
+  /* position: absolute;
   width: 100%;
-  top: 0; 
-} */
+  top: 0;  */
+}
 .navbar {
   display: flex;
   justify-content: space-between;
@@ -121,5 +157,32 @@ export default {
 .nav-button:hover {
   /* background-color: #f7f7fb; */
   color: #3e3a54;
+}
+
+.username {
+  padding: 11px 11px;
+  border-radius: 3px;
+  /* background-color: #f3f4f7eb; */
+  border: 1px solid transparent;
+  cursor: pointer;
+  position: relative;
+  padding-right: 34px;
+}
+
+.username:hover {
+  /* background-color: #f2f3f5eb; */
+  /* background-color: #f3f4f7eb; */
+  background-color: #f3f4f7eb;
+  border: 1px solid #eee;
+}
+
+.dropdown-icon {
+  position: absolute;
+  height: 17px;
+  width: 19px;
+  top: 0;
+  bottom: 0;
+  margin: auto;
+  right: 11px;
 }
 </style>

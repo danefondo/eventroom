@@ -1,5 +1,5 @@
 <template>
-    <div v-if="verified">
+    <div v-if="verified" class="verificationPage">
         <p> Verified! </p> 
         <br/>
         <p> For security purposes, you'll need to sign in again.</p>
@@ -41,6 +41,7 @@ export default {
                 );
                 if (data.message === "verification.verified") {
                     this.verified = true;
+                    this.$router.push('/');
                     // auth.logout();
                 } else {
                     this.verified = false;
@@ -62,3 +63,12 @@ export default {
     }
 }
 </script>
+
+<style scoped>
+.verificationPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+</style>

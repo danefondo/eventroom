@@ -5,8 +5,10 @@ const { signS3 } = require("../utilities/AWS");
 
 const {
   validatePostRequest,
-  processDataControllerResult,
+  processPostRequest,
 } = require("../../../utilities/CRUDAutomation");
+
+const controller = "AccountSettingsDataController";
 
 const AccountSettingsController = {
   //   async createEventroom(req, res) {
@@ -56,8 +58,15 @@ const AccountSettingsController = {
   //       res.status(500).send({ error: "An unknown error occurred" });
   //     }
   //   },
-  async getProfileSettings(req, res) {
-    console.log("reqres", req, res);
+  async getProfileDataByUserId(req, res) {
+    const options = {
+      validate: ["userId"],
+      funcToRun: "getProfileDataByUserId",
+      dataToPass: req.body.userId,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
   },
 
   async getS3Signature(req, res) {
@@ -96,6 +105,17 @@ const AccountSettingsController = {
       return res.status(500).send({ errors: errors });
     }
   },
+
+  // async saveProfileImageReference(req, res) {
+  //   const options = {
+  //     validate: ["userId", "fileName", "fileUrl"],
+  //     funcToRun: "saveProfileImageReference",
+  //     queryToPass: req.body.userId,
+  //     selfComplete: true,
+  //   };
+  //   await processPostRequest(req, res, controller, options);
+  //   return;
+  // },
 
   async saveProfileImageReference(req, res) {
     let clientData = req.body;
@@ -147,51 +167,14 @@ const AccountSettingsController = {
   },
 
   async updateProfileSettings(req, res) {
-    let dataToValidate = ["userId"];
-
-    let validationResult = await validatePostRequest(req, dataToValidate);
-
-    if (!validationResult.success) {
-      return res.status(400).send({ errors: errors });
-    }
-
-    // runProfileDataValidation(profileSettingsData);
-    // Check if user with id exists
-    // Check if no code inserted
-    // Check if Display Name fits rules
-    // Maybe check location
-
-    let profileSettingsData = {
-      userId: req.body.userId,
-      displayName: req.body.displayName,
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      bio: req.body.bio,
-      location: req.body.location,
+    const options = {
+      validate: ["userId"],
+      funcToRun: "updateProfileSettings",
+      dataToPass: req.body,
+      selfComplete: true,
     };
-
-
-    try {
-      const response = await AccountSettingsDataController.updateProfileSettings(
-        profileSettingsData
-      );
-
-      if (!response || !response.success) {
-        return res
-          .status(500)
-          .send({ error: "Error updating profile settings" });
-      }
-      console.log(
-        "@updateProfileSettings Profile settings data updated",
-        response.profileSettings
-      );
-      let success = response.success;
-      let profileSettings = response.profileSettings;
-      res.status(200).send({ success, profileSettings });
-    } catch (error) {
-      console.log(error);
-      return res.status(500).send({ error: "An unknown error occurred" });
-    }
+    await processPostRequest(req, res, controller, options);
+    return;
   },
 
   async deleteAccount(req, res) {

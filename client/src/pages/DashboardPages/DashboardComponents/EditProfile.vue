@@ -1,5 +1,5 @@
 <template>
-  <div class="profile-settings">
+  <div class="profile-settings" v-if="requestProfileDataFinished">
     <div class="settings-title">Profile settings</div>
     <div class="profile-rows">
       <div class="settings-subtitle" style="margin-bottom: 30px">Avatar</div>
@@ -74,6 +74,8 @@ export default {
     return {
       updatingSettings: false,
       uploadingImage: false,
+      failedToGetProfileData: false,
+      requestProfileDataFinished: false,
       fileName: null,
       fileUrl: null,
       image: null,
@@ -82,6 +84,8 @@ export default {
       bio: "",
       firstName: "",
       lastName: "",
+      username: "",
+      email: "",
       editor: DecoupledEditor,
       editorConfig: {
         placeholder: "Tell the world your crazy, your weird!",
@@ -112,9 +116,43 @@ export default {
   components: {
     ImageUpload,
   },
+  mounted() {
+    this.getProfileDataByUserId();
+  },
   methods: {
-    async getProfileSettingsData() {
-      console.log("Whatsu");
+    async getProfileDataByUserId() {
+      let userId = this.user._id;
+
+      try {
+        const response = await requestWithAuthentication(
+          `post`,
+          `api/settings/getProfileDataByUserId`,
+          { userId }
+        );
+
+        let profileData = response.data.result;
+        if (!profileData) throw { failedToGetProfileData: true };
+
+        for (var key in profileData) {
+          if (key !== "profileImage") {
+            this[key] = profileData[key];
+          } else {
+            let fileName = profileData[key]["fileName"];
+            let fileUrl = profileData[key]["fileUrl"];
+            if (fileName && fileUrl) {
+              this.fileName = profileData[key]["fileName"];
+              this.fileUrl = profileData[key]["fileUrl"];
+              this.image = {
+                preview: profileData[key]["fileUrl"],
+              };
+            }
+          }
+        }
+      } catch (error) {
+        this.failedToGetProfileData = true;
+      } finally {
+        this.requestProfileDataFinished = true;
+      }
     },
     async saveProfileSettings() {
       console.log("@user", this.user);
@@ -127,7 +165,7 @@ export default {
         location: this.location,
       };
 
-      this.runInitialValidation();
+      await this.runInitialValidation();
 
       try {
         console.log("@saveProfileSettings", profileSettings);
@@ -149,7 +187,7 @@ export default {
         this.updatingSettings = false;
       }
     },
-    runInitialValidation() {
+    async runInitialValidation() {
       console.log("Good to go!");
     },
     async uploadImage() {
@@ -200,7 +238,7 @@ export default {
         }
         let result = await requestWithAuthentication(
           `post`,
-          `api/settings/saveProfileImageReference`,
+          `api/profiles/saveProfileImageReference`,
           imageData
         );
         console.log("successfully saved reference", result);

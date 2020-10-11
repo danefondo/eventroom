@@ -6,7 +6,7 @@ const ProfileController = {
     const options = {
       validate: ["userId"],
       funcToRun: "getProfileByUserId",
-      queryToPass: req.body.userId,
+      dataToPass: req.body.userId,
       selfComplete: true,
     };
     await processPostRequest(req, res, controller, options);
@@ -26,6 +26,17 @@ const ProfileController = {
   async updateProfileByUserId(req, res) {},
 
   async createProfile(req, res) {},
+
+  async saveProfileImageReference(req, res) {
+    const options = {
+      validate: ["userId", "fileName", "fileUrl"],
+      funcToRun: "saveProfileImageReference",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
 };
 
 // let requestInformation = {

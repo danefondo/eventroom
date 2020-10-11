@@ -3,6 +3,7 @@
     <div class="sidebar-container">
       <RoomSettings v-if="settings" />
       <RoomInfo v-if="info" />
+      <RoomParticipants v-if="participants" />
     </div>
   </div>
 </template>
@@ -11,6 +12,7 @@
 import { mapState } from "vuex";
 import RoomSettings from "./ToolbarComponents/RoomSettings";
 import RoomInfo from "./ToolbarComponents/RoomInfo";
+import RoomParticipants from "./ToolbarComponents/RoomParticipants";
 
 export default {
   name: "RoomLeftSidebar",
@@ -19,11 +21,13 @@ export default {
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       settings: (state) => state.toolbar.toolbarConfig.settings,
       info: (state) => state.toolbar.toolbarConfig.info,
+      participants: (state) => state.toolbar.toolbarConfig.participants,
     }),
   },
   components: {
     RoomSettings,
-    RoomInfo
+    RoomInfo,
+    RoomParticipants
   }
 };
 </script>

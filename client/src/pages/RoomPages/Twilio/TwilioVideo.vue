@@ -49,7 +49,7 @@ function initialState() {
     room: null,
     localVideoBlock: null,
     participants: [],
-    participantsData: [],
+    // participantsData: [],
     NoParticipantsFoundError: false,
     ProfilesNotFound: false,
     remoteParticipant: {
@@ -87,6 +87,8 @@ export default {
       this.localVideoTrack.stop();
       // this.localVideoTrack.srcObject = null;
       this.room.disconnect();
+      this.$store.dispatch("participants/resetState");
+      this.$store.dispatch("toolbar/resetState");
       initialState();
     },
     async getAccessToken() {
@@ -627,7 +629,7 @@ export default {
         if (!profiles) throw { ProfilesNotFound: true };
 
         profiles.forEach(function (profile) {
-          globalThis.participantsData.push(profile);
+           globalThis.$store.dispatch("participants/addParticipant", profile);
         });
       } catch (error) {
         console.log(error);

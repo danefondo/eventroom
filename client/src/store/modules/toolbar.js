@@ -1,16 +1,27 @@
-const state = {
-  toolbarConfig: {
-    settings: false,
-    info: false,
-  },
+const getDefaultState = () => {
+  return {
+    toolbarConfig: {
+      settings: false,
+      info: false,
+      participants: false,
+    },
 
-  containersConfig: {
-    leftSidebar: false,
-  },
+    containersConfig: {
+      leftSidebar: false,
+    },
+  };
 };
+
+const state = getDefaultState();
 
 // Synchronous
 const mutations = {
+  resetState(state) {
+    // Merge rather than replace so we don't lose observers
+    // https://github.com/vuejs/vuex/issues/1118
+    Object.assign(state, getDefaultState());
+  },
+
   toggleContainer(state, data) {
     console.log("configcont", state.containersConfig);
     for (var key in state.containersConfig) {
@@ -43,6 +54,10 @@ const mutations = {
 
 // Asynchronous
 const actions = {
+  resetState(state) {
+    state.commit("resetState");
+  },
+
   toggleContainer(state, data) {
     state.commit("toggleContainer", data);
   },

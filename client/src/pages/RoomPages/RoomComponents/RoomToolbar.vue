@@ -3,6 +3,24 @@
     <div class="toolbar">
       <router-link to="/" class="e">e</router-link>
       <div class="buttonContainer">
+        <div class="toolbar-top">
+          <div class="media-buttons">
+            <div class="tooltip_container">
+              <div
+                class="settings-button toolbar-icon-container"
+                @click="toggleToolbar('participants')"
+              >
+                <img :src="infoIcon" class="toolbar-icon info-icon" />
+              </div>
+              <div class="tooltip tooltip--top tooltip--middle">
+                <span class="tooltip_tip">{{
+                  participants ? "Close" : "Participants"
+                }}</span>
+                <span class="tooltip_shortcut">P</span>
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- <button class="hoverButton">
           <i id="mic-icon" class="fas fa-microphone fa-xs">Open chat</i>
         </button> -->
@@ -23,7 +41,7 @@
             </div>
             <div class="tooltip tooltip--top tooltip--middle">
               <span class="tooltip_tip">{{
-                settings ? "Close" : "Room info"
+                info ? "Close" : "Room info"
               }}</span>
               <span class="tooltip_shortcut">R</span>
             </div>
@@ -74,6 +92,7 @@ export default {
     ...mapState({
       settings: (state) => state.toolbar.toolbarConfig.settings,
       info: (state) => state.toolbar.toolbarConfig.info,
+      participants: (state) => state.toolbar.toolbarConfig.participants,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
@@ -84,23 +103,30 @@ export default {
         toolbarTool,
       };
 
-      if (toolbarTool == "settings") {
-        if (this.settings == true ) {
-          data.boolean = false;
-          this.$store.dispatch("toolbar/toggleToolbar", data);
-        } else if (this.settings == false) {
-          data.boolean = true;
-          this.$store.dispatch("toolbar/toggleToolbar", data);
-        }
-      } else if (toolbarTool == "info") {
-        if (this.info == true) {
-          data.boolean = false;
-          this.$store.dispatch("toolbar/toggleToolbar", data);
-        } else if (this.info == false) {
-          data.boolean = true;
-          this.$store.dispatch("toolbar/toggleToolbar", data);
-        }
+      console.log("thisAccess", this[toolbarTool]);
+
+      if (toolbarTool) {
+        data.boolean = !this[toolbarTool];
+        this.$store.dispatch("toolbar/toggleToolbar", data);
       }
+
+      // if (toolbarTool == "settings") {
+      //   if (this.settings == true ) {
+      //     data.boolean = false;
+      //     this.$store.dispatch("toolbar/toggleToolbar", data);
+      //   } else if (this.settings == false) {
+      //     data.boolean = true;
+      //     this.$store.dispatch("toolbar/toggleToolbar", data);
+      //   }
+      // } else if (toolbarTool == "info") {
+      //   if (this.info == true) {
+      //     data.boolean = false;
+      //     this.$store.dispatch("toolbar/toggleToolbar", data);
+      //   } else if (this.info == false) {
+      //     data.boolean = true;
+      //     this.$store.dispatch("toolbar/toggleToolbar", data);
+      //   }
+      // }
     },
   },
 };

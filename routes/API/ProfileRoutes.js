@@ -15,6 +15,12 @@ router.post(
   ProfileController.getManyProfilesByUserIds
 );
 
+// Save profile image reference
+router.post(
+  "/saveProfileImageReference",
+  ProfileController.saveProfileImageReference
+);
+
 // Create new profile
 router.post("/createProfile", ProfileController.createProfile);
 

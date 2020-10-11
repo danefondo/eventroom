@@ -1,7 +1,10 @@
 const ProfileDataController = require("../database/profile/controllers/ProfileDataController");
+const AccountSettingsDataController = require("../database/settings/controllers/AccountSettingsDataController");
+  
 
 const DataControllers = {
   ProfileDataController,
+  AccountSettingsDataController,
 };
 
 const CRUDAutomation = {
@@ -23,6 +26,9 @@ const CRUDAutomation = {
 
   It is possible to in the future specify further configuration options,
   and based on that implement quite specific error returns and messages or codes;
+
+  For OPTIONS passed from controllers, I could create a 'customValidate' or 'securityValidate'
+  where it does not validate against whether there's data, but rather makes sure the data is safe and secure but won't throw error if data is missing
   */
 
   async processPostRequest(req, res, controller, options) {
@@ -49,7 +55,7 @@ const CRUDAutomation = {
       }
       return res.status(error.statusCode).send({ errors: error.errors });
     }
-    return res.status(200).send({ result });
+    return res.status(200).send({ result, success: true });
   },
 
   async tryGetData(res, controller, funcToRun, dataToPass, selfComplete) {

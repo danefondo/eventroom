@@ -3,6 +3,29 @@
 // NEEDS TIME THINKING THROUGH TO MAKE MAXIMALLY GENERAL YET STILL EFFICIENT
 
 
+/*
+TODO
+
+- GENERIC MONGODB MODEL ACCESS db[VarContainingModelName].findOne().exec();
+https://stackoverflow.com/questions/39353936/how-to-pass-variable-name-as-collection-name-for-mongo-db-in-nodejs
+
+- GENERIC MONGOOSE HANDLER, JUST PASS COMMAND + OPTIONS & IT TAKES CARE
+OF PICKING THE RIGHT TASK TO DO, THEN IT WILL JUST BE:
+db[modelName][varWithMongooseFunction](query, options).exec();
+
+https://stackoverflow.com/questions/1723287/calling-a-javascript-function-named-in-a-variable
+
+https://stackoverflow.com/questions/359788/how-to-execute-a-javascript-function-when-i-have-its-name-as-a-string
+
+That will allow for not having to set up new DataControllers most of the time;
+
+All that will need to be done is just specifying ControllerConfig + Setting up route, that's it!
+
+- EFFICIENCY --> Find ways to create filters to more quickly post first if-then get to narrow down to the right and fastest possible path to take care of task so that automation would not slow down app and be as direct as possible
+
+
+*/
+
 
 const generalController = {
   /**

@@ -10,6 +10,12 @@ const AccountSettingsSchema = new Schema({
   location: String,
   username: String,
   email: String,
+  profileImage: {
+    fileName: String,
+    fileUrl: String,
+  },
+  eventrooms: [],
+  sessionsCount: Number,
 });
 
 const AccountSettings = (module.exports = mongoose.model(

@@ -1,4 +1,5 @@
 const Profile = require("../models/ProfileModel");
+const AccountSettings = require("../../settings/models/AccountSettingsModel");
 const mongoose = require("mongoose");
 
 const ProfileDataController = {
@@ -6,12 +7,33 @@ const ProfileDataController = {
 
   async getProfileByUserId(userId) {
     // By userId, not Profile._id
-    return Profile.findOne({userId: userId}).exec();
+    return Profile.findOne({ userId: userId }).exec();
   },
 
   async getManyProfilesByUserIds(participantIds) {
     // Get profiles by ids
     return Profile.find({ userId: { $in: participantIds } });
+  },
+
+  async saveProfileImageReference(imageData) {
+    // save profile image data
+    console.log("imageData", imageData);
+    let setData = {
+      "profileImage.fileName": imageData.fileName,
+      "profileImage.fileUrl": imageData.fileUrl,
+    };
+    let query = { userId: imageData.userId };
+    let options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+    // $set used to update multiple fields
+    // https://stackoverflow.com/questions/37267042/mongoose-findoneandupdate-updating-multiple-fields
+    let update = { $set: setData };
+    console.log("update", update);
+
+    await AccountSettings.findOneAndUpdate(query, update, options).exec();
+
+    let profile = await Profile.findOneAndUpdate(query, update, options).exec();
+    return profile;
   },
 
   async createProfile(profileData) {

@@ -1,4 +1,4 @@
-const AccountSettingsModel = require("../models/AccountSettingsModel");
+const AccountSettings = require("../models/AccountSettingsModel");
 const ProfileModel = require("../../profile/models/ProfileModel");
 const User = require("../../user/models/UserModel");
 
@@ -16,10 +16,16 @@ const { verifyPassword } = require("../../../server/auth/utilities/Utils");
 // const S3_BUCKET = 'curata';
 
 const AccountSettingsDataController = {
-  async updateProfileSettings(profileSettingsData) {
-    let profileSettings;
-    let profile;
-    let query = { userId: profileSettingsData.userId };
+  async updateProfileSettings(data) {
+    let profileSettingsData = {
+      userId: data.userId,
+      displayName: data.displayName,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      bio: data.bio,
+      location: data.location,
+    };
+    let query = { userId: data.userId };
     let options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
     // $set used to update multiple fields
@@ -27,35 +33,27 @@ const AccountSettingsDataController = {
     let update = { $set: profileSettingsData };
     console.log("update", update);
 
-    try {
-      profileSettings = await AccountSettingsModel.findOneAndUpdate(
-        query,
-        update,
-        options
-      ).exec();
+    await ProfileModel.findOneAndUpdate(
+      query,
+      update,
+      options
+    ).exec();
 
-      profile = await ProfileModel.findOneAndUpdate(
-        query,
-        update,
-        options
-      ).exec();
-
-      console.log(
-        "@Successfully changed Profile Settings Data",
-        profileSettings
-      );
-
-      if (!profileSettings && !profile)
-        throw new Error("Could not find or update profile, nor create one");
-    } catch (err) {
-      console.log("@updateProfileSettings error", err);
-      return { success: false, err };
-    }
-    return { success: true, profileSettings };
+    let profileData = await AccountSettings.findOneAndUpdate(
+      query,
+      update,
+      options
+    ).exec();
+    
+    return profileData;
   },
 
   async saveProfileImageReference(imageData) {
     console.log(imageData);
+  },
+
+  async getProfileDataByUserId(userId) {
+    return AccountSettings.findOne({ userId: userId }).exec();
   },
 
   async deleteAccount(userId, password) {

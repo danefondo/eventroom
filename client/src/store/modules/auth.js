@@ -55,6 +55,7 @@ const actions = {
       commit("updateUser", null);
       commit("ready");
     }
+
     return true;
   },
 };

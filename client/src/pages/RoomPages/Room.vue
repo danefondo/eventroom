@@ -266,6 +266,10 @@ export default {
         }
       }
     },
+
+    // How anon stuff works
+    // Get list of anon users
+    // Display them in list as well, iterate-push
     async addUserToRoomData(participant, temporary = false) {
       if (!participant) return;
       let isAnon = temporary;

@@ -1,6 +1,6 @@
 <template>
   <div
-    v-if="!loading"
+    v-if="ready"
     class="nav-container"
     :class="isAuthenticated ? 'authNav' : 'notAuthNav'"
   >
@@ -62,6 +62,7 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      ready: (state) => state.auth.ready,
     }),
     profileLink: function () {
       return `/profile/${this.user.username}`;
@@ -78,7 +79,7 @@ export default {
       darkDownArrow: darkDownArrow,
       navDropdown: false,
       navHover: false,
-      loading: true,
+      // loading: true,
     };
   },
   methods: {
@@ -110,11 +111,11 @@ export default {
       }
     },
   },
-  watch: {
-    "$store.state.auth.ready": function () {
-      this.loading = false;
-    },
-  },
+  // watch: {
+  //   "$store.state.auth.ready": function () {
+  //     this.loading = false;
+  //   },
+  // },
 };
 </script>
 

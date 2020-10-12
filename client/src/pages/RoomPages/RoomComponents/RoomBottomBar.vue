@@ -197,6 +197,9 @@ export default {
       twilioLocalVideoTrack: (state) =>
         state.mediastates.twilioVideo.localVideoTrack,
       RTCConfig: (state) => state.mediastates.RTCConfig,
+      participants: (state) => state.toolbar.toolbarConfig.participants,
+      info: (state) => state.toolbar.toolbarConfig.info,
+      settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
   },
   created() {
@@ -221,6 +224,16 @@ export default {
     toggleShutRestart() {
       this.$emit("toggleShutRestart");
     },
+    toggleToolbar(toolbarTool) {
+      let data = {
+        toolbarTool,
+      };
+
+      if (toolbarTool) {
+        data.boolean = !this[toolbarTool];
+        this.$store.dispatch("toolbar/toggleToolbar", data);
+      }
+    },
     keyboardEvent(e) {
       let globalThis = this;
       if (e.which == 67) {
@@ -229,6 +242,12 @@ export default {
         globalThis.toggleMedia(1);
       } else if (e.which == 90) {
         globalThis.toggleMedia(2);
+      } else if (e.which == 80) {
+        globalThis.toggleToolbar("participants");
+      } else if (e.which == 82) {
+        globalThis.toggleToolbar("info");
+      } else if (e.which == 83) {
+        globalThis.toggleToolbar("settings");
       }
     },
   },

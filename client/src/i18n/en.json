@@ -25,8 +25,10 @@
     "register": {
         "create": "Create account",
         "creating": "Creating account...",
-        "join-title": "Join Oveno",
-        "join-tagline": "...where the world meets.",
+        "join-title": "Welcome to Eventroom",
+        "join-oveno": "Join Oveno",
+        "oveno-tagline": "...where the world meets.",
+        "join-tagline": "The most personal video experience you'll ever have.",
         "username": "Username",
         "pass": "Password (at least 8 characters)",
         "confirm-pass": "Confirm password",

@@ -1,17 +1,16 @@
 <template>
   <div class="auth">
     <div class="auth-container">
-      
       <div class="auth-header">
-        <div class="auth-title">{{$t("login.login-title")}}</div>
-        <div class="auth-subtitle">{{$t("login.login-subtitle")}}</div>
+        <div class="auth-title">{{ $t("login.login-title") }}</div>
+        <div class="auth-subtitle">{{ $t("login.login-subtitle") }}</div>
       </div>
-      <div class="external-auth fb-auth">
+      <!-- <div class="external-auth fb-auth">
         <a class="fb-link" :href="facebookLoginLink">Sign in with FB</a>
       </div>
       <div class="external-auth google-auth">
         <a class="google-link" :href="googleLoginLink"> Sign in with Google </a>
-      </div>
+      </div> -->
       <form @submit.prevent="login" class="auth-form" method="POST">
         <input
           v-model="username"
@@ -33,38 +32,50 @@
           <div class="inputErrorText">{{ error }}</div>
         </div>
         <div class="submit">
-          <input :disabled="submitting" class="auth-button" type="submit" :value="loginText" />
+          <input
+            :disabled="submitting"
+            class="auth-button"
+            type="submit"
+            :value="loginText"
+          />
         </div>
       </form>
-      <div class="auth-helper-button" @click="toggleRefreshPassword">{{$t("login.forgot-pass")}}</div>
-        <div v-if="refreshPassword">
-          <p>Please enter your email </p>
-          <form @submit.prevent="sendRefreshPassword" method="POST">
-            <input
-              v-model="refreshEmail"
-              name="refreshEmail"
-              type="text"
-              placeholder="enter email"
-              autocomplete="off"
-            />
-            <div class="submit">
-              <input class="auth-button" type="submit" :value="refreshText" />
-            </div>
-            <div v-if="refreshPasswordSent">
-              Please check your email. Make sure you wrote the correct email! Sometimes it might end up in your spam folder!
-            </div>
-          </form>
-        </div>
+      <div class="auth-helper-button" @click="toggleRefreshPassword">
+        {{ $t("login.forgot-pass") }}
+      </div>
+      <div v-if="refreshPassword">
+        <p>Please enter your email</p>
+        <form @submit.prevent="sendRefreshPassword" method="POST">
+          <input
+            v-model="refreshEmail"
+            name="refreshEmail"
+            type="text"
+            placeholder="enter email"
+            autocomplete="off"
+          />
+          <div class="submit">
+            <input class="auth-button" type="submit" :value="refreshText" />
+          </div>
+          <div v-if="refreshPasswordSent">
+            Please check your email. Make sure you wrote the correct email!
+            Sometimes it might end up in your spam folder!
+          </div>
+        </form>
+      </div>
       <div class="auth-alt-buttons">
-        <div v-if="success" class="successMessage">{{$t("login.pass-success")}}</div>
-        <router-link class="auth-alt-button" to="/account/register">{{$t("login.or-create-account")}}</router-link>
+        <div v-if="success" class="successMessage">
+          {{ $t("login.pass-success") }}
+        </div>
+        <router-link class="auth-alt-button" to="/account/register">{{
+          $t("login.or-create-account")
+        }}</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { BASE_PATH } from "../../constants"
+import { BASE_PATH } from "../../constants";
 import auth from "../../config/auth";
 import { requestWithoutAuthentication } from "../../config/api";
 
@@ -85,8 +96,8 @@ export default {
       refreshPasswordSent: false,
       refreshText: "Send email",
 
-      googleLoginLink: BASE_PATH+"/api/accounts/google",
-      facebookLoginLink: BASE_PATH+"/api/accounts/facebook",
+      googleLoginLink: BASE_PATH + "/api/accounts/google",
+      facebookLoginLink: BASE_PATH + "/api/accounts/facebook",
     };
   },
 
@@ -96,13 +107,16 @@ export default {
       this.loginText = "Logging in...";
       try {
         const { username, password } = this;
-  
+
         await auth.login(username, password);
-        
+
         this.error = "";
         this.$router.push("/");
       } catch (error) {
-        if (error.response && (error.response.status === 401 || error.response.status === 400)) {
+        if (
+          error.response &&
+          (error.response.status === 401 || error.response.status === 400)
+        ) {
           this.error = error.response.data.error;
           console.log("@login here");
         } else {
@@ -125,7 +139,11 @@ export default {
       this.sending = true;
       this.refreshText = "Sending...";
 
-      await requestWithoutAuthentication('post', '/api/accounts/sendresetpasswordmail', {email: this.refreshEmail, hostname: window.location.host});
+      await requestWithoutAuthentication(
+        "post",
+        "/api/accounts/sendresetpasswordmail",
+        { email: this.refreshEmail, hostname: window.location.host }
+      );
       this.refreshPasswordSent = true;
       this.sending = false;
       this.refreshText = "Send email";
@@ -163,40 +181,51 @@ export default {
   font-size: 50px;
   font-weight: bold;
   margin-bottom: 5px;
+  color: #3e3a54;
 }
 .auth-subtitle {
-  color: #aaa;
+  color: #858390;
   font-size: 18px;
 }
 .auth-input {
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
+  width: 100%;
+  border: 1px solid #eee;
   border-radius: 3px;
-  font-size: 16px;
+  caret-color: #666;
+  padding: 8px 14px;
+  font-size: 20px;
+  font-family: "Nunito", sans-serif;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+  margin-bottom: 7px;
 }
-.auth-input:focus {
-  border: 2px solid #493eff;
+.auth-input:focus,
+.auth-input:hover {
+  border-color: #ccc;
 }
 .auth-button {
   outline: none;
-  background-color: #493eff;
-  color: white;
-  font-size: 16px;
+  background-color: #f9f9f9;
+  color: #3e3a54;
+  font-size: 24px;
   font-weight: bold;
   border: unset;
-  padding: 10px;
+  padding: 6px;
   width: 100%;
   border-radius: 3px;
   cursor: pointer;
+  font-family: "Nunito", sans-serif;
+  margin-top: 8px;
 }
 .auth-button:hover {
-  background-color: #493effd1;
+  background-color: #f1f1f1;
 }
 .auth-alt-buttons {
   display: flex;
   flex-direction: column;
 }
+
 .auth-helper-button {
   margin-bottom: 15px;
   margin-top: -5px;
@@ -212,13 +241,13 @@ export default {
 }
 .auth-alt-button {
   margin-bottom: 10px;
-  color: #555;
+  color: #3e3a54;
   display: block;
 }
 .auth-alt-button:visited {
-  color: #555;
+  color: #3e3a54;
 }
 .auth-alt-button:hover {
-  color: #777;
+  color: #757284;
 }
 </style>

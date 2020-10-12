@@ -1,18 +1,12 @@
 <template>
   <div v-if="success">
-    <SuccessPage :registrationMethod="registrationMethod"/>
+    <SuccessPage :registrationMethod="registrationMethod" />
   </div>
   <div v-else class="registration">
     <div class="registration-block">
       <div class="auth-header">
-        <h1 class="auth-title">{{ $t("register.join-title")}}</h1>
-        <div class="auth-subtitle">{{ $t("register.join-tagline")}}</div>
-      </div>
-      <div class="external-auth fb-auth">
-        <a class="fb-link" :href="facebookLoginLink">Sign up with FB</a>
-      </div>
-      <div class="external-auth google-auth">
-        <a class="google-link" :href="googleLoginLink"> Sign up with Google </a>
+        <h1 class="auth-title">{{ $t("register.join-title") }}</h1>
+        <div class="auth-subtitle">{{ $t("register.join-tagline") }}</div>
       </div>
       <div class="registration-form">
         <form class="auth-form" method="POST" @submit.prevent="register()">
@@ -30,7 +24,7 @@
                 autocomplete="falsessy"
               />
               <div class="inputErrorContainer">
-                <div class="inputErrorText">{{ getError('email') }}</div>
+                <div class="inputErrorText">{{ getError("email") }}</div>
               </div>
             </div>
             <div class="form-group">
@@ -43,7 +37,7 @@
                 autocomplete="falsess"
               />
               <div class="inputErrorContainer">
-                <div class="inputErrorText">{{ getError('username') }}</div>
+                <div class="inputErrorText">{{ getError("username") }}</div>
               </div>
             </div>
             <div class="form-group">
@@ -63,7 +57,7 @@
                 />
               </div>
               <div class="inputErrorContainer">
-                <div class="inputErrorText">{{ getError('password') }}</div>
+                <div class="inputErrorText">{{ getError("password") }}</div>
               </div>
             </div>
             <div class="form-group last-form-group">
@@ -83,7 +77,7 @@
                 />
               </div>
               <div class="inputErrorContainer">
-                <div class="inputErrorText">{{ getError('passcheck') }}</div>
+                <div class="inputErrorText">{{ getError("passcheck") }}</div>
               </div>
             </div>
           </div>
@@ -92,13 +86,22 @@
               :disabled="submitting"
               class="auth-button"
               type="submit"
-              :value="submitting ? $t('register.creating') : $t('register.create')"
+              :value="
+                submitting ? $t('register.creating') : $t('register.create')
+              "
             />
           </div>
         </form>
-        <router-link class="auth-alt-button" to="/account/login">{{ $t("register.already-have-account")}}</router-link>
-        
+        <router-link class="auth-alt-button" to="/account/login">{{
+          $t("register.already-have-account")
+        }}</router-link>
       </div>
+      <!-- <div class="external-auth fb-auth">
+        <a class="fb-link" :href="facebookLoginLink">Sign up with FB</a>
+      </div>
+      <div class="external-auth google-auth">
+        <a class="google-link" :href="googleLoginLink"> Sign up with Google </a>
+      </div> -->
     </div>
   </div>
 </template>
@@ -106,7 +109,7 @@
 <script>
 import auth from "../../config/auth";
 import SuccessPage from "./SuccessPage";
-import { BASE_PATH } from "../../constants"
+import { BASE_PATH } from "../../constants";
 
 export default {
   name: "RegisterPage",
@@ -125,8 +128,8 @@ export default {
       submitting: false,
       success: false,
 
-      googleLoginLink: BASE_PATH+"/api/accounts/google",
-      facebookLoginLink: BASE_PATH+"/api/accounts/facebook",
+      googleLoginLink: BASE_PATH + "/api/accounts/google",
+      facebookLoginLink: BASE_PATH + "/api/accounts/facebook",
 
       registrationMethod: "",
     };
@@ -183,6 +186,7 @@ export default {
 <style scoped>
 .external-auth {
   padding: 10px;
+  color: #3e3a54;
 }
 .registration {
   display: flex;
@@ -201,19 +205,30 @@ export default {
 }
 .auth-button {
   outline: none;
-  background-color: #493eff;
-  color: white;
-  font-size: 16px;
+  background-color: #f9f9f9;
+  color: #3e3a54;
+  font-size: 24px;
   font-weight: bold;
   border: unset;
-  padding: 10px;
+  padding: 6px;
   width: 100%;
   border-radius: 3px;
   cursor: pointer;
+  font-family: "Nunito", sans-serif;
+  margin-top: 8px;
 }
 .auth-button:hover {
-  background-color: #493effd1;
+  background-color: #f1f1f1;
 }
+
+.auth-alt-button {
+  color: #3e3a54;
+}
+
+.auth-alt-button:hover {
+  color: #757284;
+}
+
 .auth-form {
   display: flex;
   flex-direction: column;
@@ -226,9 +241,11 @@ export default {
   font-size: 50px;
   font-weight: bold;
   margin-bottom: 5px;
+  color: #3e3a54;
 }
 .auth-subtitle {
-  color: #aaa;
+  /* color: #aaa; */
+  color: #858390;
   font-size: 18px;
 }
 .form-groups {
@@ -239,13 +256,27 @@ export default {
 }
 .form-group {
   display: flex;
-  margin-bottom: 5px;
+  margin-bottom: 7px;
   justify-content: center;
   position: relative;
 }
 
 .form-group input {
   width: 100%;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  caret-color: #666;
+  padding: 8px 14px;
+  font-size: 20px;
+  font-family: "Nunito", sans-serif;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.form-group input:hover,
+.form-group input:focus {
+  border-color: #ccc;
 }
 
 .showPass {
@@ -254,12 +285,15 @@ export default {
 .showPassContainer {
   position: absolute;
   right: 3%;
-  top: 0px;
-  bottom: 26%;
+  top: 2px;
+  bottom: 0px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   vertical-align: middle;
+  background-color: #ffffff;
+  height: calc(100% - 4px);
+  padding-left: 2px;
 }
 </style>

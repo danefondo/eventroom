@@ -140,22 +140,8 @@
       </div>
       <div class="media-buttons leave">
         <div class="tooltip_container">
-          <div
-            :class="
-              userMediaSettings.screenBeingShared
-                ? 'screen-button-green'
-                : 'screen-button'
-            "
-            @click="leaveRoom"
-          >
-            <img
-              :src="hangUpIcon"
-              :class="
-                userMediaSettings.screenBeingShared
-                  ? 'screen-icon-white'
-                  : 'screen-icon'
-              "
-            />
+          <div class="leave-button" @click="leaveRoom">
+            <img :src="hangUpIcon" class="leave-icon" />
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">Leave room</span>
@@ -292,7 +278,8 @@ export default {
 .audio-button,
 .settings-button,
 .screen-button,
-.pip-button {
+.pip-button,
+.leave-button {
   border: 1px solid #ececec;
   border-radius: 4px;
   display: flex;
@@ -310,7 +297,8 @@ export default {
 .video-call-button:hover,
 .audio-button:hover,
 .screen-button:hover,
-.pip-button:hover {
+.pip-button:hover,
+.leave-button:hover {
   background-color: #f3f2f2;
 }
 .video-call-icon,
@@ -321,7 +309,8 @@ export default {
 .screen-icon,
 .screen-icon-white,
 .pip-icon,
-.pip-icon-white {
+.pip-icon-white,
+.leave-icon {
   width: 28px;
   height: 28px;
   margin: auto;

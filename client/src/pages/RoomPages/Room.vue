@@ -277,8 +277,10 @@ export default {
         const axiosPostQuery = `/api/eventroom/addUserToRoomData`;
         const response = await axios.post(axiosPostQuery, queryData);
 
-        let result = response;
-        console.log("OMG IT IS RESULT", result);
+        let eventroom = response.data.result;
+        if (!eventroom) {
+          throw { error: "Couldn't add participant to database," };
+        }
       } catch (error) {
         console.log("Failed to add user to room data.", error);
       }

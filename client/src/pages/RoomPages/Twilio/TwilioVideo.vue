@@ -191,13 +191,11 @@ export default {
         this.remoteParticipantData
       ) {
         if (track.name && track.name == "screen") {
-
           this.remoteParticipantScreenData = track;
           this.$nextTick(() => {
             container = this.$refs.remotescreenshare;
             return container.appendChild(track.attach());
           });
-
         } else {
           container = this.$refs.remotevideo;
           return container.appendChild(track.attach());
@@ -436,8 +434,20 @@ export default {
         publication,
         participant
       );
-      if (publication && publication.track && publication.track.name && publication.track.name == "screen" && participant.identity !== this.userId) {
+      if (
+        publication &&
+        publication.trackName &&
+        publication.trackName == "screen" &&
+        participant.identity !== this.userId
+      ) {
         this.remoteParticipantScreenData = null;
+      } else if (
+        publication &&
+        publication.trackName &&
+        publication.trackName == "screen" &&
+        participant.identity == this.userId
+      ) {
+        this.toggleScreenshare();
       }
     },
 
@@ -661,6 +671,13 @@ export default {
 
             globalThis.localScreenTrack = screenTrack;
             globalThis.room.localParticipant.publishTrack(screenTrack);
+
+            globalThis.localScreenTrack.on("stopped", () => {
+              globalThis.toggleScreenshare();
+              // globalThis.room.localParticipant.unpublishTrack(
+              //   globalThis.localScreenTrack
+              // );
+            });
 
             // Show the "Capture Screen" button after screen capture stops.
             // screenTrack.on("stopped");

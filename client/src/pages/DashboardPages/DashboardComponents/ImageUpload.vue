@@ -36,7 +36,7 @@
         id="file-input"
         type="file"
         name="image"
-        accept="image/jpg"
+        accept="image/*"
         @change="imageChange"
       />
     </div>

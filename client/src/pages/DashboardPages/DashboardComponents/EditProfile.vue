@@ -59,6 +59,9 @@
     <div class="general-success" v-if="updateSuccessful">
       Profile settings successfully updated!
     </div>
+    <div class="general-error" v-if="updateFailed">
+      Profile update failed. Please refresh and try again or contact support.
+    </div>
     <div class="save" @click="saveProfileSettings" :disabled="updatingSettings">
       {{ updatingSettings ? "Saving..." : "Save settings" }}
     </div>
@@ -80,6 +83,7 @@ export default {
       failedToGetProfileData: false,
       requestProfileDataFinished: false,
       updateSuccessful: false,
+      updateFailed: false,
       fileName: null,
       fileUrl: null,
       image: null,
@@ -193,6 +197,7 @@ export default {
         // window.scrollTo(0, 0);
         // this.error = true;
         console.log("Error", error);
+        this.updateFailed = true;
         this.updatingSettings = false;
       }
     },
@@ -373,6 +378,20 @@ export default {
 
 .save:hover {
   background-color: #6e00ffc9;
+}
+
+
+.general-error {
+  color: #a72143;
+  background-color: #f9f9f9;
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 21px;
+  margin-top: 45px;
+  margin-bottom: -25px;
+  box-sizing: border-box;
+  text-align: center;
 }
 
 .general-success {

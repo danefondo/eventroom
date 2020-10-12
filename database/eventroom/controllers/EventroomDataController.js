@@ -26,7 +26,15 @@ const EventroomDataController = {
         errors.FailedToGetRoom = true;
         throw { errors: errors };
       }
-      eventroom.anonParticipants.push(roomData.participant);
+
+      let participantId = roomData.participant;
+
+      if (roomData.isAnon) {
+        eventroom.anonParticipantsIdsWhoHaveJoined.push(participantId);
+      } 
+
+      eventroom.currentParticipantsIds.push(participantId);
+      eventroom.allParticipantsIdsWhoHaveJoined.push(participantId)
       await eventroom.save();
     } catch (error) {
       if (error.errors) {

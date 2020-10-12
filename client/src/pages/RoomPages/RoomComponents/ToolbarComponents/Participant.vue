@@ -42,6 +42,8 @@ export default {
 
 .displayName {
   font-size: 21px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .profileImage {
@@ -55,6 +57,7 @@ export default {
 .profileImageAlt {
   height: 32px;
   width: 32px;
+  flex-shrink: 0;
   border-radius: 360px;
   margin-right: 12px;
   border: 1px solid #a7aebd;

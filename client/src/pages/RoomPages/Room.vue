@@ -8,8 +8,6 @@
     <RoomToolbar />
     <RoomLeftSidebar v-if="leftSidebar" />
     <div class="video-chat">
-      <!-- <h1>Video Chat</h1>
-      <div v-if="tempUser">{{ tempUser.tempUserDisplayName }}</div> -->
       <TwilioVideo
         v-if="RTCConfig.twilio && userId && eventroom.eventroomId"
         :eventroomId="eventroom.eventroomId"
@@ -126,15 +124,31 @@ export default {
      * Check to see if user already has a temporary token for the room?
      */
     console.log("@1 Begin Eventroom mount.");
-    if (!this.isAuthenticated) {
-      this.createTempUser();
-    }
+    window.onbeforeunload = () => {
+      if (this.RTCConfig.vanillaRTC) {
+        this.$refs.vanillaRTC.prepareToExit();
+      } else if (this.RTCConfig.twilio) {
+        this.$refs.twilio.prepareToExit();
+      }
+      this.$store.dispatch("tempuser/destroyTempUser");
+      destroyTempToken();
+      this.$store.dispatch("eventroom/clearEventroom");
+      initialState();
+    };
 
     console.log("@2 Check if user exists...");
     if (this.user && this.isAuthenticated) {
       console.log("@2.5 User exists, getting room.", this.user);
       this.userId = this.user._id;
-      this.getRoom();
+      // this.getRoom();
+      this.addUserToRoomData(this.userId);
+    } else if (auth.checkTempToken()) {
+      // Check if temporary user already exists;
+      let temp = auth.checkTempToken();
+      this.userId = temp._id;
+      this.addUserToRoomData(this.userId, true);
+    } else {
+      await this.createTempUser();
     }
 
     console.log("@3 Get and set Media Preferences.");
@@ -202,7 +216,7 @@ export default {
           await globalThis.$store.dispatch(vuexQuery, temporaryUser);
 
           this.userId = temporaryUser._id;
-          this.getRoom();
+          await this.addUserToRoomData(this.userId, true);
         }
       } catch (error) {
         console.log("@createTempUser: Failed to create temporary user", error);
@@ -273,18 +287,21 @@ export default {
     async addUserToRoomData(participant, temporary = false) {
       if (!participant) return;
       let isAnon = temporary;
-      console.log("ISANON", isAnon);
+      console.log("ISANON", isAnon, participant);
 
       try {
         const eventroomName = this.$route.params.eventroomName;
-        const queryData = { eventroomName, participant };
+        const queryData = { eventroomName, participant, isAnon };
         const axiosPostQuery = `/api/eventroom/addUserToRoomData`;
         const response = await axios.post(axiosPostQuery, queryData);
 
         let eventroom = response.data.result;
+        console.log("yoooo", eventroom);
         if (!eventroom) {
           throw { error: "Couldn't add participant to database," };
         }
+
+        this.$store.dispatch("eventroom/setInitialEventroomData", eventroom);
       } catch (error) {
         console.log("Failed to add user to room data.", error);
       }
@@ -326,15 +343,15 @@ export default {
     //   }
     //   next();
   },
-  watch: {
-    "$store.state.tempuser.tempUser": async function (temporaryUser) {
-      if (temporaryUser) {
-        console.log("tempUserMapping", temporaryUser);
-        await this.addUserToRoomData(temporaryUser, true);
-        await this.getRoom();
-      }
-    },
-  },
+  // watch: {
+  //   "$store.state.tempuser.tempUser": async function (temporaryUser) {
+  //     if (temporaryUser) {
+  //       console.log("tempUserMapping", temporaryUser);
+  //       await this.addUserToRoomData(temporaryUser, true);
+  //       // await this.getRoom();
+  //     }
+  //   },
+  // },
 };
 </script>
 

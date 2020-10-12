@@ -17,10 +17,19 @@ const mutations = {
   addParticipant(state, participant) {
 
     let participants = state.participantsData;
+    console.log("partiCIPANTS", participants);
+    console.log("partiPANT", participant);
     if (participants.some(p => p.userId === participant.userId)) {
-      return console.log("Participant already in list");
+      console.log("Participant already in list");
+    } else {
+      state.participantsData.push(participant);
     }
-    state.participantsData.push(participant);
+
+    if (participants.some(p => p._id === participant._id)) {
+      console.log("Participant already in list");
+    } else {
+      state.participantsData.push(participant);
+    }
   },
 
   removeParticipant(state, participant) {

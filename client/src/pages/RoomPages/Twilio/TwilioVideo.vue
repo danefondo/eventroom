@@ -749,9 +749,17 @@ export default {
 
         if (!profiles) throw { ProfilesNotFound: true };
 
-        profiles.forEach(function (profile) {
-          globalThis.$store.dispatch("participants/addParticipant", profile);
-        });
+        if (profiles.users) {
+          profiles.users.forEach(function (profile) {
+            globalThis.$store.dispatch("participants/addParticipant", profile);
+          });
+        }
+
+        if (profiles.tempUsers) {
+          profiles.tempUsers.forEach(function (profile) {
+            globalThis.$store.dispatch("participants/addParticipant", profile);
+          });
+        }
       } catch (error) {
         console.log(error);
         if (errors.NoParticipantsFoundError) {

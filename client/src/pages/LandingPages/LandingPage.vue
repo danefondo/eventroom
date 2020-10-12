@@ -37,6 +37,8 @@ import { mapState } from "vuex";
 import axios from "axios";
 import { slug } from "../../config/slugGenerator/slug";
 import dice from "../../assets/images/dice.png";
+import auth from "../../config/auth";
+import { destroyTempToken, setTempToken } from "../../config/axios";
 
 export default {
   name: "LandingPage",
@@ -48,6 +50,7 @@ export default {
       cannotCreateRoom: false,
       showPreScreenPreference: true,
       dice: dice,
+      tempUserId: "",
     };
   },
   computed: {
@@ -55,12 +58,39 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      tempUser: (state) => state.tempuser.tempUser,
     }),
   },
   async mounted() {
     this.customSlug();
   },
   methods: {
+    async createTempUser(eventroomName) {
+      let globalThis = this;
+      try {
+        this.$store.dispatch("tempuser/destroyTempUser");
+        destroyTempToken();
+        const eventroomData = { eventroomName };
+        const axiosPostQuery = `/api/accounts/createTempUser`;
+        const { data } = await axios.post(axiosPostQuery, eventroomData);
+
+        console.log("@createTempUser, result from createTempUser:", data);
+
+        setTempToken(data.tempToken);
+        localStorage.tempUser = JSON.stringify(data.tempUser);
+
+        if (auth.checkTempToken()) {
+          let temporaryUser = auth.checkTempToken();
+          console.log("temporary", temporaryUser);
+
+          const vuexQuery = "tempuser/addNewTempUser";
+          await globalThis.$store.dispatch(vuexQuery, temporaryUser);
+          this.tempUserId = temporaryUser._id;
+        }
+      } catch (error) {
+        console.log("@createTempUser: Failed to create temporary user", error);
+      }
+    },
     async createEventroom() {
       try {
         let slug = this.slug;
@@ -87,6 +117,9 @@ export default {
 
         if (this.isAuthenticated) {
           eventroomData.hostId = this.user._id;
+        } else {
+          await this.createTempUser(eventroomData.eventroomName);
+          eventroomData.hostId = this.tempUserId;
         }
 
         const response = await axios.post(

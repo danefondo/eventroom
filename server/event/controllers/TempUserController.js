@@ -23,7 +23,7 @@ const TempUserController = {
         res.status(500);
       }
 
-      const tempUserDisplayName = uniqueNamesGenerator({
+      const displayName = uniqueNamesGenerator({
         dictionaries: [adjectives, colors, animals],
         separator: '',
         style: 'capital'
@@ -36,7 +36,7 @@ const TempUserController = {
       let user = new TempUser({
         associatedRoomName,
         tempUserToken,
-        tempUserDisplayName,
+        displayName,
         dateCreated,
       });
       await user.save();
@@ -45,7 +45,7 @@ const TempUserController = {
       const tempUser = {
         _id: user._id,
         eventroom: associatedRoomName,
-        tempUserDisplayName,
+        displayName,
         tempVerifTok: tempUserToken,
       };
 

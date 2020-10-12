@@ -4,7 +4,7 @@ let Schema = mongoose.Schema;
 const tempUserSchema = new Schema({
   associatedRoomName: String,
   tempUserToken: String,
-  tempUserDisplayName: String,
+  displayName: String,
   dateCreated: Date,
   createdAt: {
     type: Date,

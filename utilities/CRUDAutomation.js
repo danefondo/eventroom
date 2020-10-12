@@ -235,3 +235,6 @@ const CRUDAutomation = {
 };
 
 module.exports = CRUDAutomation;
+
+
+// If anyone ever steals any of Elysium's code. I will make you regret it for the rest of your life.

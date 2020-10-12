@@ -1,4 +1,5 @@
 const Profile = require("../models/ProfileModel");
+const TempUser = require("../../room/models/TempUserModel");
 const AccountSettings = require("../../settings/models/AccountSettingsModel");
 const mongoose = require("mongoose");
 
@@ -11,8 +12,26 @@ const ProfileDataController = {
   },
 
   async getManyProfilesByUserIds(participantIds) {
+    let participants = {};
+    let tempUsers = await TempUser.find({ _id: { $in: participantIds } });
+    console.log("TEMP USERS LIST", tempUsers);
+
+    let users = await Profile.find({ userId: { $in: participantIds } });
+    console.log("USERS LIST", users);
+
+    if (tempUsers) {
+      participants.tempUsers = tempUsers;
+    }
+
+    if (users) {
+      participants.users = users;
+    }
+
+    // IF NOTHING IN EITHER, THROW OR RETURN EMPTY
+    // OTHERWISE COMBINE
     // Get profiles by ids
-    return Profile.find({ userId: { $in: participantIds } });
+    console.log("PARTICIPANTS", participants);
+    return participants;
   },
 
   async saveProfileImageReference(imageData) {

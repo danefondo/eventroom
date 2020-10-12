@@ -9,6 +9,11 @@ const router = Express.Router();
 router.post("/createEventroom", EventroomController.createEventroom);
 
 /**
+ * Add room participant to room data
+ */
+router.post("/addUserToRoomData", EventroomController.addUserToRoomData);
+
+/**
  * Get an Eventroom initialization
  */
 router.get("/:eventroomName", EventroomController.getEventroomByName);

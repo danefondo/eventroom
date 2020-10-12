@@ -3,19 +3,29 @@
     class="nav-container"
     :class="isAuthenticated ? 'authNav' : 'notAuthNav'"
   >
-    <div class="navbar" v-if="authDetermined">
+    <div class="navbar">
       <router-link to="/" class="nav-logo">Eventroom.to</router-link>
-      <div v-if="isAuthenticated" class="flex">
+      <div v-if="isAuthenticated && authDetermined" class="flex">
         <div
           class="nav-button username"
+          :class="navDropdown ? 'dropdown-active' : ''"
           @mouseover="mouseOver"
           @mouseout="mouseOut"
+          @click="toggleDropdown"
         >
           {{ user.username }}
           <img
-            @click="toggleDropdown"
-            :src="navHover ? darkDownArrow : lightDownArrow"
-            :class="navDropdown ? 'dropdow-icon active' : 'dropdown-icon'"
+            :src="navHover || navDropdown ? darkDownArrow : lightDownArrow"
+            :class="
+              navDropdown || navDropdown
+                ? 'dropdown-icon dropdown-active'
+                : 'dropdown-icon'
+            "
+          />
+          <NavDropdown
+            v-if="navDropdown"
+            :user="user"
+            @click.prevent="toggleDropdown"
           />
         </div>
 
@@ -23,7 +33,7 @@
           >Logout</div
         > -->
       </div>
-      <div v-else-if="!isAuthenticated">
+      <div v-else-if="!isAuthenticated && authDetermined == false">
         <router-link to="/account/login" class="nav-button">Login</router-link>
         <router-link to="/account/register" class="nav-button"
           >Register</router-link
@@ -40,12 +50,13 @@
 <script>
 import { mapState } from "vuex";
 import { requestWithAuthentication } from "../config/api";
-import auth from "../config/auth";
 import lightDownArrow from "../assets/images/down-arrow-light-sharp.png";
 import darkDownArrow from "../assets/images/down-arrow-dark-sharp.png";
+import NavDropdown from "./NavDropdown";
 
 export default {
   name: "Nav",
+  props: ["authDetermined"],
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
@@ -56,11 +67,13 @@ export default {
       return `/profile/${this.user.username}`;
     },
   },
+  components: {
+    NavDropdown,
+  },
   data() {
     return {
       buttonText: "Resend email",
       emailSentCounter: 0,
-      authDetermined: false,
       lightDownArrow: lightDownArrow,
       darkDownArrow: darkDownArrow,
       navDropdown: false,
@@ -69,23 +82,15 @@ export default {
   },
   methods: {
     toggleDropdown() {
-      console.log("wow");
+      this.navDropdown = !this.navDropdown;
     },
     mouseOut() {
+      if (this.navDropdown) return;
       this.navHover = !this.navHover;
     },
     mouseOver() {
+      if (this.navDropdown) return;
       this.navHover = !this.navHover;
-    },
-    async logUserOut() {
-      try {
-        const response = await auth.logout();
-        if (response.data.success) {
-          this.$router.push("/");
-        }
-      } catch (err) {
-        console.log(err);
-      }
     },
     async resendEmail() {
       try {
@@ -101,13 +106,6 @@ export default {
         }
       } catch (err) {
         console.log(err);
-      }
-    },
-  },
-  watch: {
-    isAuthenticated: function () {
-      if (this.isAuthenticated) {
-        this.authDetermined = true;
       }
     },
   },
@@ -176,6 +174,12 @@ export default {
   border: 1px solid #eee;
 }
 
+.dropdown-active {
+  background-color: #f3f4f7eb;
+  border: 1px solid #eee;
+  color: #3e3a54;
+}
+
 .dropdown-icon {
   position: absolute;
   height: 17px;
@@ -184,5 +188,7 @@ export default {
   bottom: 0;
   margin: auto;
   right: 11px;
+  border: none !important;
+  background-color: unset !important;
 }
 </style>

@@ -1,10 +1,11 @@
 const ProfileDataController = require("../database/profile/controllers/ProfileDataController");
 const AccountSettingsDataController = require("../database/settings/controllers/AccountSettingsDataController");
-  
+const EventroomDataController = require("../database/eventroom/controllers/EventroomDataController");
 
 const DataControllers = {
   ProfileDataController,
   AccountSettingsDataController,
+  EventroomDataController
 };
 
 const CRUDAutomation = {
@@ -70,7 +71,13 @@ const CRUDAutomation = {
       );
     } catch (error) {
       console.log("Failed to get participants data", error);
-      throw { errors: error.errors, statusCode: 500 };
+      let errors = {};
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors, statusCode: 500 };
     }
 
     return result;

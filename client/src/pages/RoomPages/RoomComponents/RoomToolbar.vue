@@ -155,6 +155,7 @@ export default {
 .toolbar-icon-container {
   display: flex;
   justify-content: center;
+  min-width: 32px;
 }
 
 .toolbar-icon {

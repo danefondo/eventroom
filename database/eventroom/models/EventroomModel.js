@@ -15,6 +15,9 @@ const EventroomSchema = new Schema({
     expires: 86400,
     default: Date.now,
   },
+  currentParticipants: [String],
+  participants: [String],
+  anonParticipants: [String],
 
   // sessionId: String,
   // sessionTokens: [String],

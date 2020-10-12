@@ -48,7 +48,7 @@ export default {
 
 .settings-left,
 .settings-right {
-  padding-top: 75px;
+  padding-top: 50px;
   padding-bottom: 75px;
 }
 </style>

@@ -4,7 +4,25 @@ const {
 const EventroomDataController = require("../../../database/eventroom/controllers/EventroomDataController");
 const TwilioUtilities = require("../../twilio/utilities/TwilioUtilities");
 
+const { processPostRequest } = require("../../../utilities/CRUDAutomation");
+
+const controller = "EventroomDataController";
+
 const EventroomController = {
+
+  
+  async addUserToRoomData(req, res) {
+    const options = {
+      validate: ["eventroomName", "participant"],
+      funcToRun: "addUserToRoomData",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+
   async checkIfEventroomExistsByName(req, res) {
     if (!req.body) {
       return res.status(400).send({ error: "Invalid request 400" });

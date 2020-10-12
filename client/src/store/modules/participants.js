@@ -13,8 +13,20 @@ const mutations = {
     // https://github.com/vuejs/vuex/issues/1118
     Object.assign(state, getDefaultState());
   },
+
   addParticipant(state, participant) {
+
+    let participants = state.participantsData;
+    if (participants.some(p => p.userId === participant.userId)) {
+      return console.log("Participant already in list");
+    }
     state.participantsData.push(participant);
+  },
+
+  removeParticipant(state, participant) {
+    let participants = state.participantsData;
+    let arrayIndex = participants.findIndex((p) => p.userId === participant.identity);
+    participants.splice(arrayIndex, 1);
   },
 };
 
@@ -23,8 +35,13 @@ const actions = {
   resetState(state) {
     state.commit("resetState");
   },
+
   addParticipant(state, participant) {
     state.commit("addParticipant", participant);
+  },
+
+  removeParticipant(state, participant) {
+    state.commit("removeParticipant", participant);
   },
 };
 

@@ -6,23 +6,52 @@
         Connected to {{ eventroomId }}</span
       >
     </div> -->
-    <div class="left-side side">
+    <div
+      class="left-side side"
+      :class="localParticipantScreenData ? 'column-side' : ''"
+    >
       <div
         v-if="localParticipantData"
         id="local-video"
         class="video"
+        :class="localParticipantScreenData ? 'split' : ''"
         ref="localvideo"
       ></div>
+      <div
+        v-if="localParticipantScreenData"
+        id="localScreenshare"
+        :class="
+          localParticipantScreenData == undefined ? 'video hide' : 'video split'
+        "
+        ref="localscreenshare"
+      ></div>
     </div>
-    <div class="right-side side">
+    <div
+      class="right-side side"
+      :class="remoteParticipantScreenData ? 'column-side' : ''"
+    >
       <div v-if="!remoteParticipantData" class="no-remote-video">
         Looks like it's just you in here!
       </div>
       <div
         v-else-if="remoteParticipantData"
         id="remote-video"
-        :class="remoteParticipantData == undefined ? 'video hide' : 'video'"
+        class="video"
+        :class="[
+          remoteParticipantData ? '' : 'hide',
+          remoteParticipantScreenData ? 'remote-split' : '',
+        ]"
         ref="remotevideo"
+      ></div>
+      <div
+        v-if="remoteParticipantScreenData"
+        id="remoteScreenshare"
+        :class="
+          remoteParticipantScreenData == undefined
+            ? 'video hide'
+            : 'video remote-split'
+        "
+        ref="remotescreenshare"
       ></div>
     </div>
     <div class="row remote_video_container">
@@ -36,7 +65,6 @@
         ></div>
       </div>
     </div>
-    <div id="localScreenshare" ref="localscreenshare"></div>
     <div class="spacing"></div>
     <div class="row">
       <div id="localTrack"></div>
@@ -58,6 +86,8 @@ function initialState() {
   return {
     localParticipantData: null,
     remoteParticipantData: null,
+    localParticipantScreenData: null,
+    remoteParticipantScreenData: null,
     loading: false,
     data: {},
     localTrack: false,
@@ -160,8 +190,19 @@ export default {
         participant.identity !== this.userId &&
         this.remoteParticipantData
       ) {
-        container = this.$refs.remotevideo;
-        return container.appendChild(track.attach());
+        if (track.name && track.name == "screen") {
+
+          this.remoteParticipantScreenData = track;
+          this.$nextTick(() => {
+            container = this.$refs.remotescreenshare;
+            return container.appendChild(track.attach());
+          });
+
+        } else {
+          container = this.$refs.remotevideo;
+          return container.appendChild(track.attach());
+        }
+        return;
       }
 
       // Attach Participant's track to the element.
@@ -237,8 +278,10 @@ export default {
       let participants = this.participants;
       let arrayIndex = participants.findIndex((p) => p.sid === participant.sid);
       participants.splice(arrayIndex, 1);
-      this.$refs.remotevideo.innerHTML = '';
+      this.$refs.remotevideo.innerHTML = "";
       this.remoteParticipantData = null;
+      this.remoteParticipantScreenData = null;
+      this.$store.dispatch("participants/removeParticipant", participant);
     },
 
     /**
@@ -353,6 +396,7 @@ export default {
       let globalThis = this;
 
       console.log("publicationyyy", publication);
+      // hmm what was this for
       if (publication && publication.track) {
         if (publication.track.name && publication.track.name == "screen") {
           return;
@@ -392,6 +436,9 @@ export default {
         publication,
         participant
       );
+      if (publication && publication.track && publication.track.name && publication.track.name == "screen" && participant.identity !== this.userId) {
+        this.remoteParticipantScreenData = null;
+      }
     },
 
     /**
@@ -590,6 +637,7 @@ export default {
         globalThis.room.localParticipant.unpublishTrack(this.localScreenTrack);
         globalThis.localScreenTrack.stop();
         globalThis.localScreenTrack = null;
+        globalThis.localParticipantScreenData = null;
 
         settingData.settingState = false;
         globalThis.$store.dispatch(
@@ -598,25 +646,31 @@ export default {
         );
       } else {
         try {
-          // Create and preview your local screen.
-          let screenPreview = document.getElementById("localScreenshare");
           // let screenPreview = globalThis.$refs.localscreenshare;
           let screenTrack = await globalThis.createScreenshareTrack(720, 1280);
-          // screenTrack.attach(screenPreview);
-          console.log("screen", screenTrack);
-          screenPreview.appendChild(screenTrack.attach());
 
-          globalThis.localScreenTrack = screenTrack;
-          globalThis.room.localParticipant.publishTrack(screenTrack);
+          globalThis.localParticipantScreenData = screenTrack;
 
-          // Show the "Capture Screen" button after screen capture stops.
-          // screenTrack.on("stopped");
-          // Show the "Stop Capture Screen" button.
-          settingData.settingState = true;
-          globalThis.$store.dispatch(
-            "mediastates/setSpecificMediaSettingState",
-            settingData
-          );
+          globalThis.$nextTick(() => {
+            // Create and preview your local screen.
+            let screenPreview = document.getElementById("localScreenshare");
+
+            // screenTrack.attach(screenPreview);
+            console.log("screen", screenTrack);
+            screenPreview.appendChild(screenTrack.attach());
+
+            globalThis.localScreenTrack = screenTrack;
+            globalThis.room.localParticipant.publishTrack(screenTrack);
+
+            // Show the "Capture Screen" button after screen capture stops.
+            // screenTrack.on("stopped");
+            // Show the "Stop Capture Screen" button.
+            settingData.settingState = true;
+            globalThis.$store.dispatch(
+              "mediastates/setSpecificMediaSettingState",
+              settingData
+            );
+          });
         } catch (e) {
           alert(e.message);
         }
@@ -841,6 +895,20 @@ When RemoteParticipant disconnects from the Room
   padding: 25px 0px;
   display: flex;
   justify-content: center;
+}
+
+.column-side {
+  flex-direction: column;
+}
+
+.split {
+  height: 50%;
+  margin: 10px 0px;
+}
+
+.remote-split {
+  height: calc(50% - 10px);
+  margin: 10px 0px;
 }
 
 .hide {

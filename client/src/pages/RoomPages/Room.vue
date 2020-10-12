@@ -266,6 +266,23 @@ export default {
         }
       }
     },
+    async addUserToRoomData(participant, temporary = false) {
+      if (!participant) return;
+      let isAnon = temporary;
+      console.log("ISANON", isAnon);
+
+      try {
+        const eventroomName = this.$route.params.eventroomName;
+        const queryData = { eventroomName, participant };
+        const axiosPostQuery = `/api/eventroom/addUserToRoomData`;
+        const response = await axios.post(axiosPostQuery, queryData);
+
+        let result = response;
+        console.log("OMG IT IS RESULT", result);
+      } catch (error) {
+        console.log("Failed to add user to room data.", error);
+      }
+    },
     // /* eslint-disable no-unused-vars */
     // async beforeRouteLeave(to, from, next) {
     //   try {
@@ -304,10 +321,11 @@ export default {
     //   next();
   },
   watch: {
-    "$store.state.tempuser.tempUser": function (temporaryUser) {
+    "$store.state.tempuser.tempUser": async function (temporaryUser) {
       if (temporaryUser) {
         console.log("tempUserMapping", temporaryUser);
-        this.getRoom();
+        await this.addUserToRoomData(temporaryUser, true);
+        await this.getRoom();
       }
     },
   },

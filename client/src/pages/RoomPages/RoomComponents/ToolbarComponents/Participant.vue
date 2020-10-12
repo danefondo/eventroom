@@ -1,10 +1,13 @@
 <template>
   <div class="participant">
     <img
-      v-if="participant.profileImage.fileUrl"
+      v-if="participant.profileImage && participant.profileImage.fileUrl"
       :src="participant.profileImage.fileUrl"
       class="profileImage"
     />
+    <div v-else class="profileImageAlt">
+      {{ participant.displayName.charAt(0) }}
+    </div>
     <div class="displayName">{{ participant.displayName }}</div>
   </div>
 </template>
@@ -28,6 +31,7 @@ export default {
   color: #1f3058;
   transition: 0.1s ease-in-out;
   cursor: pointer;
+  margin-bottom: 4px;
 }
 
 .participant:hover {
@@ -37,13 +41,28 @@ export default {
 }
 
 .displayName {
-  font-size: 22px;
+  font-size: 21px;
 }
 
 .profileImage {
   height: 32px;
+  width: 32px;
   border-radius: 360px;
   margin-right: 12px;
   border: 1px solid #a7aebd;
+}
+
+.profileImageAlt {
+  height: 32px;
+  width: 32px;
+  border-radius: 360px;
+  margin-right: 12px;
+  border: 1px solid #a7aebd;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: white;
+  justify-content: center;
+  background-color: #520cd5;
 }
 </style>

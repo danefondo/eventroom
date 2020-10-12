@@ -1,6 +1,6 @@
 <template>
   <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
-    <Nav v-if="!$route.meta.hideNavigation" :authDetermined="authDetermined" />
+    <Nav v-if="!$route.meta.hideNavigation" />
     <div
       :class="
         $route.meta.hideNavigation ? 'page-container full' : 'page-container'
@@ -26,31 +26,8 @@ export default {
       isVerified: (state) => state.auth.verificationStatus,
     }),
   },
-
-  data() {
-    return {
-      authDetermined: undefined,
-    };
-  },
-
   components: {
     Nav,
-  },
-  mounted() {
-    if (!this.isAuthenticated) {
-      this.authDetermined = false;
-    } else {
-      this.authDetermined = true;
-    }
-  },
-  watch: {
-    isAuthenticated: function () {
-      if (this.isAuthenticated) {
-        this.authDetermined = true;
-      } else {
-        this.authDetermined = false;
-      }
-    },
   },
 };
 </script>

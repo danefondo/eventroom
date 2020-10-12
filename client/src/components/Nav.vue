@@ -1,11 +1,12 @@
 <template>
   <div
+    v-if="!loading"
     class="nav-container"
     :class="isAuthenticated ? 'authNav' : 'notAuthNav'"
   >
     <div class="navbar">
       <router-link to="/" class="nav-logo">Eventroom.to</router-link>
-      <div v-if="isAuthenticated && authDetermined" class="flex">
+      <div v-if="isAuthenticated" class="flex">
         <div
           class="nav-button username"
           :class="navDropdown ? 'dropdown-active' : ''"
@@ -33,7 +34,7 @@
           >Logout</div
         > -->
       </div>
-      <div v-else-if="!isAuthenticated && authDetermined == false">
+      <div v-else-if="!isAuthenticated">
         <router-link to="/account/login" class="nav-button">Login</router-link>
         <router-link to="/account/register" class="nav-button"
           >Register</router-link
@@ -56,7 +57,6 @@ import NavDropdown from "./NavDropdown";
 
 export default {
   name: "Nav",
-  props: ["authDetermined"],
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
@@ -78,6 +78,7 @@ export default {
       darkDownArrow: darkDownArrow,
       navDropdown: false,
       navHover: false,
+      loading: true,
     };
   },
   methods: {
@@ -107,6 +108,11 @@ export default {
       } catch (err) {
         console.log(err);
       }
+    },
+  },
+  watch: {
+    "$store.state.auth.ready": function () {
+      this.loading = false;
     },
   },
 };

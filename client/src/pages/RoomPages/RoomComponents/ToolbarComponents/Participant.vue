@@ -8,7 +8,7 @@
     <div v-else class="profileImageAlt">
       {{ participant.displayName.charAt(0) }}
     </div>
-    <div class="displayName">{{ participant.displayName }}</div>
+    <div class="displayName">{{ displayName }}</div>
   </div>
 </template>
 
@@ -16,6 +16,30 @@
 export default {
   name: "Participant",
   props: ["participant"],
+  computed: {
+    displayName() {
+      let returnName;
+      if (this.participant.displayName) {
+        returnName = this.participant.displayName;
+      }
+
+      if (!returnName) {
+        let fullName;
+        let firstName = this.participant.firstName;
+        let lastName = this.participant.lastName;
+        if (firstName && lastName) {
+          fullName = firstName + " " + lastName;
+          returnName = fullName;
+        } else if (firstName && !lastName) {
+          returnName = firstName;
+        } else if (!firstName && lastName) {
+          returnName = lastName;
+        }
+      }
+
+      return returnName;
+    },
+  },
 };
 </script>
 

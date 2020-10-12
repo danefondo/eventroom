@@ -56,6 +56,9 @@
         </div>
       </div>
     </div>
+    <div class="general-success" v-if="updateSuccessful">
+      Profile settings successfully updated!
+    </div>
     <div class="save" @click="saveProfileSettings" :disabled="updatingSettings">
       {{ updatingSettings ? "Saving..." : "Save settings" }}
     </div>
@@ -76,6 +79,7 @@ export default {
       uploadingImage: false,
       failedToGetProfileData: false,
       requestProfileDataFinished: false,
+      updateSuccessful: false,
       fileName: null,
       fileUrl: null,
       image: null,
@@ -179,6 +183,11 @@ export default {
 
         if (result.data.success) {
           this.updatingSettings = false;
+          this.updateSuccessful = true;
+          let globalThis = this;
+          setTimeout(function() {
+            globalThis.updateSuccessful = false;
+          }, 5000);
         }
       } catch (error) {
         // window.scrollTo(0, 0);
@@ -364,5 +373,18 @@ export default {
 
 .save:hover {
   background-color: #6e00ffc9;
+}
+
+.general-success {
+  color: #21a764;
+  background-color: #f9f9f9;
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-weight: bold;
+  font-size: 21px;
+  margin-top: 45px;
+  margin-bottom: -25px;
+  box-sizing: border-box;
+  text-align: center;
 }
 </style>

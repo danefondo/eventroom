@@ -27,6 +27,7 @@ export default {
         let fullName;
         let firstName = this.participant.firstName;
         let lastName = this.participant.lastName;
+        let username = this.participant.username;
         if (firstName && lastName) {
           fullName = firstName + " " + lastName;
           returnName = fullName;
@@ -34,6 +35,8 @@ export default {
           returnName = firstName;
         } else if (!firstName && lastName) {
           returnName = lastName;
+        } else if (!firstName && !lastName && username) {
+          returnName = username;
         }
       }
 

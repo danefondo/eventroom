@@ -4,6 +4,7 @@
       <RoomSettings v-if="settings" />
       <RoomInfo v-if="info" />
       <RoomParticipants v-if="participants" />
+      <RoomChat v-if="chat" />
     </div>
   </div>
 </template>
@@ -12,6 +13,7 @@
 import { mapState } from "vuex";
 import RoomSettings from "./ToolbarComponents/RoomSettings";
 import RoomInfo from "./ToolbarComponents/RoomInfo";
+import RoomChat from "./ToolbarComponents/RoomChat";
 import RoomParticipants from "./ToolbarComponents/RoomParticipants";
 
 export default {
@@ -22,11 +24,13 @@ export default {
       settings: (state) => state.toolbar.toolbarConfig.settings,
       info: (state) => state.toolbar.toolbarConfig.info,
       participants: (state) => state.toolbar.toolbarConfig.participants,
+      chat: (state) => state.toolbar.toolbarConfig.chat,
     }),
   },
   components: {
     RoomSettings,
     RoomInfo,
+    RoomChat,
     RoomParticipants
   }
 };

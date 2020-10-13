@@ -4,6 +4,7 @@ const getDefaultState = () => {
       settings: false,
       info: false,
       participants: false,
+      chat: false,
     },
 
     containersConfig: {

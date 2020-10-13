@@ -21,7 +21,9 @@
         v-if="localParticipantScreenData"
         id="localScreenshare"
         :class="
-          localParticipantScreenData == undefined ? 'video hide' : 'video split'
+          localParticipantScreenData == undefined
+            ? 'video hide'
+            : 'video split-bottom'
         "
         ref="localscreenshare"
       ></div>
@@ -49,7 +51,7 @@
         :class="
           remoteParticipantScreenData == undefined
             ? 'video hide'
-            : 'video remote-split'
+            : 'video remote-split-bottom'
         "
         ref="remotescreenshare"
       ></div>
@@ -927,13 +929,23 @@ When RemoteParticipant disconnects from the Room
 }
 
 .split {
-  height: 50%;
-  margin: 10px 0px;
+  height: calc(50% - 10px);
+  margin-bottom: 10px;
+}
+
+.split-bottom {
+  height: calc(50% - 10px);
+  margin-top: 10px;
 }
 
 .remote-split {
   height: calc(50% - 10px);
-  margin: 10px 0px;
+  margin-bottom: 10px;
+}
+
+.remote-split-bottom {
+  height: calc(50% - 10px);
+  margin-top: 10px;
 }
 
 .hide {

@@ -19,6 +19,22 @@
                 <span class="tooltip_shortcut">P</span>
               </div>
             </div>
+            <div class="icon-separator"></div>
+            <div class="icon-separator"></div>
+            <div class="tooltip_container">
+              <div
+                class="settings-button toolbar-icon-container"
+                @click="toggleToolbar('chat')"
+              >
+                <img :src="chatIcon" class="toolbar-icon group-icon" />
+              </div>
+              <div class="tooltip tooltip--top tooltip--middle">
+                <span class="tooltip_tip">{{
+                  participants ? "Close" : "Chat"
+                }}</span>
+                <span class="tooltip_shortcut">X</span>
+              </div>
+            </div>
           </div>
         </div>
         <!-- <button class="hoverButton">
@@ -72,6 +88,7 @@ import { mapState } from "vuex";
 import settingsIcon from "../../../assets/images/settings.png";
 import infoIcon from "../../../assets/images/info.png";
 import groupIcon from "../../../assets/images/group.png";
+import chatIcon from "../../../assets/images/chat.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
 export default {
@@ -81,6 +98,7 @@ export default {
       errors: false,
       settingsIcon: settingsIcon,
       infoIcon: infoIcon,
+      chatIcon: chatIcon,
       groupIcon: groupIcon,
       //   toolbarConfiguration: [],
       //   toolOpened: false,
@@ -94,6 +112,7 @@ export default {
     ...mapState({
       settings: (state) => state.toolbar.toolbarConfig.settings,
       info: (state) => state.toolbar.toolbarConfig.info,
+      chat: (state) => state.toolbar.toolbarConfig.chat,
       participants: (state) => state.toolbar.toolbarConfig.participants,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
@@ -288,6 +307,6 @@ export default {
   padding-top: 8px;
   font-size: 24px;
   font-weight: 600;
-  color: #1E2F58;
+  color: #1e2f58;
 }
 </style>

@@ -6,9 +6,19 @@
       <!-- <Message /> -->
       <div
         class="message dont-break-out"
-        v-for="(messageData, index) in messagesInThread"
+        v-for="(messageData, index) in sortedMessages"
         :key="index"
       >
+        <div
+          :class="
+            messageData.chatUser.userId == userId
+              ? 'localDateTimeDisplay'
+              : 'dateTimeDisplay'
+          "
+        >
+          {{ returnDate(messageData.dateSent) }}
+        </div>
+
         <div
           :class="
             messageData.chatUser.userId == userId
@@ -107,6 +117,13 @@ export default {
         state.chat.userCurrentChatTextBackup,
       userJoinSuccessful: (state) => state.chat.userJoinSuccessful,
     }),
+    sortedMessages: function () {
+      let toSort = this.messagesInThread;
+      let sorted = toSort.sort((a, b) => {
+        return new Date(a.dateSent) - new Date(b.dateSent);
+      });
+      return sorted;
+    },
   },
   mounted() {
     if (this.userCurrentChatTextBackup) {
@@ -115,6 +132,11 @@ export default {
     this.scrollChatToBottom();
   },
   methods: {
+    returnDate(dateTime) {
+      const options = { weekday: "long", month: "long", day: "numeric" };
+      let date = new Date(dateTime).toLocaleDateString("en-US", options);
+      return date;
+    },
     sendMessage() {
       if (!this.userCurrentChatText) return;
       let messageData = {
@@ -210,6 +232,7 @@ export default {
 
 .message {
   padding: 5px 7px;
+  position: relative;
 }
 
 .localDisplayName {
@@ -219,6 +242,7 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
 }
 
 .messageText {
@@ -291,5 +315,26 @@ THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
   padding: 15px 0px;
   z-index: 500;
   box-shadow: inset 0px -5px 2px 0px #eceff3b8, 0px -14px 18px 0px #f3f3f3ad;
+}
+
+.dateTimeDisplay,
+.localDateTimeDisplay {
+  position: absolute;
+  bottom: -2px;
+  font-size: 10px;
+  right: 14px;
+  font-weight: 600;
+  color: #6e799399;
+  align-items: inherit;
+  text-align: right;
+  padding: 2px;
+  z-index: 999;
+  max-width: 212px;
+  border-radius: 5px;
+}
+
+.localDateTimeDisplay {
+  bottom: 0px;
+  right: 14px;
 }
 </style>

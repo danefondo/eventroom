@@ -14,9 +14,18 @@
         v-if="localParticipantData"
         id="local-video"
         class="video"
-        :class="localParticipantScreenData ? 'split' : ''"
+        :class="[
+          localParticipantScreenData ? 'split' : '',
+          videoIsMirrored ? 'mirrored' : '',
+        ]"
         ref="localvideo"
-      ></div>
+      >
+        <div class="videoControls">
+          <div class="toggleMirror" @click="toggleMirror">
+            <img :src="flipImageIcon" class="toggleMirrorIcon" />
+          </div>
+        </div>
+      </div>
       <div
         v-if="localParticipantScreenData"
         id="localScreenshare"
@@ -44,7 +53,9 @@
           remoteParticipantScreenData ? 'remote-split' : '',
         ]"
         ref="remotevideo"
-      ></div>
+      >
+        <div class="toggleMirror"></div>
+      </div>
       <div
         v-if="remoteParticipantScreenData"
         id="remoteScreenshare"
@@ -75,6 +86,7 @@
 </template>
 
 <script>
+import flipImageIcon from "../../../assets/images/flip-icon.png";
 import {
   connect,
   LocalVideoTrack,
@@ -86,6 +98,8 @@ import { mapState } from "vuex";
 
 function initialState() {
   return {
+    flipImageIcon: flipImageIcon,
+    // localVideoMirror: false,
     localParticipantData: null,
     remoteParticipantData: null,
     localParticipantScreenData: null,
@@ -132,6 +146,7 @@ export default {
     ...mapState({
       localVideoTrack: (state) => state.mediastates.twilioVideo.localVideoTrack,
       userMediaSettings: (state) => state.mediastates.userMediaSettings,
+      videoIsMirrored: (state) => state.preferences.videoIsMirrored,
     }),
   },
   methods: {
@@ -773,6 +788,11 @@ export default {
         }
       }
     },
+    toggleMirror() {
+      // this.localVideoMirror = !this.localVideoMirror;
+      const vuexQuery = "preferences/toggleMirror";
+      this.$store.dispatch(vuexQuery);
+    },
   },
   watch: {
     participants: function () {
@@ -904,6 +924,11 @@ When RemoteParticipant disconnects from the Room
   height: 100%;
   object-fit: cover;
   border-radius: 6px;
+  position: relative;
+}
+
+.video:hover > .videoControls {
+  display: block;
 }
 
 .no-remote-video {
@@ -951,5 +976,33 @@ When RemoteParticipant disconnects from the Room
 .hide {
   width: 0px;
   height: 0px;
+}
+
+.videoControls {
+  position: absolute;
+  display: none;
+  height: 60px;
+  width: 97%;
+  background-color: #4c525a52;
+  z-index: 999;
+  border-radius: 6px;
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+
+.toggleMirror {
+  position: relative;
+}
+
+.toggleMirrorIcon {
+  height: 30px;
+  width: 30px;
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+
+.mirrored {
+  transform: scaleX(-1);
 }
 </style>

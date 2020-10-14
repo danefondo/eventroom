@@ -12,6 +12,7 @@ import twilio from "./modules/twilio";
 import mediastates from "./modules/mediastates";
 import participants from "./modules/participants";
 import chat from "./modules/chat";
+import preferences from "./modules/preferences";
 
 Vue.use(Vuex);
 
@@ -27,7 +28,8 @@ const store = new Vuex.Store({
     twilio,
     mediastates,
     participants,
-    chat
+    chat,
+    preferences,
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production

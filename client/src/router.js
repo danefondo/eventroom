@@ -41,7 +41,7 @@ import LogoutPage from "./pages/AuthPages/LogoutPage";
 import RegisterPage from "./pages/AuthPages/RegisterPage";
 import VerificationPage from "./pages/AuthPages/VerificationPage";
 import RequireVerificationPage from "./pages/AuthPages/RequireVerificationPage";
-import SuccessPage from "./pages/AuthPages/SuccessPage";
+// import SuccessPage from "./pages/AuthPages/SuccessPage";
 import PassResetPage from "./pages/AuthPages/PassResetPage";
 import PassResetRedirect from "./pages/AuthPages/PassResetRedirect";
 
@@ -149,7 +149,7 @@ const routes = [
     path: "/account/register",
     component: RegisterPage,
     name: "RegisterPage",
-    children: [{ path: "success", component: SuccessPage, name: "Success" }],
+    // children: [{ path: "success", component: SuccessPage, name: "Success" }],
   },
   {
     path: "/account/verify/:token",

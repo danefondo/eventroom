@@ -1,8 +1,8 @@
 <template>
-  <div v-if="success">
+  <!-- <div v-if="success">
     <SuccessPage :registrationMethod="registrationMethod" />
-  </div>
-  <div v-else class="registration">
+  </div> -->
+  <div class="registration">
     <div class="registration-block">
       <div class="auth-header">
         <h1 class="auth-title">{{ $t("register.join-title") }}</h1>
@@ -108,13 +108,13 @@
 
 <script>
 import auth from "../../config/auth";
-import SuccessPage from "./SuccessPage";
+// import SuccessPage from "./SuccessPage";
 import { BASE_PATH } from "../../constants";
 
 export default {
   name: "RegisterPage",
   components: {
-    SuccessPage,
+    // SuccessPage,
   },
   data() {
     return {
@@ -154,6 +154,8 @@ export default {
         this.success = true;
         this.registrationMethod = "local";
         console.log("registration successful: ", response.data);
+        // this.$router.push('/');
+        window.location.href = '/';
       } catch (error) {
         if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;

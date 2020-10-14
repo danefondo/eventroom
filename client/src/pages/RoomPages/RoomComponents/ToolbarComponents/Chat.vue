@@ -66,7 +66,7 @@ export default {
 
       // BACK UP SHOULD BE IN VUEX STORE & SHOULD NOT BE NULLED
       userCurrentChatTextBackup: "",
-      messagesInThread: [],
+    //   messagesInThread: [],
       typing: false,
       connections: 0,
       autolinkerOptions: {
@@ -104,7 +104,7 @@ export default {
       isVerified: (state) => state.auth.verificationStatus,
       tempUser: (state) => state.tempuser.tempUser,
       localChatUser: (state) => state.chat.localChatUser,
-      //   messagesInThread: (state) => state.chat.messagesInThread,
+      messagesInThread: (state) => state.chat.messagesInThread,
     }),
   },
   mounted() {
@@ -117,8 +117,8 @@ export default {
 
     this.sockets.subscribe("messageReceived", (message) => {
       console.log("Received message", message);
-      globalThis.messagesInThread.push(message);
-      //   globalThis.$store.dispatch("chat/addMessage", message);
+    //   globalThis.messagesInThread.push(message);
+      globalThis.$store.dispatch("chat/addMessage", message);
       globalThis.sendingMessage = false;
       globalThis.scrollChatToBottom();
     });
@@ -165,7 +165,7 @@ export default {
       //   let chatMessages = this.$refs.messages;
       let chatMessages = document.getElementById("messages");
       chatMessages.scrollTop = chatMessages.scrollHeight;
-      //   chatMessages.scrollIntoView();
+      //   chatMessages.scrollIntoView(false);
     },
   },
 };
@@ -181,8 +181,8 @@ export default {
 }
 
 .displayName {
-  color: #b1b5b9;
-  font-size: 15px;
+  color: #a8acbd;
+  font-size: 14px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -216,8 +216,8 @@ export default {
 }
 
 .localDisplayName {
-  color: #b1b5b9;
-  font-size: 15px;
+  color: #a8acbd;
+  font-size: 14px;
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -242,7 +242,7 @@ THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
 } */
 
 .localMessageText {
-  font-size: 18px ;
+  font-size: 18px;
   padding: 2px 0px;
   color: #1f3058;
   text-align: end;
@@ -261,6 +261,10 @@ THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
   outline: none;
   display: block;
   margin: 0 auto;
+}
+
+.chatInputBox:hover {
+  border-color: #ccc;
 }
 
 .chatInputSend {
@@ -285,9 +289,10 @@ THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
 
 .chatSubmitContainer {
   flex: 0 0 auto;
+  border-top: 1px solid #ddddddbd;
   flex-direction: column;
   padding: 15px 0px;
-  z-index: 9999;
-  box-shadow: inset 0px -5px 20px 0px #eceff3b8, 0px -10px 15px 0px #f3f3f3;
+  z-index: 500;
+  box-shadow: inset 0px -5px 2px 0px #eceff3b8, 0px -14px 18px 0px #f3f3f3ad;
 }
 </style>

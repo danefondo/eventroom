@@ -232,6 +232,8 @@ io.on("connection", function (socket) {
   });
 
   socket.on("sendChatMessage", function (data) {
+    io.removeAllListeners();
+
     if (!data || !data.eventroomId || !data.userId) {
       let response = "Message data missing";
       return socket.emit("messageSendFailed", response);

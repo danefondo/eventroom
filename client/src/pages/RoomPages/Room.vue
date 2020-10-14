@@ -111,6 +111,7 @@ export default {
     destroyTempToken();
     this.$store.dispatch("eventroom/clearEventroom");
     this.$store.dispatch("auth/updateUserId", "");
+    window.removeEventListener("keyup", this.handler);
     initialState();
     next();
   },
@@ -163,6 +164,8 @@ export default {
       this.$store.dispatch("tempuser/destroyTempUser");
       destroyTempToken();
       this.$store.dispatch("eventroom/clearEventroom");
+      this.$store.dispatch("auth/updateUserId", "");
+      window.removeEventListener("keyup", this.handler);
       initialState();
     };
   },

@@ -2,10 +2,10 @@
   <div class="chat-text">
     <!-- <div>EVENTROOM {{ eventroom.eventroomId }}</div>
     <div>USER: {{ userId }}</div> -->
-    <div class="messages">
+    <div class="messages" ref="messages" id="messages">
       <!-- <Message /> -->
       <div
-        class="message"
+        class="message dont-break-out"
         v-for="(messageData, index) in messagesInThread"
         :key="index"
       >
@@ -26,14 +26,13 @@
             {{ messageData.chatUser.displayName }}
           </div>
           <div
+            v-autolinker:[autolinkerOptions]="messageData.message"
             :class="
               messageData.chatUser.userId == userId
                 ? 'localMessageText'
                 : 'messageText'
             "
-          >
-            {{ messageData.message }}
-          </div>
+          ></div>
         </div>
       </div>
     </div>
@@ -70,6 +69,28 @@ export default {
       messagesInThread: [],
       typing: false,
       connections: 0,
+      autolinkerOptions: {
+        urls: {
+          schemeMatches: true,
+          wwwMatches: true,
+          tldMatches: true,
+        },
+        email: false,
+        phone: false,
+        mention: false,
+        hashtag: false,
+
+        stripPrefix: true,
+        stripTrailingSlash: true,
+        newWindow: true,
+
+        truncate: {
+          length: 0,
+          location: "end",
+        },
+
+        className: "messageTextLink",
+      },
     };
   },
   computed: {
@@ -82,44 +103,24 @@ export default {
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
       tempUser: (state) => state.tempuser.tempUser,
-    //   messagesInThread: (state) => state.chat.messagesInThread,
+      localChatUser: (state) => state.chat.localChatUser,
+      //   messagesInThread: (state) => state.chat.messagesInThread,
     }),
   },
   mounted() {
     let globalThis = this;
-    let localChatUser = {};
-    localChatUser.eventroomId = this.eventroom.eventroomId;
-    localChatUser.userId = globalThis.userId;
-
-    // later other configs, e.g. if this.user.displayNamePreference && contextBasedDisplayNamePReference
-    if (this.user) {
-      if (this.user.displayName) {
-        localChatUser.displayName = this.user.displayName;
-      } else if (this.user.firstName && this.user.lastName) {
-        localChatUser.displayName =
-          this.user.firstName + "" + this.user.lastName;
-      } else if (this.user.firstName && !this.user.lastName) {
-        localChatUser.displayName = this.user.firstName;
-      } else if (this.user.username) {
-        localChatUser.displayName = this.user.username;
-      }
-    } else if (this.tempUser) {
-      localChatUser.displayName = this.tempUser.displayName;
-    }
-
-    console.log("localChatUser", localChatUser);
 
     this.sockets.subscribe("userJoinedChat", (data) => {
       console.log("USER JOINED CHAT WITH ID", data.userId);
       globalThis.userHasJoined = true;
-      globalThis.localChatUser = localChatUser;
     });
 
     this.sockets.subscribe("messageReceived", (message) => {
       console.log("Received message", message);
       globalThis.messagesInThread.push(message);
-    //   globalThis.$store.dispatch("chat/addMessage", message);
+      //   globalThis.$store.dispatch("chat/addMessage", message);
       globalThis.sendingMessage = false;
+      globalThis.scrollChatToBottom();
     });
 
     // Failed sockets
@@ -160,6 +161,12 @@ export default {
       this.sendingMessage = true;
       this.$socket.emit("sendChatMessage", messageData);
     },
+    scrollChatToBottom() {
+      //   let chatMessages = this.$refs.messages;
+      let chatMessages = document.getElementById("messages");
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      //   chatMessages.scrollIntoView();
+    },
   },
 };
 </script>
@@ -176,6 +183,9 @@ export default {
 .displayName {
   color: #b1b5b9;
   font-size: 15px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .messageContent {
@@ -209,6 +219,9 @@ export default {
   color: #b1b5b9;
   font-size: 15px;
   text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .messageText {
@@ -217,8 +230,19 @@ export default {
   color: #1f3058;
 }
 
+/*
+THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
+.messageTextLink {
+  color: #1f3058;
+  text-decoration: underline;
+}
+
+.messageTextLink:hover {
+  color: blue;
+} */
+
 .localMessageText {
-  font-size: 18px;
+  font-size: 18px ;
   padding: 2px 0px;
   color: #1f3058;
   text-align: end;

@@ -141,9 +141,9 @@ export default {
       this.$store.dispatch("auth/updateUserId", userId);
       // this.getRoom();
       this.addUserToRoomData(userId);
-    } else if (auth.checkTempToken()) {
+    } else if (this.tempUser && this.tempUser._id) {
       // Check if temporary user already exists;
-      let temp = auth.checkTempToken();
+      let temp = this.tempUser
       let userId = temp._id;
       this.$store.dispatch("auth/updateUserId", userId);
       this.addUserToRoomData(userId, true);
@@ -293,6 +293,34 @@ export default {
         }
       }
     },
+    setLocalChatUser() {
+      let localChatUser = {};
+      localChatUser.eventroomId = this.eventroom.eventroomId;
+      localChatUser.userId = this.userId;
+
+      // later other configs, e.g. if this.user.displayNamePreference && contextBasedDisplayNamePReference
+      if (this.user) {
+        if (this.user.displayName) {
+          localChatUser.displayName = this.user.displayName;
+        } else if (this.user.firstName && this.user.lastName) {
+          localChatUser.displayName =
+            this.user.firstName + "" + this.user.lastName;
+        } else if (this.user.firstName && !this.user.lastName) {
+          localChatUser.displayName = this.user.firstName;
+        } else if (this.user.username) {
+          localChatUser.displayName = this.user.username;
+        }
+      } else if (this.tempUser) {
+        console.log("tempuser", this.tempUser);
+        localChatUser.displayName = this.tempUser.displayName;
+      } else if (!this.tempUser && !this.tempUser.displayName && !this.user) {
+        alert("YOU NEED AN ACCOUNT!");
+      }
+
+      this.$store.dispatch("chat/setLocalChatUser", localChatUser);
+
+      console.log("localChatUser", localChatUser);
+    },
 
     // How anon stuff works
     // Get list of anon users
@@ -315,6 +343,8 @@ export default {
         }
 
         this.$store.dispatch("eventroom/setInitialEventroomData", eventroom);
+        // Set user details in Vuex store for sending chat messages
+        this.setLocalChatUser();
       } catch (error) {
         console.log("Failed to add user to room data.", error);
       }

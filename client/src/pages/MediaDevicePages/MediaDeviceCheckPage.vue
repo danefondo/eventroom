@@ -108,10 +108,14 @@
                 "
               />
               <span class="eventroom-slash">eventroom.to/</span>
-              <span class="eventroom-to">{{slug}}</span>
+              <div>
+              <span class="eventroom-to">{{ slug }}</span></div>
             </div>
             <!-- <div>request / knock / password (based on case) / join (you're in invite list, open for you)</div> -->
-            <div @click="joinRoom" :class="roomType === 'open' ? 'join-room' : 'request-to-join'">
+            <div
+              @click="joinRoom"
+              :class="roomType === 'open' ? 'join-room' : 'request-to-join'"
+            >
               {{ roomType === "open" ? "Join room" : "Request to join" }}
             </div>
           </div>
@@ -644,12 +648,21 @@ export default {
   margin-top: 20px;
   display: flex;
   align-items: center;
+  max-width: 365px;
+  overflow: hidden;
+
+  /* To make the width of the container exact. */
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .eventroom-slash {
   font-family: "Nunito", sans-serif;
   display: inline-block;
   font-weight: bold;
+  z-index: 9999;
+  background-color: #fafafb;
 }
 
 .eventroom-to {
@@ -658,6 +671,41 @@ export default {
   display: inline-block;
   font-weight: 700;
   margin-left: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  width: 100%;
+}
+
+.eventroom-to:not(:hover) {
+  text-overflow: ellipsis;
+}
+
+.eventroom-to span:hover,
+.eventroom-to span:focus {
+  display: inline-block;
+  animation-name: scroll-text;
+  animation-duration: 7s;
+  animation-timing-function: linear;
+  animation-delay: 0s;
+  animation-iteration-count: infinite;
+  animation-direction: normal;
+  /* FYI this would be the shorthand:
+    animation: scroll-text 5s ease 0s 2 normal;
+  */
+}
+@keyframes scroll-text {
+  0% {
+    transform: translateX(0%);
+  }
+  90% {
+    transform: translateX(-100%);
+  }
+  95% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
 }
 
 .open-lock-icon,

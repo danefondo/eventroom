@@ -40,6 +40,15 @@ $visited-color: #111;
 $button-color: #493eff;
 $button-hover-color: #493effd1;
 
+.messageTextLink {
+  color: #1f3058;
+  text-decoration: underline;
+}
+
+.messageTextLink:hover {
+  color: blue;
+}
+
 #app {
   font-family: "Nunito", "Helvetica", "Arial", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -124,4 +133,44 @@ a:visited {
 .flex {
   display: flex;
 }
+
+.dont-break-out {
+  /* These are technically the same, but use both */
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+
+  -ms-word-break: break-all;
+  /* This is the dangerous one in WebKit, as it breaks things wherever */
+  word-break: break-all;
+  /* Instead use this non-standard one: */
+  word-break: break-word;
+
+  /* Adds a hyphen where the word breaks, if supported (No Blink) */
+  // -ms-hyphens: auto;
+  // -moz-hyphens: auto;
+  // -webkit-hyphens: auto;
+  // hyphens: auto;
+}
+
+// ::-webkit-scrollbar {
+//   width: 10px;
+//   height: 4px;
+// }
+
+// /* Track */
+// ::-webkit-scrollbar-track {
+//   background-color: #eaeaea;
+//   border-radius: 5px;
+// }
+
+// /* Handle */
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 5px;
+//   -webkit-border-radius: 5px;
+//   background: rgb(208 208 208 / 80%);
+// }
+
+// ::-webkit-scrollbar-thumb:window-inactive {
+//   background: rgb(208 208 208 / 80%);
+// }
 </style>

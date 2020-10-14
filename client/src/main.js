@@ -10,6 +10,7 @@ import VueCookies from "vue-cookies";
 import VueYoutube from "vue-youtube";
 import moment from "moment";
 import VueHotkey from "v-hotkey";
+import autolinker, { AUTOLINKER_NAME } from 'vue-autolinker'
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
@@ -24,6 +25,10 @@ Vue.use(CKEditor);
 Vue.use(VueYoutube);
 Vue.use(VueCookies);
 Vue.use(VueHotkey);
+
+Vue.directive(AUTOLINKER_NAME, autolinker)
+
+
 
 const i18n = new VueI18n(i18nConfig);
 

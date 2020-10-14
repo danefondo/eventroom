@@ -256,11 +256,11 @@ io.on("connection", function (socket) {
       console.log(clients); // an array containing all connected socket ids
     });
     // socket.removeAllListeners();
-    socket.removeAllListeners(eventroomId);
-    socket.leave(eventroomId);
-    // socket.disconnect();
 
-    // socket.leave(eventroomId);
+    // socket.removeAllListeners(eventroomId);
+    socket.leave(eventroomId);
+
+    // socket.disconnect();
 
     // socket.leave(roomId, () => {
     //   io.to('room 237').emit(`user ${socket.id} has left the room`);

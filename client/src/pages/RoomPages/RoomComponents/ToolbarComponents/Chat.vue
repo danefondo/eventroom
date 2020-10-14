@@ -112,6 +112,7 @@ export default {
     if (this.userCurrentChatTextBackup) {
       this.userCurrentChatText = this.userCurrentChatTextBackup;
     }
+    this.scrollChatToBottom();
   },
   methods: {
     sendMessage() {

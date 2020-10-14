@@ -159,11 +159,11 @@
 
 <script>
 import { mapState } from "vuex";
-import videoIcon from "../../../assets/images/video-call.png";
+import videoIcon from "../../../assets/images/video-darkblue.png";
 import videoIconWhite from "../../../assets/images/video-call-white.png";
-import audioIcon from "../../../assets/images/microphone.png";
+import audioIcon from "../../../assets/images/microphone-blue.png";
 import audioIconWhite from "../../../assets/images/microphone-white.png";
-import screenIcon from "../../../assets/images/screen.png";
+import screenIcon from "../../../assets/images/screen-darkblue.png";
 import screenIconWhite from "../../../assets/images/screen-white.png";
 import pipIcon from "../../../assets/images/pip.png";
 import pipIconWhite from "../../../assets/images/pip-white.png";

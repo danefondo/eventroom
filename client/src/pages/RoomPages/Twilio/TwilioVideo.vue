@@ -790,8 +790,7 @@ export default {
     },
     toggleMirror() {
       // this.localVideoMirror = !this.localVideoMirror;
-      const vuexQuery = "preferences/toggleMirror";
-      this.$store.dispatch(vuexQuery);
+      this.$store.dispatch("preferences/toggleMirror");
     },
   },
   watch: {

@@ -107,6 +107,22 @@ export default {
     } else if (this.RTCConfig.twilio) {
       this.$refs.twilio.prepareToExit();
     }
+
+    let eventroomId = this.eventroom.eventroomId;
+    this.$socket.emit("leaveChat", eventroomId);
+
+    this.sockets.unsubscribe("userJoinedChat");
+    this.sockets.unsubscribe("messageReceived");
+    this.sockets.unsubscribe("messageSendFailed");
+    this.sockets.unsubscribe("joinChatFail");
+    // this.$socket.off();
+
+    // this.$socket.disconnect();
+
+    // this.$socket.close();
+    // this.$socket = undefined;
+    // this.$socket.connected = false;
+    // this.$socket.disconnected = true;
     this.$store.dispatch("tempuser/destroyTempUser");
     destroyTempToken();
     this.$store.dispatch("eventroom/clearEventroom");
@@ -123,6 +139,7 @@ export default {
     window.addEventListener("keyup", this.handler);
   },
   async mounted() {
+    let globalThis = this;
     /**
      * 1. Client enters room
      * 2. If no user (no auth), create temp user
@@ -141,13 +158,13 @@ export default {
       let userId = this.user._id;
       this.$store.dispatch("auth/updateUserId", userId);
       // this.getRoom();
-      this.addUserToRoomData(userId);
+      await this.addUserToRoomData(userId);
     } else if (this.tempUser && this.tempUser._id) {
       // Check if temporary user already exists;
-      let temp = this.tempUser
+      let temp = this.tempUser;
       let userId = temp._id;
       this.$store.dispatch("auth/updateUserId", userId);
-      this.addUserToRoomData(userId, true);
+      await this.addUserToRoomData(userId, true);
     } else {
       await this.createTempUser();
     }
@@ -161,6 +178,7 @@ export default {
       } else if (this.RTCConfig.twilio) {
         this.$refs.twilio.prepareToExit();
       }
+      // this.$socket.emit("leaveChat", this.eventroom.eventroomId);
       this.$store.dispatch("tempuser/destroyTempUser");
       destroyTempToken();
       this.$store.dispatch("eventroom/clearEventroom");
@@ -168,8 +186,45 @@ export default {
       window.removeEventListener("keyup", this.handler);
       initialState();
     };
+
+    console.log("sockeee", this.$socket);
+    this.joinUser();
+    globalThis.$store.dispatch("chat/userJoinSucessful", true);
+
+    this.sockets.subscribe("userJoinedChat", (data) => {
+      console.log("USER JOINED CHAT WITH ID", data.userId);
+      // globalThis.$store.dispatch("chat/userJoinSucessful", true);
+      // globalThis.userHasJoined = true;
+      //   globalThis.userIsAttemptingJoin = false;
+    });
+
+    this.sockets.subscribe("messageReceived", (message) => {
+      console.log("Received message", message);
+      //- Wait for Vue to render element
+      globalThis.$store.dispatch("chat/addMessage", message);
+    });
+
+    // Failed sockets
+    this.sockets.subscribe("messageSendFailed", (response) => {
+      // globalThis.$store.dispatch("chat/messageFailure", true);
+      // globalThis.$store.dispatch("chat/messageSending", false);
+      console.log("Message sending failed", response);
+    });
+
+    this.sockets.subscribe("joinChatFail", (response) => {
+      console.log("Massive fail", response);
+    });
   },
   methods: {
+    joinUser() {
+      let eventroomData = {
+        eventroomId: this.eventroom.eventroomId,
+        userId: this.userId,
+      };
+
+      // NOW PROVIDE MORE DATA, TO SAY WHICH USER AND SO ON;
+      this.$socket.emit("joinChat", eventroomData);
+    },
     leaveRoom() {
       if (!this.isAuthenticated) {
         this.$router.push("/");

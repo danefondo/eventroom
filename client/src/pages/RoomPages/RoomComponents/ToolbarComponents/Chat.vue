@@ -40,7 +40,6 @@
     <div class="chatSubmitContainer">
       <input
         class="chatInputBox"
-        v-if="userHasJoined"
         type="text"
         placeholder="Whatcha wanna say?"
         v-model="userCurrentChatText"
@@ -55,20 +54,17 @@
 <script>
 import { mapState } from "vuex";
 
+// Chat.vue is a SIGNALER;
+
 export default {
   name: "Chat",
   data() {
     return {
-      userIsAttemptingJoin: false,
-      userHasJoined: false,
-      sendingMessage: false,
+      //   userIsAttemptingJoin: false,
       userCurrentChatText: "",
-
-      // BACK UP SHOULD BE IN VUEX STORE & SHOULD NOT BE NULLED
-      userCurrentChatTextBackup: "",
-    //   messagesInThread: [],
       typing: false,
       connections: 0,
+
       autolinkerOptions: {
         urls: {
           schemeMatches: true,
@@ -105,46 +101,19 @@ export default {
       tempUser: (state) => state.tempuser.tempUser,
       localChatUser: (state) => state.chat.localChatUser,
       messagesInThread: (state) => state.chat.messagesInThread,
+      messageSending: (state) => state.chat.messageSending,
+      messageSendFailure: (state) => state.chat.messageSendFailure,
+      userCurrentChatTextBackup: (state) =>
+        state.chat.userCurrentChatTextBackup,
+      userJoinSuccessful: (state) => state.chat.userJoinSuccessful,
     }),
   },
   mounted() {
-    let globalThis = this;
-
-    this.sockets.subscribe("userJoinedChat", (data) => {
-      console.log("USER JOINED CHAT WITH ID", data.userId);
-      globalThis.userHasJoined = true;
-    });
-
-    this.sockets.subscribe("messageReceived", (message) => {
-      console.log("Received message", message);
-    //   globalThis.messagesInThread.push(message);
-      globalThis.$store.dispatch("chat/addMessage", message);
-      globalThis.sendingMessage = false;
-      globalThis.scrollChatToBottom();
-    });
-
-    // Failed sockets
-    this.sockets.subscribe("messageSendFailed", (response) => {
-      globalThis.sendingMessage = false;
-      globalThis.userCurrentChatText = this.userCurrentChatTextBackup;
-      console.log("Message sending failed", response);
-    });
-
-    this.sockets.subscribe("joinChatFail", (response) => {
-      console.log("Massive fail", response);
-    });
-    this.joinUser();
+    if (this.userCurrentChatTextBackup) {
+      this.userCurrentChatText = this.userCurrentChatTextBackup;
+    }
   },
   methods: {
-    joinUser() {
-      let eventroomData = {
-        eventroomId: this.eventroom.eventroomId,
-        userId: this.userId,
-      };
-
-      // NOW PROVIDE MORE DATA, TO SAY WHICH USER AND SO ON;
-      this.$socket.emit("joinChat", eventroomData);
-    },
     sendMessage() {
       if (!this.userCurrentChatText) return;
       let messageData = {
@@ -156,10 +125,16 @@ export default {
         chatUser: this.localChatUser,
       };
 
-      this.userCurrentChatTextBackup = this.userCurrentChatText;
+      let messageText = this.userCurrentChatText;
+      this.$store.dispatch("chat/updateBackupChatText", messageText);
       this.userCurrentChatText = "";
-      this.sendingMessage = true;
+
+      this.$store.dispatch("chat/messageFailure", false);
+      this.$store.dispatch("chat/messageSending", true);
       this.$socket.emit("sendChatMessage", messageData);
+      this.$store.dispatch("chat/addMessage", messageData);
+      this.$store.dispatch("chat/messageSending", false);
+      this.$store.dispatch("chat/updateBackupChatText", "");
     },
     scrollChatToBottom() {
       //   let chatMessages = this.$refs.messages;
@@ -167,6 +142,27 @@ export default {
       chatMessages.scrollTop = chatMessages.scrollHeight;
       //   chatMessages.scrollIntoView(false);
     },
+  },
+  watch: {
+    messagesInThread: function () {
+      let globalThis = this;
+      globalThis.$nextTick(() => {
+        globalThis.scrollChatToBottom();
+      });
+    },
+
+    // Restore message from store if send fails;
+    messageSendFailure: function () {
+      let globalThis = this;
+      globalThis.userCurrentChatText =
+        globalThis.$store.state.chat.userCurrentChatTextBackup;
+      globalThis.$store.dispatch("chat/updateBackupChatText", "");
+    },
+
+    // messageSendSuccessful: function() {
+    //     let globalThis = this;
+    //     globalThis.$store.dispatch("chat/updateBackupChatText", "");
+    // }
   },
 };
 </script>

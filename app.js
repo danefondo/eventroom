@@ -226,21 +226,50 @@ io.on("connection", function (socket) {
       let response = "EventroomId missing, cannot join chat.";
       return socket.emit("joinChatFail", response);
     }
+
     socket.join(eventroomId);
     console.log("User joined Eventroom with id: ", eventroomId);
-    io.in(eventroomId).emit("userJoinedChat", data);
+    io.to(eventroomId).emit("userJoinedChat", data);
   });
 
   socket.on("sendChatMessage", function (data) {
-    io.removeAllListeners();
-
     if (!data || !data.eventroomId || !data.userId) {
       let response = "Message data missing";
       return socket.emit("messageSendFailed", response);
     }
     console.log("User sent message", data);
-    io.in(data.eventroomId).emit("messageReceived", data);
+    // io.in(data.eventroomId).emit("messageReceived", data);
+    socket.to(data.eventroomId).emit("messageReceived", data);
+    // io.removeAllListeners();
   });
+
+  socket.on("leaveChat", function (eventroomId) {
+    // socket.removeAllListeners(true);
+    // socket.disconnect();
+    // io.removeAllListeners();
+    // socket.removeListener(eventroomId);
+    // socket.leave(eventroomId);
+
+    console.log("LEAVING THE FUCKING CHAT", eventroomId);
+
+    io.of("/").adapter.clients((err, clients) => {
+      console.log(clients); // an array containing all connected socket ids
+    });
+    // socket.removeAllListeners();
+    socket.removeAllListeners(eventroomId);
+    socket.leave(eventroomId);
+    // socket.disconnect();
+
+    // socket.leave(eventroomId);
+
+    // socket.leave(roomId, () => {
+    //   io.to('room 237').emit(`user ${socket.id} has left the room`);
+    // });
+  });
+
+  // socket.on("disconnect", function () {
+  //   socket.removeAllListeners();
+  // });
 });
 
 let twilio = require("twilio")(

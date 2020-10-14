@@ -665,6 +665,10 @@ export default {
   background-color: #fafafb;
 }
 
+.eventroom-to-container {
+  display: flex;
+}
+
 .eventroom-to {
   font-family: "Nunito", sans-serif;
   color: #520cd5;

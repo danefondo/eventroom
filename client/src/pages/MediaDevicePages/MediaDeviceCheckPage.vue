@@ -108,7 +108,7 @@
                 "
               />
               <span class="eventroom-slash">eventroom.to/</span>
-              <div>
+              <div class="eventroom-to-container">
               <span class="eventroom-to">{{ slug }}</span></div>
             </div>
             <!-- <div>request / knock / password (based on case) / join (you're in invite list, open for you)</div> -->

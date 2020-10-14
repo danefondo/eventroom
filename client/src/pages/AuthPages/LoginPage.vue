@@ -173,6 +173,7 @@ export default {
   display: flex;
   flex-direction: column;
   margin-bottom: 25px;
+  position: relative;
 }
 .auth-header {
   margin-bottom: 25px;
@@ -249,5 +250,14 @@ export default {
 }
 .auth-alt-button:hover {
   color: #757284;
+}
+
+.inputErrorContainer {
+  padding: 8px 0px;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  color: #a72143;
+  font-weight: 600;
 }
 </style>

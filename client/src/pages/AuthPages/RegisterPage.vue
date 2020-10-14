@@ -23,7 +23,7 @@
                 placeholder="example@mail.com"
                 autocomplete="falsessy"
               />
-              <div class="inputErrorContainer">
+              <div v-if="getError('email')" class="inputErrorContainer">
                 <div class="inputErrorText">{{ getError("email") }}</div>
               </div>
             </div>
@@ -36,47 +36,51 @@
                 :placeholder="$t('register.username')"
                 autocomplete="falsess"
               />
-              <div class="inputErrorContainer">
+              <div v-if="getError('username')" class="inputErrorContainer">
                 <div class="inputErrorText">{{ getError("username") }}</div>
               </div>
             </div>
             <div class="form-group">
-              <input
-                v-model="password"
-                class="auth-input"
-                name="password"
-                :type="passwordType ? 'password' : 'text'"
-                :placeholder="$t('register.pass')"
-                autocomplete="off"
-              />
-              <div class="showPassContainer">
-                <img
-                  @click="toggleType('passwordType')"
-                  class="showPass inline"
-                  src="../../assets/images/light-eye-unbox.png"
+              <div class="password-box">
+                <input
+                  v-model="password"
+                  class="auth-input"
+                  name="password"
+                  :type="passwordType ? 'password' : 'text'"
+                  :placeholder="$t('register.pass')"
+                  autocomplete="off"
                 />
+                <div class="showPassContainer">
+                  <img
+                    @click="toggleType('passwordType')"
+                    class="showPass inline"
+                    src="../../assets/images/light-eye-unbox.png"
+                  />
+                </div>
               </div>
-              <div class="inputErrorContainer">
+              <div v-if="getError('password')" class="inputErrorContainer">
                 <div class="inputErrorText">{{ getError("password") }}</div>
               </div>
             </div>
             <div class="form-group last-form-group">
-              <input
-                v-model="passwordCheck"
-                class="auth-input"
-                name="passcheck"
-                :type="passwordCheckType ? 'password' : 'text'"
-                :placeholder="$t('register.confirm-pass')"
-                autocomplete="off"
-              />
-              <div class="showPassContainer">
-                <img
-                  @click="toggleType('passwordCheckType')"
-                  class="showPass inline"
-                  src="../../assets/images/light-eye-unbox.png"
+              <div class="password-box">
+                <input
+                  v-model="passwordCheck"
+                  class="auth-input"
+                  name="passcheck"
+                  :type="passwordCheckType ? 'password' : 'text'"
+                  :placeholder="$t('register.confirm-pass')"
+                  autocomplete="off"
                 />
+                <div class="showPassContainer">
+                  <img
+                    @click="toggleType('passwordCheckType')"
+                    class="showPass inline"
+                    src="../../assets/images/light-eye-unbox.png"
+                  />
+                </div>
               </div>
-              <div class="inputErrorContainer">
+              <div v-if="getError('passcheck')" class="inputErrorContainer">
                 <div class="inputErrorText">{{ getError("passcheck") }}</div>
               </div>
             </div>
@@ -155,7 +159,7 @@ export default {
         this.registrationMethod = "local";
         console.log("registration successful: ", response.data);
         // this.$router.push('/');
-        window.location.href = '/';
+        window.location.href = "/";
       } catch (error) {
         if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;
@@ -258,6 +262,7 @@ export default {
 }
 .form-group {
   display: flex;
+  flex-direction: column;
   margin-bottom: 7px;
   justify-content: center;
   position: relative;
@@ -297,5 +302,21 @@ export default {
   background-color: #ffffff;
   height: calc(100% - 4px);
   padding-left: 2px;
+}
+
+.inputErrorContainer {
+  padding: 8px 0px;
+  background-color: #f9f9f9;
+  border-radius: 3px;
+  margin-top: 5px;
+  color: #a72143;
+  font-weight: 600;
+}
+
+.password-box {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
 }
 </style>

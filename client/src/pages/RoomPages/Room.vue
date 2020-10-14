@@ -28,6 +28,7 @@
         "
         @toggleMedia="toggleMedia"
         @leaveRoom="leaveRoom"
+        ref="bottomBar"
       />
     </div>
   </div>
@@ -54,7 +55,6 @@ function initialState() {
     },
     showShortcutsModal: false,
     moreThanOneAndLessThanThreeInSession: false,
-    userId: "",
     userMediaDefaultPreferences: {
       cameraOn: true,
       microphoneOn: true,
@@ -78,6 +78,7 @@ export default {
       eventroom: (state) => state.eventroom.eventroomData,
       userMediaSettings: (state) => state.mediastates.userMediaSettings,
       RTCConfig: (state) => state.mediastates.RTCConfig,
+      userId: (state) => state.auth.userId,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
@@ -109,8 +110,16 @@ export default {
     this.$store.dispatch("tempuser/destroyTempUser");
     destroyTempToken();
     this.$store.dispatch("eventroom/clearEventroom");
+    this.$store.dispatch("auth/updateUserId", "");
     initialState();
     next();
+  },
+  created() {
+    let globalThis = this;
+    globalThis.handler = function (e) {
+      globalThis.keyboardEvent(e);
+    };
+    window.addEventListener("keyup", this.handler);
   },
   async mounted() {
     /**
@@ -124,6 +133,27 @@ export default {
      * Check to see if user already has a temporary token for the room?
      */
     console.log("@1 Begin Eventroom mount.");
+
+    console.log("@2 Check if user exists...");
+    if (this.user && this.isAuthenticated) {
+      console.log("@2.5 User exists, getting room.", this.user);
+      let userId = this.user._id;
+      this.$store.dispatch("auth/updateUserId", userId);
+      // this.getRoom();
+      this.addUserToRoomData(userId);
+    } else if (auth.checkTempToken()) {
+      // Check if temporary user already exists;
+      let temp = auth.checkTempToken();
+      let userId = temp._id;
+      this.$store.dispatch("auth/updateUserId", userId);
+      this.addUserToRoomData(userId, true);
+    } else {
+      await this.createTempUser();
+    }
+
+    console.log("@3 Get and set Media Preferences.");
+    this.getAndSetMediaPreferences();
+
     window.onbeforeunload = () => {
       if (this.RTCConfig.vanillaRTC) {
         this.$refs.vanillaRTC.prepareToExit();
@@ -135,24 +165,6 @@ export default {
       this.$store.dispatch("eventroom/clearEventroom");
       initialState();
     };
-
-    console.log("@2 Check if user exists...");
-    if (this.user && this.isAuthenticated) {
-      console.log("@2.5 User exists, getting room.", this.user);
-      this.userId = this.user._id;
-      // this.getRoom();
-      this.addUserToRoomData(this.userId);
-    } else if (auth.checkTempToken()) {
-      // Check if temporary user already exists;
-      let temp = auth.checkTempToken();
-      this.userId = temp._id;
-      this.addUserToRoomData(this.userId, true);
-    } else {
-      await this.createTempUser();
-    }
-
-    console.log("@3 Get and set Media Preferences.");
-    this.getAndSetMediaPreferences();
   },
   methods: {
     leaveRoom() {
@@ -215,8 +227,9 @@ export default {
           const vuexQuery = "tempuser/addNewTempUser";
           await globalThis.$store.dispatch(vuexQuery, temporaryUser);
 
-          this.userId = temporaryUser._id;
-          await this.addUserToRoomData(this.userId, true);
+          let userId = temporaryUser._id;
+          this.$store.dispatch("auth/updateUserId", userId);
+          await this.addUserToRoomData(userId, true);
         }
       } catch (error) {
         console.log("@createTempUser: Failed to create temporary user", error);
@@ -306,6 +319,32 @@ export default {
         console.log("Failed to add user to room data.", error);
       }
     },
+    keyboardEvent(e) {
+      let globalThis = this;
+      if (e.target.className == "chatInputBox") {
+        if (e.which == 13) {
+          document.getElementById("chatInputSend").click();
+        } else {
+          return;
+        }
+      }
+      if (e.target.classList.contains("eventroom-name")) return;
+
+      if (e.which == 67) {
+        globalThis.toggleMedia(0);
+      } else if (e.which == 77) {
+        globalThis.toggleMedia(1);
+      } else if (e.which == 90) {
+        globalThis.toggleMedia(2);
+      } else if (e.which == 80) {
+        globalThis.$refs.bottomBar.toggleToolbar("participants");
+      } else if (e.which == 82) {
+        globalThis.$refs.bottomBar.toggleToolbar("info");
+      } else if (e.which == 83) {
+        globalThis.$refs.bottomBar.toggleToolbar("settings");
+      }
+    },
+
     // /* eslint-disable no-unused-vars */
     // async beforeRouteLeave(to, from, next) {
     //   try {

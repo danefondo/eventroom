@@ -1,4 +1,5 @@
-<template id="editable">
+<template>
+<!-- If you change the input div's class, shortcut events will break in RoomBottomBar which prevents key shortcuts if event.target.classList.contains("eventroom-name") -->
   <div
     ref="editable"
     spellcheck="false"

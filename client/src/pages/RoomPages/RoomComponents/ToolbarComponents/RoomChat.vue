@@ -2,33 +2,19 @@
   <div class="settings">
     <div class="sidebar-container">
       <div class="sidebar-header flex pbt-16 plr-16">
-        <header class="heading">
-          <div class="flex title-row">
-            <Chat />
-          </div>
-          <div class="mt-8 tooltip_container">
-            <a
-              class="room-name_button knpf knpf--link knpf--small knpf--secondary"
-            >
-              <div class="url" @click="copyLink">
-                <span class="room-name">eventroom.to/</span
-                ><span class="room-name">{{ eventroom.eventroomName }}</span>
-              </div></a
-            >
-            <div class="tooltip tooltip--bottom tooltip--middle">
-              <span class="tooltip_tip">
-                {{ copiedState ? "Copied!" : "Copy URL" }}
-              </span>
-            </div>
-          </div>
-        </header>
+        <h1 class="sidebar-title flex">Chat</h1>
         <img
           @click="toggleToolbar('chat')"
           :src="cancelIcon"
           class="cancelIcon"
         />
       </div>
-      <div class="sidebar-inner"></div>
+      <div class="sidebar-inner">
+        <Chat v-show="eventroom && userId" />
+        <div class="chat-launch-fail" v-if="!eventroom || !userId">
+          Failed to connect user to chat.
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -55,6 +41,7 @@ export default {
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       chat: (state) => state.toolbar.toolbarConfig.chat,
       eventroom: (state) => state.eventroom.eventroomData,
+      userId: (state) => state.auth.userId,
     }),
   },
   components: {

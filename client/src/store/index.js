@@ -11,6 +11,7 @@ import eventroom from "./modules/eventroom";
 import twilio from "./modules/twilio";
 import mediastates from "./modules/mediastates";
 import participants from "./modules/participants";
+import chat from "./modules/chat";
 
 Vue.use(Vuex);
 
@@ -25,7 +26,8 @@ const store = new Vuex.Store({
     eventroom,
     twilio,
     mediastates,
-    participants
+    participants,
+    chat
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production

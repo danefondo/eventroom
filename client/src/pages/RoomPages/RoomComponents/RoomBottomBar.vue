@@ -202,13 +202,7 @@ export default {
       settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
   },
-  created() {
-    let globalThis = this;
-    globalThis.handler = function (e) {
-      globalThis.keyboardEvent(e);
-    };
-    window.addEventListener("keyup", this.handler);
-  },
+
   props: ["moreThanOneAndLessThanThreeInSession"],
   methods: {
     leaveRoom() {
@@ -234,22 +228,6 @@ export default {
         this.$store.dispatch("toolbar/toggleToolbar", data);
       }
     },
-    keyboardEvent(e) {
-      let globalThis = this;
-      if (e.which == 67) {
-        globalThis.toggleMedia(0);
-      } else if (e.which == 77) {
-        globalThis.toggleMedia(1);
-      } else if (e.which == 90) {
-        globalThis.toggleMedia(2);
-      } else if (e.which == 80) {
-        globalThis.toggleToolbar("participants");
-      } else if (e.which == 82) {
-        globalThis.toggleToolbar("info");
-      } else if (e.which == 83) {
-        globalThis.toggleToolbar("settings");
-      }
-    },
   },
 };
 </script>
@@ -258,6 +236,15 @@ export default {
 * {
   box-sizing: border-box;
 }
+
+.sidebar-inner {
+  box-sizing: border-box;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .toolbar-container {
   height: 48px;
   width: calc(100% - 50px);

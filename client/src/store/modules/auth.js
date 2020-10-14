@@ -1,4 +1,4 @@
-import { requestWithAuthentication } from '../../config/api';
+import { requestWithAuthentication } from "../../config/api";
 
 const state = {
   ready: false,
@@ -7,11 +7,12 @@ const state = {
 
   authenticationStatus: false,
   verificationStatus: false,
+
+  // This userId can be both an anonymous user's id and an actual user's id
+  userId: "",
 };
 
-const getters = {
-  
-};
+const getters = {};
 
 const mutations = {
   ready(state) {
@@ -33,13 +34,23 @@ const mutations = {
   updateUser(state, newUser) {
     state.user = newUser;
   },
+
+  updateUserId(state, userId) {
+    state.userId = userId;
+  },
 };
 
 const actions = {
+  updateUserId(state, userId) {
+    state.commit("updateUserId", userId);
+  },
   authenticate: async ({ commit }) => {
     let response;
     try {
-      response = await requestWithAuthentication('get', `/api/accounts/authenticate`);
+      response = await requestWithAuthentication(
+        "get",
+        `/api/accounts/authenticate`
+      );
     } catch (err) {
       console.log("@store auth err:", err);
       return err;
@@ -62,11 +73,11 @@ const actions = {
 
 const auth = {
   namespaced: true,
-  
+
   state,
   getters,
   mutations,
-  actions
+  actions,
 };
 
 export default auth;

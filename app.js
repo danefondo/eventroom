@@ -46,7 +46,7 @@ const app = Express();
 
 //- Prepare HTTP server for Socket.io
 let HTTP = require("http").createServer(app);
-let IO = require("socket.io")(HTTP);
+let io = require("socket.io")(HTTP);
 
 //- Use MomentJS
 app.locals.moment = require("moment");
@@ -80,7 +80,7 @@ initialiseAuthentication(app);
 
 /* ====== SOCKET.IO SETUP ====== */
 
-IO.on("connection", function (socket) {
+io.on("connection", function (socket) {
   console.log("this user is connected");
   // io.emit('test', 'lsdkfja');
   // socket.broadcast.emit("message", "whadaaaaap");
@@ -146,7 +146,7 @@ IO.on("connection", function (socket) {
   // second in the room. Otherwise it is full.
   socket.on("join", function (room) {
     console.log("A client joined");
-    var clients = IO.sockets.adapter.rooms[room];
+    var clients = io.sockets.adapter.rooms[room];
     var numClients = typeof clients !== "undefined" ? clients.length : 0;
     if (numClients == 0) {
       socket.join(room);
@@ -218,6 +218,26 @@ IO.on("connection", function (socket) {
   socket.on("newEventroomName", function (eventroomName) {
     console.log("Received new Eventroom name. Broadcasting...");
     socket.broadcast.emit("eventroomNameChange", eventroomName);
+  });
+
+  socket.on("joinChat", function (data) {
+    let eventroomId = data.eventroomId;
+    if (!eventroomId) {
+      let response = "EventroomId missing, cannot join chat.";
+      return socket.emit("joinChatFail", response);
+    }
+    socket.join(eventroomId);
+    console.log("User joined Eventroom with id: ", eventroomId);
+    io.in(eventroomId).emit("userJoinedChat", data);
+  });
+
+  socket.on("sendChatMessage", function (data) {
+    if (!data || !data.eventroomId || !data.userId) {
+      let response = "Message data missing";
+      return socket.emit("messageSendFailed", response);
+    }
+    console.log("User sent message", data);
+    io.in(data.eventroomId).emit("messageReceived", data);
   });
 });
 

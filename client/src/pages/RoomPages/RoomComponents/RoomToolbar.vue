@@ -26,7 +26,7 @@
                 class="settings-button toolbar-icon-container"
                 @click="toggleToolbar('chat')"
               >
-                <img :src="chatIcon" class="toolbar-icon group-icon" />
+                <img :src="chatIcon" class="toolbar-icon chat-icon" />
               </div>
               <div class="tooltip tooltip--top tooltip--middle">
                 <span class="tooltip_tip">{{
@@ -191,6 +191,11 @@ export default {
 .group-icon {
   width: 24px;
   height: 24px;
+}
+
+.chat-icon {
+  width: 23px;
+  height: 23px;
 }
 
 .icon-separator {

@@ -30,7 +30,9 @@
               </div></a
             >
             <div class="tooltip tooltip--bottom tooltip--middle">
-              <span class="tooltip_tip"> {{copiedState ? 'Copied!' : 'Copy URL'}} </span>
+              <span class="tooltip_tip">
+                {{ copiedState ? "Copied!" : "Copy URL" }}
+              </span>
             </div>
           </div>
         </header>

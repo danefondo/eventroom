@@ -4,7 +4,7 @@
       <RoomSettings v-if="settings" />
       <RoomInfo v-if="info" />
       <RoomParticipants v-if="participants" />
-      <RoomChat v-if="chat" />
+      <RoomChat v-show="chat" />
     </div>
   </div>
 </template>

@@ -177,6 +177,79 @@ const AccountSettingsController = {
     return;
   },
 
+  /**
+   * 
+   * @param {*} req 
+   * @param {*} res 
+   * 
+   * Returns:
+   * If success: {success: true}
+   * If fail: { errors: UserIdMissing
+   *                    OldPasswordMissing
+   *                    NewPasswordMissing
+   *                    NewPasswordConfirmationMissing
+   *                    PasswordsDoNotMatch
+   *                    FailedToChangePassword
+   *                    IncorrectPassword
+   *                    ExceptionError }
+   */
+  async changePassword(req, res) {
+    let clientData = req.body;
+    let errors = {};
+    if (!clientData) {
+      errors.InvalidRequest = true;
+      return res.status(400).send({ errors: errors });
+    }
+
+    if (!clientData.userId) {
+      errors.UserIdMissing = true;
+      return res.status(500).send({ errors: errors });
+    }
+
+    if (!clientData.oldPassword) {
+      errors.OldPasswordMissing = true;
+      return res.status(500).send({ errors: errors });
+    }
+
+    if (!clientData.newPassword) {
+      errors.NewPasswordMissing = true;
+      return res.status(500).send({ errors: errors });
+    }
+
+    if (!clientData.newPasswordConfirmation) {
+      errors.NewPasswordConfirmationMissing = true;
+      return res.status(500).send({ errors: errors });
+    }
+
+    if (clientData.newPassword !== clientData.newPasswordConfirmation) {
+      errors.PasswordsDoNotMatch = true;
+      return res.status(500).send({ errors: errors });
+    }
+
+    try {
+      const result = await AccountSettingsDataController.changePassword(
+        clientData.userId,
+        clientData.oldPassword,
+        clientData.newPassword,
+      );
+
+      if (!result || !result.success) {
+        errors.FailedToChangePassword = true;
+        return res.status(500).send({ errors: errors });
+      }
+
+      let success = result.success;
+      res.status(200).send({ success });
+    } catch (error) {
+      console.log("Error occurred while attempting to delete account.", error);
+      if (error.IncorrectPassword) {
+        errors.IncorrectPassword = true;
+      }
+      errors.ExceptionError = true;
+      return res.status(500).send({ errors: errors });
+    }
+  },
+
   async deleteAccount(req, res) {
     let clientData = req.body;
     let errors = {};

@@ -38,7 +38,14 @@ router.post(
   AccountSettingsController.updateProfileSettings
 );
 
-// Update profile settings
+// Change account password
+router.post(
+    "/changePassword",
+    AuthController.confirmAuthentication,
+    AccountSettingsController.changePassword
+  );
+
+// Delete account
 router.post(
   "/deleteAccount",
   AuthController.confirmAuthentication,

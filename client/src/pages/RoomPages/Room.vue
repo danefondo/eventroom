@@ -128,7 +128,7 @@ export default {
     this.$store.dispatch("eventroom/clearEventroom");
     this.$store.dispatch("auth/updateUserId", "");
     window.removeEventListener("keyup", this.handler);
-    initialState();
+    this.resetData();
     next();
   },
   created() {
@@ -184,7 +184,7 @@ export default {
       this.$store.dispatch("eventroom/clearEventroom");
       this.$store.dispatch("auth/updateUserId", "");
       window.removeEventListener("keyup", this.handler);
-      initialState();
+      this.resetData();
     };
 
     console.log("sockeee", this.$socket);
@@ -235,7 +235,7 @@ export default {
     toggleShowShortcuts() {
       this.showShortcutsModal = !this.showShortcutsModal;
     },
-    resetWindow: function () {
+    resetData: function () {
       Object.assign(this.$data, initialState());
     },
     async getRoom() {

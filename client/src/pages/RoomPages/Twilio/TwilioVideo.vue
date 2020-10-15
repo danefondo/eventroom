@@ -157,7 +157,10 @@ export default {
       this.room.disconnect();
       this.$store.dispatch("participants/resetState");
       this.$store.dispatch("toolbar/resetState");
-      initialState();
+      this.resetData();
+    },
+    resetData: function () {
+      Object.assign(this.$data, initialState());
     },
     async getAccessToken() {
       try {

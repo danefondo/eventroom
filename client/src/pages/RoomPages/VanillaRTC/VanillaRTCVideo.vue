@@ -117,7 +117,10 @@ export default {
       console.log("@prepareToExit, Attempting exit...");
       this.localStream.getTracks().forEach((track) => track.stop());
       // this.room.disconnect();
-      initialState();
+      this.resetData();
+    },
+    resetData: function () {
+      Object.assign(this.$data, initialState());
     },
     requestMediaStream() {
       // Start getUserMedia process

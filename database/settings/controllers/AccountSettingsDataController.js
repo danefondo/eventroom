@@ -2,7 +2,10 @@ const AccountSettings = require("../models/AccountSettingsModel");
 const ProfileModel = require("../../profile/models/ProfileModel");
 const User = require("../../user/models/UserModel");
 
-const { verifyPassword } = require("../../../server/auth/utilities/Utils");
+const {
+  hashPassword,
+  verifyPassword,
+} = require("../../../server/auth/utilities/Utils");
 
 // const aws = require('aws-sdk');
 
@@ -33,18 +36,14 @@ const AccountSettingsDataController = {
     let update = { $set: profileSettingsData };
     console.log("update", update);
 
-    await ProfileModel.findOneAndUpdate(
-      query,
-      update,
-      options
-    ).exec();
+    await ProfileModel.findOneAndUpdate(query, update, options).exec();
 
     let profileData = await AccountSettings.findOneAndUpdate(
       query,
       update,
       options
     ).exec();
-    
+
     return profileData;
   },
 
@@ -54,6 +53,23 @@ const AccountSettingsDataController = {
 
   async getProfileDataByUserId(userId) {
     return AccountSettings.findOne({ userId: userId }).exec();
+  },
+
+  async changePassword(userId, oldPassword, newPassword) {
+    let user = await User.findOne({ _id: userId }).select("+password").exec();
+
+    if (!user) throw { UserNotFoundError: true };
+    let cryptedPassword = user.password;
+
+    let passwordMatchCheck = await verifyPassword(oldPassword, cryptedPassword);
+    if (!passwordMatchCheck) throw { IncorrectPassword: true };
+
+    let hashedNewPassword = await hashPassword(newPassword);
+
+    user.password = hashedNewPassword;
+    await user.save();
+
+    return { success: true };
   },
 
   async deleteAccount(userId, password) {

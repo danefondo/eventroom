@@ -61,33 +61,41 @@
 <script>
 import { requestWithAuthentication } from "../../../config/api";
 
+function initialState() {
+  return {
+    changingPassword: false,
+    oldPassword: "",
+    newPassword: "",
+    newPasswordConfirmation: "",
+    oldPasswordError: false,
+    newPasswordError: false,
+    newPasswordConfirmationError: false,
+    oldPasswordErrorMessage: "",
+    newPasswordErrorMessage: "",
+    newPasswordConfirmationErrorMessage: "",
+    generalPasswordError: false,
+    generalPasswordErrorMessage: "",
+    passwordChangeSuccess: false,
+    passwordChangeSuccessMessage: "",
+  };
+}
+
 export default {
   name: "ChangePassword",
-  data() {
-    return {
-      changingPassword: false,
-      oldPassword: "",
-      newPassword: "",
-      newPasswordConfirmation: "",
-      oldPasswordError: false,
-      newPasswordError: false,
-      newPasswordConfirmationError: false,
-      oldPasswordErrorMessage: "",
-      newPasswordErrorMessage: "",
-      newPasswordConfirmationErrorMessage: "",
-      generalPasswordError: false,
-      generalPasswordErrorMessage: "",
-      passwordChangeSuccess: false,
-      passwordChangeSuccessMessage: "",
-    };
+  data: function () {
+    return initialState();
   },
   props: ["user"],
   methods: {
+    resetData: function () {
+      Object.assign(this.$data, initialState());
+    },
     async changePassword() {
       let passwordChangeData = {
         oldPassword: this.oldPassword,
         newPassword: this.newPassword,
         newPasswordConfirmation: this.newPasswordConfirmation,
+        userId: this.user._id,
       };
 
       this.changingPassword = true;
@@ -101,15 +109,12 @@ export default {
       try {
         const result = await requestWithAuthentication(
           `post`,
-          "/api/accounts/updatePassword",
+          "/api/settings/changePassword",
           passwordChangeData
         );
 
         if (result.data.success) {
-          this.changingPassword = false;
-          this.oldPassword = "";
-          this.newPassword = "";
-          this.newPasswordConfirmation = "";
+          this.resetData();
           this.passwordChangeSuccess = true;
           this.passwordChangeSuccessMessage = "Password successfully changed.";
           setTimeout(function () {
@@ -180,6 +185,14 @@ export default {
       return passwordError;
     },
     processAndDisplayServerErrors(errors) {
+      //   If fail: { errors: UserIdMissing
+      //                      OldPasswordMissing
+      //                      NewPasswordMissing
+      //                      NewPasswordConfirmationMissing
+      //                      PasswordsDoNotMatch
+      //                      FailedToChangePassword
+      //                      IncorrectPassword
+      //                      ExceptionError }
       console.log("@processServerError: ", errors);
       this.generalPasswordError = false;
       this.generalPasswordErrorMessage = "";
@@ -193,25 +206,36 @@ export default {
       } else if (errors) {
         this.generalPasswordError = true;
 
-        if (errors.oldPasswordError) {
+        if (errors.OldPasswordMissing) {
           this.oldPasswordError = true;
-          this.oldPasswordErrorMessage = errors.oldPasswordErrorMessage;
+          this.oldPasswordErrorMessage = "Must provide old password!";
         }
 
-        if (errors.newPasswordError) {
+        if (errors.NewPasswordMissing) {
           this.newPasswordError = true;
-          this.newPasswordErrorMessage = errors.newPasswordErrorMessage;
+          this.newPasswordErrorMessage = "New password missing!";
         }
 
-        if (errors.newPasswordConfirmationError) {
+        if (errors.NewPasswordConfirmationMissing) {
           this.newPasswordConfirmationError = true;
           this.newPasswordConfirmationErrorMessage =
-            errors.newPasswordConfirmationErrorMessage;
+            "New password confirmation missing!";
         }
 
-        if (errors.generalPasswordError) {
+        if (errors.PasswordsDoNotMatch) {
           this.generalPasswordError = true;
-          this.generalPasswordErrorMessage = errors.generalPasswordErrorMessage;
+          this.generalPasswordErrorMessage = "Passwords don't match!";
+        }
+
+        if (errors.FailedToChangePassword || errors.ExceptionError) {
+          this.generalPasswordError = true;
+          this.generalPasswordErrorMessage =
+            "Failed to change password. Try again or contact support";
+        }
+
+        if (errors.IncorrectPassword) {
+          this.generalPasswordError = true;
+          this.generalPasswordErrorMessage = "Password incorrect!";
         }
       }
     },

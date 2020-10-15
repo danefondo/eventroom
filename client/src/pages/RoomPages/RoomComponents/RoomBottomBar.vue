@@ -51,6 +51,7 @@
             "
             @click="toggleMedia(0)"
           >
+            <IconBase icon-name="video" viewBox="0 0 50 50" width="28" height="28"><IconVideo /></IconBase>
             <img
               :src="userMediaSettings.cameraOn ? videoIcon : videoIconWhite"
               :class="
@@ -76,6 +77,7 @@
             "
             @click="toggleMedia(1)"
           >
+          <IconBase icon-name="microphone" viewBox="0 0 30 30" width="28" height="28"><IconMicrophone /></IconBase>
             <img
               :src="userMediaSettings.microphoneOn ? audioIcon : audioIconWhite"
               :class="
@@ -168,6 +170,10 @@ import screenIconWhite from "../../../assets/images/screen-white.png";
 import pipIcon from "../../../assets/images/pip.png";
 import pipIconWhite from "../../../assets/images/pip-white.png";
 import hangUpIcon from "../../../assets/images/hangup.png";
+
+import IconBase from "../../../components/IconBase";
+import IconVideo from "../../../components/SVG/IconVideo";
+import IconMicrophone from "../../../components/SVG/IconMicrophone";
 // import { requestWithAuthentication } from "../../../config/api";
 
 export default {
@@ -202,7 +208,11 @@ export default {
       settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
   },
-
+  components: {
+    IconBase,
+    IconVideo,
+    IconMicrophone,
+  },
   props: ["moreThanOneAndLessThanThreeInSession"],
   methods: {
     leaveRoom() {

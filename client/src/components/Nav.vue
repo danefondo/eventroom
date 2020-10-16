@@ -12,10 +12,11 @@
           :class="navDropdown ? 'dropdown-active' : ''"
           @mouseover="mouseOver"
           @mouseout="mouseOut"
-          @click="toggleDropdown"
+          @click.self="toggleDropdown"
         >
           {{ user.username }}
           <img
+            @click.self="toggleDropdown"
             :src="navHover || navDropdown ? darkDownArrow : lightDownArrow"
             :class="
               navDropdown || navDropdown
@@ -23,11 +24,7 @@
                 : 'dropdown-icon'
             "
           />
-          <NavDropdown
-            v-if="navDropdown"
-            :user="user"
-            @click.prevent="toggleDropdown"
-          />
+          <NavDropdown v-if="navDropdown" :user="user" />
         </div>
 
         <!-- <div @click="logUserOut" class="nav-button"
@@ -82,7 +79,18 @@ export default {
       // loading: true,
     };
   },
+  mounted() {
+    document.addEventListener("click", this.close);
+  },
+  beforeDestroy() {
+    document.removeEventListener("click", this.close);
+  },
   methods: {
+    close(e) {
+      if (!this.$el.contains(e.target)) {
+        this.navDropdown = false;
+      }
+    },
     toggleDropdown() {
       this.navDropdown = !this.navDropdown;
     },

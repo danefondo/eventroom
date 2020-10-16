@@ -9,8 +9,6 @@ const { processPostRequest } = require("../../../utilities/CRUDAutomation");
 const controller = "EventroomDataController";
 
 const EventroomController = {
-
-  
   async addUserToRoomData(req, res) {
     const options = {
       validate: ["eventroomName", "participant"],
@@ -22,6 +20,27 @@ const EventroomController = {
     return;
   },
 
+  async claimRoom(req, res) {
+    const options = {
+      validate: ["eventroomName", "userId", "username"],
+      funcToRun: "claimRoom",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  async getUserRooms(req, res) {
+    const options = {
+      validate: ["userId"],
+      funcToRun: "getUserRooms",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
 
   async checkIfEventroomExistsByName(req, res) {
     if (!req.body) {

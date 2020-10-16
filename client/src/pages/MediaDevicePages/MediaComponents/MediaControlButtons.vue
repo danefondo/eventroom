@@ -137,8 +137,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 45px;
-  width: 45px;
+  height: 46px;
+  width: 46px;
   cursor: pointer;
   position: relative;
   box-sizing: border-box;
@@ -165,8 +165,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 45px;
-  width: 45px;
+  height: 46px;
+  width: 46px;
   cursor: pointer;
   background-color: #d12b54;
   position: relative;

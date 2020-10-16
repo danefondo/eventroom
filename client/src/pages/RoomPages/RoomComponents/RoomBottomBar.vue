@@ -51,15 +51,7 @@
             "
             @click="toggleMedia(0)"
           >
-            <IconBase icon-name="video" viewBox="0 0 50 50" width="28" height="28"><IconVideo /></IconBase>
-            <img
-              :src="userMediaSettings.cameraOn ? videoIcon : videoIconWhite"
-              :class="
-                userMediaSettings.cameraOn
-                  ? 'video-call-icon'
-                  : 'video-call-icon-white'
-              "
-            />
+            <IconBase icon-name="video" viewBox="0 0 50 50" width="29" height="29" :iconColor="userMediaSettings.cameraOn ? getColor('video') : getSecondColor('video')" ><IconVideo /></IconBase>
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
@@ -77,7 +69,7 @@
             "
             @click="toggleMedia(1)"
           >
-          <IconBase icon-name="microphone" viewBox="0 0 30 30" width="28" height="28"><IconMicrophone /></IconBase>
+          <IconBase icon-name="microphone" :iconColor="getColor('microphone')" viewBox="0 0 30 30" width="28" height="28"><IconMicrophone /></IconBase>
             <img
               :src="userMediaSettings.microphoneOn ? audioIcon : audioIconWhite"
               :class="
@@ -206,6 +198,8 @@ export default {
       participants: (state) => state.toolbar.toolbarConfig.participants,
       info: (state) => state.toolbar.toolbarConfig.info,
       settings: (state) => state.toolbar.toolbarConfig.settings,
+      userDesignPreferences: (state) => state.preferences.userDesignPreferences,
+      thisRoomDesignPreferences: (state) => state.preferences.thisRoomDesignPreferences,
     }),
   },
   components: {
@@ -237,6 +231,19 @@ export default {
         data.boolean = !this[toolbarTool];
         this.$store.dispatch("toolbar/toggleToolbar", data);
       }
+    },
+    getColor(icon) {
+      let color;
+      if (this.userDesignPreferences[icon]["color"]) {
+        color = this.userDesignPreferences[icon]["color"];
+      } else if (this.userDesignPreferences.defaults.defaultIconColor) {
+        color = this.userDesignPreferences.defaults.defaultIconColor;
+      } else if (this.thisRoomDesignPreferences[icon]["color"]) {
+        color = this.thisRoomDesignPreferences[icon]["color"];
+      } else {
+        color = "#1F3058";
+      }
+      return color;
     },
   },
 };
@@ -301,8 +308,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 45px;
-  width: 45px;
+  height: 46px;
+  width: 46px;
   cursor: pointer;
   position: relative;
   box-sizing: border-box;
@@ -337,8 +344,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 45px;
-  width: 45px;
+  height: 46px;
+  width: 46px;
   cursor: pointer;
   background-color: #d12b54;
   position: relative;
@@ -355,8 +362,8 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 45px;
-  width: 45px;
+  height: 46px;
+  width: 46px;
   cursor: pointer;
   background-color: #1be691;
   position: relative;

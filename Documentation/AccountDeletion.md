@@ -26,3 +26,10 @@
 
 **(3. Scenario with no error: Post success handling)**
 1. If success is returned, send success to client with status 200.
+
+
+
+If any part of the delete failed,
+mark that in deleteErrors data model,
+and keep log of failedToDeleteItems 
+that must be deleted

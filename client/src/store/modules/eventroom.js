@@ -4,6 +4,8 @@ const state = {
     eventroomName: "",
     dateCreated: Date,
     hostId: "",
+    ownerId: "",
+    creatorId: "",
   },
 };
 
@@ -18,11 +20,23 @@ const mutations = {
     if (eventroomData["hostId"]) {
       state.eventroomData.hostId = eventroomData["hostId"];
     }
+
+    if (eventroomData["ownerId"]) {
+      state.eventroomData.ownerId = eventroomData["ownerId"];
+    }
+
+    if (eventroomData["creatorId"]) {
+      state.eventroomData.creatorId = eventroomData["creatorId"];
+    }
     console.log("finalizde @Vuex", state.eventroomData);
   },
 
   updateEventroomName(state, eventroomName) {
     state.eventroomData["eventroomName"] = eventroomName;
+  },
+
+  updateEventroomOwner(state, ownerId) {
+    state.eventroomData["ownerId"] = ownerId;
   },
 
   clearEventroom(state) {
@@ -31,6 +45,8 @@ const mutations = {
       eventroomName: "",
       dateCreated: Date,
       hostId: "",
+      ownerId: "",
+      creatorId: "",
     };
     // for (var key in state.eventroomData) {
     //   state.eventroomData[key] = "";
@@ -47,6 +63,10 @@ const actions = {
 
   updateEventroomName(state, eventroomName) {
     state.commit("updateEventroomName", eventroomName);
+  },
+
+  updateEventroomOwner(state, ownerId) {
+    state.commit("updateEventroomOwner", ownerId);
   },
 
   clearEventroom(state) {

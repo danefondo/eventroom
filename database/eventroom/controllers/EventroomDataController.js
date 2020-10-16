@@ -1,4 +1,5 @@
 const EventroomModel = require("../models/EventroomModel");
+const ProfileModel = require("../../profile/models/ProfileModel");
 
 const EventroomDataController = {
   async checkIfEventroomExistsByName(eventroomName) {
@@ -31,10 +32,10 @@ const EventroomDataController = {
 
       if (roomData.isAnon) {
         eventroom.anonParticipantsIdsWhoHaveJoined.push(participantId);
-      } 
+      }
 
       eventroom.currentParticipantsIds.push(participantId);
-      eventroom.allParticipantsIdsWhoHaveJoined.push(participantId)
+      eventroom.allParticipantsIdsWhoHaveJoined.push(participantId);
       await eventroom.save();
     } catch (error) {
       if (error.errors) {
@@ -42,15 +43,79 @@ const EventroomDataController = {
       } else {
         errors.error = error;
       }
-      throw { errors: errors }
+      throw { errors: errors };
     }
     return eventroom;
+  },
+
+  async claimRoom(eventroomData) {
+    let errors = {};
+    let query = { eventroomName: eventroomData.eventroomName };
+    let eventroom;
+
+    try {
+      eventroom = await EventroomModel.findOne(query).exec();
+      if (!eventroom) {
+        errors.FailedToFindRoom = true;
+        throw { errors: errors };
+      }
+
+      console.log("data", eventroomData);
+      console.log("eventry", eventroom);
+      if (eventroom.creatorId !== eventroomData.userId) {
+        console.log("eventroomCREATOR", eventroom.creatorId);
+        console.log("USERID", eventroomData.userId);
+        errors.UserLacksPermissionToClaim = true;
+        throw { errors: errors };
+      }
+
+      // Todo: Make sure expire date has not arrived yet or that it doesn't before save;
+      eventroom.expire_at = null;
+      eventroom.ownerId = eventroomData.userId;
+      eventroom.ownerUsername = eventroomData.username;
+
+      await eventroom.save();
+
+      let userQuery = { userId: eventroomData.userId };
+      user = await ProfileModel.findOne(userQuery).exec();
+      if (!user) {
+        errors.FailedToFindUser = true;
+        throw { errors: errors };
+      }
+      user.push(eventroom._id);
+      await user.save();
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return eventroom;
+  },
+
+  async getUserRooms(userData) {
+    let query = { ownerId: userData.userId };
+    let errors = {};
+    let eventrooms;
+    try {
+      eventrooms = await EventroomModel.find(query).exec();
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return eventrooms;
   },
 
   async createEventroom(eventroomData) {
     console.log("Creating new Eventroom...");
 
-    const eventroom = new EventroomModel({
+    let eventroom = new EventroomModel({
       eventroomName: eventroomData.eventroomName,
       dateCreated: eventroomData.dateCreated,
     });
@@ -59,6 +124,7 @@ const EventroomDataController = {
 
     if (eventroomData.hostId) {
       eventroom.hostId = eventroomData.hostId;
+      eventroom.creatorId = eventroomData.hostId;
     }
 
     return eventroom.save();

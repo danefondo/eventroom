@@ -30,6 +30,10 @@ const CRUDAutomation = {
 
   For OPTIONS passed from controllers, I could create a 'customValidate' or 'securityValidate'
   where it does not validate against whether there's data, but rather makes sure the data is safe and secure but won't throw error if data is missing
+
+  TODO:
+  - Specify case, e.g. 'customValidation: true, and then it uses another function to process the data to validate; e.g. then you can specify  instead of a string array, an object array, where you can specify which kind of validation is required, if any special validation is required, and then a special validator can be applied
+- Automate Data Controller processes, e.g. setting up the errors, specifying query in initial request, setting up empty variables, sending and awaiting and returning query, setting errors based on error types and then returning and handling any data and then in the initial request specifying what action is to be performed and if any changes are to be made, then what are those changes; that could lead to additional saving of hundreds of hours on the backend, whilst only having to continue refining, improving a single function set, which is the CRUD automation system, to make it more and more general purpose;
   */
 
   async processPostRequest(req, res, controller, options) {

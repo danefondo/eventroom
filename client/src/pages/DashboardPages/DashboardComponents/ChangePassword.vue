@@ -2,10 +2,10 @@
   <div class="password-settings">
     <div class="settings-title mb-20">Change password</div>
     <div class="profile-rows">
-      <div class="settings-subtitle">Old password</div>
+      <div class="settings-subtitle">Current password</div>
       <div class="profile-row">
         <div class="input-container">
-          <div class="input-label">Enter old password</div>
+          <div class="input-label">Enter current password</div>
           <input
             type="password"
             class="setting-input"
@@ -117,9 +117,10 @@ export default {
           this.resetData();
           this.passwordChangeSuccess = true;
           this.passwordChangeSuccessMessage = "Password successfully changed.";
+          let globalThis = this;
           setTimeout(function () {
-            this.passwordChangeSuccess = false;
-            this.passwordChangeSuccessMessage = "";
+            globalThis.passwordChangeSuccess = false;
+            globalThis.passwordChangeSuccessMessage = "";
           }, 5000);
         }
       } catch ({ response }) {

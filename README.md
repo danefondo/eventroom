@@ -20,3 +20,4 @@ npm run dev
 - screenshare icon: https://www.flaticon.com/free-icon/screen_808574
 - info icon: https://www.flaticon.com/free-icon/information_157933
 - settings icon: https://icons8.com/icon/83666/settings--v1
+- link icon: https://www.flaticon.com/free-icon/link_1011407

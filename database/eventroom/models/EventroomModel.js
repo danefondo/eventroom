@@ -1,23 +1,52 @@
 const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
-const EventroomSchema = new Schema({
+// Events are not rooms. Events are scheduled, rooms are assigned and used for events.
+
+let EventroomSchema = new Schema({
   eventroomName: String,
 
-  // eventId: mongoose.Types.ObjectId,
+  creatorId: String,
 
   hostId: String,
-  // youtubePlaylists: [{youtubeVideoURL: String, youtubeVideoId}],
+  coHosts: [String],
   dateCreated: Date,
 
   createdAt: {
     type: Date,
-    expires: 86400,
     default: Date.now,
   },
+
+  // youtubePlaylists: [
+  //   {
+  //     videoUrl: String,
+  //     videoId: String,
+  //     name: String,
+  //     description: String,
+  //   },
+  // ],
+
+  permissions: {
+    canAccessWithoutHostPresent: Boolean,
+    canAccessWithoutOwnerPresent: Boolean,
+    requiresPassword: Boolean,
+    requiresUser: Boolean,
+    requiresVerification: Boolean,
+    requiresFriendship: Boolean,
+    requiresKnocking: Boolean,
+    requiresPayment: Boolean,
+  },
+
+  roomPassword: String,
+
   currentParticipantsIds: [String],
   allParticipantsIdsWhoHaveJoined: [String],
   anonParticipantsIdsWhoHaveJoined: [String],
+
+  expire_at: { type: Date, default: Date.now, expires: 86400 },
+
+  ownerId: String,
+  ownerUsername: String,
 
   // sessionId: String,
   // sessionTokens: [String],

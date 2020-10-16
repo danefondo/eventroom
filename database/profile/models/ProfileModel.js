@@ -14,8 +14,14 @@ const ProfileSchema = new Schema({
     fileName: String,
     fileUrl: String,
   },
-  eventrooms: [],
+  eventrooms: [String],
   sessionsCount: Number,
 });
 
 const Profile = (module.exports = mongoose.model("Profile", ProfileSchema));
+
+// How long it lasted
+// Who was in it
+// Name
+// Description
+// Any other details, e.g. music listened to, videos watched

@@ -47,6 +47,7 @@ import PassResetRedirect from "./pages/AuthPages/PassResetRedirect";
 
 /* ====== PROFILE PAGES ====== */
 import ProfilePage from "./pages/UserPages/ProfilePage";
+import UserRooms from "./pages/RoomPages/UserRooms"
 
 const routes = [
   { path: "/discover/home", component: HomePage },
@@ -169,6 +170,15 @@ const routes = [
     path: "/profile/:username",
     component: ProfilePage,
     name: "ProfilePage",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
+  {
+    path: "/account/myrooms",
+    component: UserRooms,
+    name: "UserRooms",
     meta: {
       requireAuthentication: true,
     },

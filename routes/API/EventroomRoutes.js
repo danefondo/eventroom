@@ -8,6 +8,11 @@ const router = Express.Router();
  */
 router.post("/createEventroom", EventroomController.createEventroom);
 
+// Get user rooms
+router.post("/getUserRooms", EventroomController.getUserRooms);
+
+router.post("/claimRoom", EventroomController.claimRoom);
+
 /**
  * Add room participant to room data
  */

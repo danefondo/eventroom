@@ -42,7 +42,58 @@
           class="cancelIcon"
         />
       </div>
-      <div class="sidebar-inner"></div>
+      <div class="sidebar-inner">
+        <div class="sidebar-sections">
+          <div class="sidebar-midsection"></div>
+          <div class="sidebar-bottom">
+            <div v-if="user && isAuthenticated && checkIfOwner" class="claim">
+              <div class="claim-notice claim-owner">
+                <div class="claim-notice-text">
+                  You are the owner of this Eventroom.
+                </div>
+              </div>
+            </div>
+            <div
+              v-else-if="user && isAuthenticated && !checkIfOwner"
+              class="claim"
+            >
+              <div class="claim-notice">
+                <div class="claim-notice-text">
+                  By default, all Eventrooms expire and get deleted within 24
+                  hours. If you like this room's name or want to save this room
+                  and return to it later, you can claim it as your own.
+                </div>
+              </div>
+              <div @click="claimRoom" class="claim-room-button">
+                <div class="claim-room-text">
+                  {{ claiming ? "Claiming..." : "Claim this Eventroom" }}
+                </div>
+              </div>
+            </div>
+            <div v-else-if="!user && !isAuthenticated" class="claim">
+              <div class="claim-notice">
+                <div class="claim-notice-text">
+                  Sign up to claim Eventroom
+                  <span class="claim-name">{{
+                    this.eventroom.eventroomName
+                  }}</span>
+                  as your own, save its history and contents and return to it
+                  any time using the same URL.
+                </div>
+              </div>
+              <router-link to="/account/register" class="claim-room-button">
+                <div class="claim-room-text">Sign up</div>
+              </router-link>
+              <router-link
+                to="/account/login"
+                class="claim-room-button login-claim"
+              >
+                <div class="claim-room-text login-claim-text">Or login</div>
+              </router-link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -52,6 +103,7 @@ import cancelIcon from "../../../../assets/images/cancel.png";
 import { mapState } from "vuex";
 import Editable from "./Editable";
 import axios from "axios";
+import { requestWithAuthentication } from "../../../../config/api";
 
 export default {
   name: "RoomInfo",
@@ -62,14 +114,27 @@ export default {
       awaitingTyping: false,
       nameExists: false,
       copiedState: false,
+      claiming: false,
     };
   },
   computed: {
     ...mapState({
+      user: (state) => state.auth.user,
+      isAuthenticated: (state) => state.auth.authenticationStatus,
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       info: (state) => state.toolbar.toolbarConfig.info,
       eventroom: (state) => state.eventroom.eventroomData,
     }),
+    checkIfOwner() {
+      let returnValue;
+      if (!this.eventroom || !this.eventroom.ownerId || !this.user) {
+        returnValue = false;
+      }
+      if (this.eventroom.ownerId == this.user._id) {
+        returnValue = true;
+      }
+      return returnValue;
+    },
   },
   components: {
     Editable,
@@ -85,6 +150,38 @@ export default {
     });
   },
   methods: {
+    async claimRoom() {
+      try {
+        if (!this.eventroomName) {
+          return alert("Eventroom name missing!");
+        }
+        if (!this.user || !this.user._id || !this.user.username) {
+          return alert("It appears you've logged out!");
+        }
+        let eventroomData = {
+          eventroomName: this.eventroomName,
+          userId: this.user._id,
+          username: this.user.username,
+        };
+
+        this.claiming = true;
+        const response = await requestWithAuthentication(
+          `post`,
+          "/api/eventroom/claimRoom",
+          eventroomData
+        );
+
+        console.log("response: ", response);
+
+        if (response.data.success) {
+          this.claiming = false;
+          this.$store.dispatch("eventroom/updateEventroomOwner", response.data.result.ownerId);
+        }
+      } catch (error) {
+        console.log("fail", error);
+        this.claiming = false;
+      }
+    },
     toggleToolbar(toolbarTool) {
       let data = {
         toolbarTool,
@@ -570,5 +667,89 @@ a {
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
+}
+
+.sidebar-sections {
+  height: calc(100vh - 87px);
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+}
+
+.sidebar-midsection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-bottom {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+}
+
+.claim-notice {
+  width: 260px;
+  margin: 0 auto;
+  background-color: #eceff3;
+  padding: 15px;
+  border-radius: 3px;
+  box-sizing: border-box;
+  border-bottom: 2px solid #102856;
+}
+
+.claim-notice-text {
+  font-size: 17px;
+  font-weight: 600;
+  color: #1f2f58;
+  line-height: 23px;
+}
+
+.claim-room-button {
+  box-sizing: border-box;
+  padding: 12px 15px;
+  width: 260px;
+  background-color: #94256d;
+  margin: 10px auto 25px auto;
+  border-radius: 3px;
+  cursor: pointer;
+  /* border-bottom: 2px solid #102856; */
+  text-align: center;
+  display: block;
+}
+
+.claim-room-button:hover {
+  background-color: #b52683;
+}
+
+.claim-room-text {
+  font-size: 19px;
+  font-weight: 700;
+  color: white;
+}
+
+.claim-name {
+  background-color: #f3e32ec7;
+  border-radius: 3px;
+  padding: 0px 5px;
+  text-transform: capitalize;
+}
+
+.login-claim {
+  padding: 8px;
+  background-color: #172d5a9e;
+  margin-top: -20px;
+}
+
+.login-claim:hover {
+  background-color: #102856b8;
+}
+
+.login-claim-text {
+  font-size: 16px;
+}
+
+.claim-owner {
+  margin-bottom: 20px;
 }
 </style>

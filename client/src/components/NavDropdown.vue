@@ -3,11 +3,19 @@
     <router-link to="/account/settings" class="dropdown-item">
       <div>Account settings</div>
     </router-link>
+    <router-link to="/account/myrooms" class="dropdown-item">
+      <div>My rooms</div>
+    </router-link>
+    <div class="dropdown-item">
+      <div>+ New Eventroom</div>
+    </div>
     <div class="dropdown-item logout">
       <div @click="logUserOut" class="logout-button">Logout</div>
     </div>
   </div>
 </template>
+
+<!-- When user does have rooms, there can be a quick entry by displaying some of the rooms as some sort of circles on a separate row, which have an image or letter & it is scrollable, maybe expandable, it is still under 'My rooms' title.-->
 
 <script>
 import auth from "../config/auth";
@@ -56,6 +64,7 @@ export default {
   border-radius: 3px;
   font-size: 17px;
   cursor: pointer;
+  margin-bottom: 5px;
 }
 
 .dropdown-item:hover {

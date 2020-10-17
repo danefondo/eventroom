@@ -77,7 +77,7 @@ const EventroomDataController = {
       await eventroom.save();
 
       let userQuery = { userId: eventroomData.userId };
-      user = await ProfileModel.findOne(userQuery).exec();
+      let user = await ProfileModel.findOne(userQuery).exec();
       if (!user) {
         errors.FailedToFindUser = true;
         throw { errors: errors };

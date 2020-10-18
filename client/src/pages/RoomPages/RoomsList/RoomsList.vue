@@ -2,7 +2,7 @@
   <div class="myrooms">
     <div class="profile">
       <div class="myrooms-title">My Rooms</div>
-      <div class="myrooms-sub">View and manage all of your rooms</div>
+      <!-- <div class="myrooms-sub">View and manage all of your rooms</div> -->
       <div class="profileImage"></div>
       <div class="links">
         <div class="viewProfile">View my public profile</div>
@@ -25,11 +25,11 @@
 
 // import axios from "axios";
 import { mapState } from "vuex";
-import RoomBox from "./RoomComponents/RoomBox";
-import { requestWithAuthentication } from "../../config/api";
+import RoomBox from "./RoomBox";
+import { requestWithAuthentication } from "../../../config/api";
 
 export default {
-  name: "UserRooms",
+  name: "RoomsList",
   data() {
     return {
       gettingRooms: false,
@@ -136,15 +136,23 @@ export default {
 
 <style scoped>
 .profile {
-  width: 800px;
+  /* width: 800px; */
+  width: 725px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px;
-  background-color: #f3f4f7ad;
+  /* padding: 20px; */
+  padding: 40px 20px 25px 20px;
+  /* background-color: #f3f4f7ad; */
+  /* background-color: #f3f4f76b; */
+  background-color: #f7f8f9;
   border-radius: 4px;
   margin-bottom: 10px;
+  border-radius: 35px;
+  padding-bottom: 30px;
+
+  transform: scale(1.015);
 }
 
 .profileName {
@@ -155,41 +163,57 @@ export default {
 .links {
   display: flex;
   flex-direction: row;
-  margin-top: 5px;
+  margin-top: 10px;
 }
 
 .viewProfile,
 .newRoom {
-  font-size: 19px;
+  /* font-size: 19px; */
+  font-size: 20px;
   margin-top: 15px;
   margin-left: 5px;
   margin-right: 5px;
   letter-spacing: 0.5px;
   /* background-color: #e4e8ec; */
-  background-color: #dcdfe2;
+  /* background-color: #dcdfe2; */
+  /* background-color: #dcdfe299;
+  background-color: #f3f3f3;
+  background-color: #f1f1f1; */
+  background-color: #e9eced;
   /* padding: 5px 28px; */
   padding: 6px 14px;
-  font-weight: 600;
+  font-weight: 700;
   border-radius: 360px;
   cursor: pointer;
   transition: 0.1s ease;
 }
 
-.viewProfile:hover {
+.viewProfile:hover,
+.newRoom:hover {
   background-color: #b7bcc194;
 }
 
+.viewProfile {
+  color: #222;
+}
+
 .newRoom {
+  color: #5600ff;
+}
+
+/* .newRoom {
   background-color: #000000;
   color: white;
 }
 
 .newRoom:hover {
   background-color: #333;
-}
+} */
 
 .myrooms-title {
-  font-size: 45px;
+  /* font-size: 45px; */
+  font-size: 55px;
+  font-weight: 600;
 }
 
 .myrooms-sub {

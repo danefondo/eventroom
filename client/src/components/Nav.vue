@@ -174,7 +174,7 @@ export default {
 
 .username {
   padding: 11px 11px;
-  border-radius: 3px;
+  border-radius: 6px;
   /* background-color: #f3f4f7eb; */
   border: 1px solid transparent;
   cursor: pointer;
@@ -186,12 +186,12 @@ export default {
   /* background-color: #f2f3f5eb; */
   /* background-color: #f3f4f7eb; */
   background-color: #f3f4f7eb;
-  border: 1px solid #eee;
+  /* border: 1px solid #eee; */
 }
 
 .dropdown-active {
   background-color: #f3f4f7eb;
-  border: 1px solid #eee;
+  /* border: 1px solid #eee; */
   color: #3e3a54;
 }
 

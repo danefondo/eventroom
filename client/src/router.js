@@ -23,6 +23,10 @@ import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage"
 /* ====== ROOM PAGES ====== */
 import RoomPage from "./pages/RoomPages/Room";
 
+import RoomEditor from "./pages/RoomPages/RoomEditor/RoomEditor"
+
+import RoomsList from "./pages/RoomPages/RoomsList/RoomsList"
+
 /* ====== ERROR PAGES ====== */
 import Error404Page from "./pages/ErrorPages/Error404Page";
 import RoomNotFound from "./pages/RoomPages/RoomNotFound";
@@ -47,7 +51,6 @@ import PassResetRedirect from "./pages/AuthPages/PassResetRedirect";
 
 /* ====== PROFILE PAGES ====== */
 import ProfilePage from "./pages/UserPages/ProfilePage";
-import UserRooms from "./pages/RoomPages/UserRooms"
 
 const routes = [
   { path: "/discover/home", component: HomePage },
@@ -175,10 +178,21 @@ const routes = [
     },
   },
 
+    /* ====== ROOM ROUTES ====== */
+
   {
-    path: "/account/myrooms",
-    component: UserRooms,
-    name: "UserRooms",
+    path: "/account/rooms",
+    component: RoomsList,
+    name: "RoomsList",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
+  {
+    path: "/account/rooms/:eventroomName",
+    component: RoomEditor,
+    name: "RoomEditor",
     meta: {
       requireAuthentication: true,
     },

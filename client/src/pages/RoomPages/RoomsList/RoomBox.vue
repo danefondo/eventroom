@@ -17,40 +17,22 @@
         >eventroom.to/{{ eventroom.eventroomName }}</router-link
       >
     </div>
-    <div class="copy-container">
-      <div class="mt-8 tooltip_container">
-        <div @click="copyLink" class="copy-link">Copy link</div>
-        <div
-          class="tooltip tooltip--bottom"
-          :class="copiedState ? 'tooltip--middle-copied' : 'tooltip--middle'"
-        >
-          <span class="tooltip_tip">
-            {{ copiedState ? "Copied!" : "Copy link" }}
-          </span>
-        </div>
+    <div class="action-links">
+      <div @click="copyLink" class="copy-link">
+        {{ copiedState ? "Copied!" : "Copy link" }}
       </div>
+      <div @click="edit" class="edit-link">Edit</div>
     </div>
     <div class="last-used"></div>
     <div class="last-duration"></div>
     <div class="total-use-time"></div>
-    <IconBase
-      @click="edit"
-      class="link-icon edit-room"
-      icon-name="edit"
-      iconColor="black"
-      viewBox="0 0 512 512"
-      width="35"
-      height="35"
-      ><IconEdit
-    /></IconBase>
-    <!-- <div class="view-participants">Participants</div> -->
   </div>
 </template>
 
 <script>
 import IconBase from "../../../components/IconBase";
 import IconLink from "../../../components/SVG/IconLink";
-import IconEdit from "../../../components/SVG/IconEdit";
+// import IconEdit from "../../../components/SVG/IconEdit";
 
 export default {
   name: "RoomBox",
@@ -63,19 +45,18 @@ export default {
   components: {
     IconBase,
     IconLink,
-    IconEdit,
+    // IconEdit,
   },
   methods: {
     edit() {
-      this.$router.push(`/account/rooms/${this.eventroom.eventroomName}/edit`);
+      this.$router.push(`/account/rooms/${this.eventroom.eventroomName}/`);
     },
     copyLink() {
       var input = document.createElement("textarea");
       input.innerHTML =
         window.location.host +
-        "/account/rooms/" +
-        this.eventroom.eventroomName +
-        "/edit";
+        "/" +
+        this.eventroom.eventroomName;
       document.body.appendChild(input);
       input.select();
       var result = document.execCommand("copy");
@@ -105,11 +86,13 @@ export default {
   background-color: transparent;
   display: flex;
   box-sizing: border-box;
-  transition: 0.2s ease;
+  transition: 0.1s ease;
+  border-radius: 360px;
 }
 
+/* FOR A DARKER APP BACKGROUND COLOR (e.g. #f3f4f76b), USE THIS: #edf0f3 */
 .room-box:hover {
-  border: 1px solid #1f2f5833;
+  /* border: 1px solid #dcdfe299; */
   transform: scale(1.015);
   background-color: #f7f8f9;
 }
@@ -123,6 +106,7 @@ export default {
   font-weight: 600;
   color: #000;
   display: block;
+  text-transform: capitalize;
 }
 
 .room-name:hover {
@@ -133,25 +117,44 @@ export default {
   margin-top: 5px;
   cursor: pointer;
   display: block;
+  color: #2f2f31;
+  font-weight: 600;
+  font-size: 18px;
 }
 
 .room-url:hover {
   text-decoration: underline;
 }
 
-.copy-link {
-  padding: 6px 15px;
+.action-links {
   position: absolute;
-  right: 5%;
+  display: flex;
+  top: 50%;
+  right: 0%;
+  box-sizing: border-box;
+  transform: translate(-25%, -50%);
+}
+
+.copy-link,
+.edit-link {
+  padding: 6px 15px;
   font-size: 18px;
   box-sizing: border-box;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  color: #2b2b2b;
   cursor: pointer;
-  background-color: #dcdfe2;
   border-radius: 360px;
   white-space: nowrap;
+  font-weight: bold;
+  background-color: #e9eced;
+}
+
+.copy-link {
+  margin-right: 15px;
+  color: #5600ff;
+}
+
+.edit-link:hover,
+.copy-link:hover {
+  background-color: #b7bcc194;
 }
 
 .edit-room {
@@ -160,7 +163,7 @@ export default {
   border-radius: 3px;
   margin-left: auto;
   position: absolute;
-  right: 20px;
+  right: -15px;
   font-size: 20px;
   box-sizing: border-box;
   top: 50%;
@@ -169,9 +172,14 @@ export default {
   cursor: pointer;
 }
 
-.room-box svg:hover path {
-  fill: #333 !important;
-  stroke: #333 !important;
+/* svg.link-icon.edit-room:hover > .edit-room g {
+  fill: #4437d5 !important;
+  stroke: #4437d5 !important;
+} */
+
+.edit-room:hover > g .icon-path {
+  fill: #4437d5 !important;
+  stroke: #4437d5 !important;
 }
 
 .link-container {
@@ -184,9 +192,10 @@ export default {
   margin-right: 4px;
 }
 
-.copy-container {
+.copy-container,
+.edit-container {
   position: absolute;
-  right: 5%;
+  right: 8%;
   top: 46%;
   transform: translate(-50%, -50%);
 }
@@ -229,7 +238,12 @@ export default {
   transform-origin: left top;
 }
 .tooltip--bottom.tooltip--middle {
-  --translateX: -187%;
+  --translateX: -190.84%;
+  left: 50%;
+}
+
+.tooltip--bottom.tooltip--middle-edit {
+  --translateX: -101.5%;
   left: 50%;
 }
 
@@ -238,13 +252,13 @@ export default {
   left: 50%;
 }
 
-.tooltip--bottom.tooltip--middle::before {
+/* The tooltip arrow */
+.tooltip--bottom.tooltip--middle::before,
+.tooltip--bottom.tooltip--middle-copied::before,
+.tooltip--bottom.tooltip--middle-edit::before {
   left: 50%;
 }
 
-.tooltip--bottom.tooltip--middle-copied::before {
-  left: 50%;
-}
 .tooltip_container {
   --tooltip-display: none;
   display: inline-flex;

@@ -2,7 +2,7 @@
   <div class="myrooms">
     <div v-if="eventroom && eventroom.eventroomName" class="profile">
       <router-link to="/account/rooms" class="goBack">Go back</router-link>
-      <input class="room-title" :value="eventroom.eventroomName" />
+      <input spellcheck="false" class="room-title" v-model="eventroomName" />
       <!-- <div class="myrooms-sub">View and manage all of your rooms</div> -->
       <div class="profileImage"></div>
       <div class="link-container">
@@ -96,6 +96,9 @@ export default {
   name: "RoomEditor",
   data() {
     return {
+      eventroomName: "",
+      awaitingTyping: false,
+      nameExists: false,
       gettingRoom: false,
       gettingRoomError: false,
       bio: "",
@@ -145,8 +148,17 @@ export default {
       eventroom: (state) => state.eventroom.eventroomData,
     }),
   },
-  mounted() {
-    this.getRoom();
+  async mounted() {
+    await this.getRoom();
+
+    this.eventroomName = this.eventroom.eventroomName;
+
+    this.sockets.subscribe("eventroomNameChange", (data) => {
+      console.log("eventroomNameChange", data);
+      this.eventroomName = data;
+      this.$store.dispatch("eventroom/updateEventroomName", data);
+      this.changeURL();
+    });
   },
   methods: {
     togglePassword() {
@@ -285,6 +297,95 @@ export default {
         this.roomPassCopiedState = false;
       }, 1000);
       return result;
+    },
+    async updateEventroomName() {
+      try {
+        if (
+          !this.eventroomName ||
+          this.eventroomName.length == 0 ||
+          this.eventroomName == ""
+        ) {
+          // Prevent updating eventroomName to nothing
+          return console.log("Cannot set empty name.");
+        }
+        if (this.eventroomName == this.eventroom.eventroomName) {
+          // Prevent update when updating for connected participants
+          // As their old name won't exist anymore so cannot find it
+          //-To update, and you wouldn't want to
+          return;
+        }
+
+        let eventroomData = {
+          newEventroomName: this.eventroomName,
+          eventroomId: this.eventroom.eventroomId,
+        };
+        console.log("eveData", eventroomData);
+        const response = await axios.post(
+          `/api/eventroom/changeEventroomName`,
+          eventroomData
+        );
+        console.log("success name change", response.data);
+        this.$store.dispatch(
+          "eventroom/updateEventroomName",
+          this.eventroomName
+        );
+        this.$socket.emit("newEventroomName", this.eventroomName);
+        this.changeURL();
+      } catch (error) {
+        console.log("Failed to create temporary user", error);
+      }
+    },
+    changeURL() {
+      let slash = "/account/rooms/" + this.eventroom.eventroomName;
+      if (history.pushState) {
+        history.pushState({}, null, slash);
+      } else {
+        // support for browsers not supporting pushState
+        document.location.href = this.$route + slash;
+      }
+    },
+    async checkIfNameExists() {
+      if (
+        !this.eventroomName ||
+        this.eventroomName.length == 0 ||
+        this.eventroomName == ""
+      ) {
+        // Prevent checking if empty
+        return console.log("Cannot check empty name.");
+      }
+      console.log("wodddoo");
+      try {
+        let eventroomName = this.eventroomName;
+        let eventroomData = {
+          eventroomName: eventroomName,
+        };
+        const response = await axios.post(
+          `/api/eventroom/checkIfEventroomExistsByName`,
+          eventroomData
+        );
+        console.log("respon", response.data);
+        this.nameExists = response.data.alreadyExists;
+
+        if (!this.nameExists) {
+          this.updateEventroomName();
+        }
+      } catch (error) {
+        console.log(
+          "@checkIfSlugExists: Emergency, our penguins cannot find igloos to check!"
+        );
+      }
+    },
+  },
+  watch: {
+    eventroomName: function () {
+      if (!this.awaitingTyping) {
+        setTimeout(() => {
+          console.log("type type");
+          this.checkIfNameExists();
+          this.awaitingTyping = false;
+        }, 3000); // 1 sec delay
+      }
+      this.awaitingTyping = true;
     },
   },
 };

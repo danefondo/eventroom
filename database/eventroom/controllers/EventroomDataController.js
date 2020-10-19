@@ -48,6 +48,112 @@ const EventroomDataController = {
     return eventroom;
   },
 
+  async updateRoomPassword(eventroomData) {
+    let errors = {};
+    let query = { _id: eventroomData.eventroomId };
+    let eventroom;
+
+    try {
+      eventroom = await EventroomModel.findById(query).exec();
+      if (!eventroom) {
+        errors.FailedToFindRoom = true;
+        throw { errors: errors };
+      }
+
+      console.log("data", eventroomData);
+      console.log("eventry", eventroom);
+      if (eventroom.creatorId !== eventroomData.userId) {
+        console.log("eventroomCREATOR", eventroom.creatorId);
+        console.log("USERID", eventroomData.userId);
+        errors.UserLacksPermissionToModifyRoomPassword = true;
+        throw { errors: errors };
+      }
+
+      eventroom.roomPassword = eventroomData.roomPassword;
+      eventroom.roomPasswordEnabled = true;
+
+      await eventroom.save();
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return eventroom;
+  },
+
+  async checkIfRoomPasswordMatches(passCheckData) {
+    // Validate password as valid string?
+    // Select password specifically
+    let errors = {};
+    let query = { _id: passCheckData.eventroomId };
+    let matching = false;
+
+    try {
+      let eventroom = await EventroomModel.findById(query).exec();
+      if (!eventroom) {
+        errors.FailedToFindRoom = true;
+        throw { errors: errors };
+      }
+
+      if (eventroom.roomPassword == passCheckData.roomPasswordCheck) {
+        matching = true;
+      } 
+
+      if (!matching) {
+        errors.PasswordDidNotMatch = true;
+        throw { errors: errors };
+      }
+
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return matching;
+  },
+
+  async disableRoomPassword(eventroomData) {
+    let errors = {};
+    let query = { _id: eventroomData.eventroomId };
+    let eventroom;
+
+    try {
+      eventroom = await EventroomModel.findById(query).exec();
+      if (!eventroom) {
+        errors.FailedToFindRoom = true;
+        throw { errors: errors };
+      }
+
+      console.log("data", eventroomData);
+      console.log("eventry", eventroom);
+      if (eventroom.creatorId !== eventroomData.userId) {
+        console.log("eventroomCREATOR", eventroom.creatorId);
+        console.log("USERID", eventroomData.userId);
+        errors.UserLacksPermissionToModifyRoomPassword = true;
+        throw { errors: errors };
+      }
+
+      eventroom.roomPassword = "";
+      eventroom.roomPasswordEnabled = false;
+
+      await eventroom.save();
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return eventroom;
+  },
+
   async claimRoom(eventroomData) {
     let errors = {};
     let query = { eventroomName: eventroomData.eventroomName };

@@ -38,6 +38,7 @@ let EventroomSchema = new Schema({
   },
 
   roomPassword: String,
+  roomPasswordEnabled: Boolean,
 
   currentParticipantsIds: [String],
   allParticipantsIdsWhoHaveJoined: [String],

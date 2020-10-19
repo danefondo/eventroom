@@ -7,6 +7,10 @@ const state = {
     ownerId: "",
     creatorId: "",
   },
+
+  passwordNeedsMatching: Boolean,
+
+  ready: false,
 };
 
 // Synchronous
@@ -28,7 +32,14 @@ const mutations = {
     if (eventroomData["creatorId"]) {
       state.eventroomData.creatorId = eventroomData["creatorId"];
     }
+
+    if (eventroomData["roomPasswordEnabled"] === true) {
+      state.passwordNeedsMatching = true;
+    } else {
+      state.passwordNeedsMatching = false;
+    }
     console.log("finalizde @Vuex", state.eventroomData);
+    state.ready = true;
   },
 
   updateEventroomName(state, eventroomName) {
@@ -37,6 +48,10 @@ const mutations = {
 
   updateEventroomOwner(state, ownerId) {
     state.eventroomData["ownerId"] = ownerId;
+  },
+
+  passwordMatchedUpdate(state) {
+    state.passwordNeedsMatching = false;
   },
 
   clearEventroom(state) {
@@ -72,6 +87,10 @@ const actions = {
   clearEventroom(state) {
     state.commit("clearEventroom");
   },
+
+  passwordMatchedUpdate(state) {
+    state.commit("passwordMatchedUpdate");
+  }
 };
 
 const eventroom = {

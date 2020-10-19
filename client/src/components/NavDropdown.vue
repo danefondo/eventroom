@@ -71,7 +71,7 @@ export default {
 }
 
 .dropdown-item:hover {
-  background-color: #dcdfe4;
+  background-color: #b7bcc194;
 }
 
 .new-eventroom {
@@ -98,7 +98,7 @@ export default {
   font-size: 14px;
   height: max-content;
   width: max-content;
-  color: #6c7075;
+  color: #9ca0a9;
 }
 
 .logout-button:hover {

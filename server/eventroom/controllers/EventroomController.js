@@ -20,10 +20,43 @@ const EventroomController = {
     return;
   },
 
+  async checkIfRoomPasswordMatches(req, res) {
+    const options = {
+      validate: ["eventroomId"],
+      funcToRun: "checkIfRoomPasswordMatches",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
   async claimRoom(req, res) {
     const options = {
       validate: ["eventroomName", "userId", "username"],
       funcToRun: "claimRoom",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  async updateRoomPassword(req, res) {
+    const options = {
+      validate: ["roomPassword", "eventroomId", "userId"],
+      funcToRun: "updateRoomPassword",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  async disableRoomPassword(req, res) {
+    const options = {
+      validate: ["eventroomId", "userId"],
+      funcToRun: "disableRoomPassword",
       dataToPass: req.body,
       selfComplete: true,
     };

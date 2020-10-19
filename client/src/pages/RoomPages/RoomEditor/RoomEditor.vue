@@ -40,6 +40,44 @@
     </div>
     <div class="edit-section">
       <div class="edit-title">Eventroom privacy</div>
+      <div class="toggle-setting">
+        <div class="setting">
+          <div class="setting-name">Require password?</div>
+          <Toggle @click.native="togglePassword" :boolean="passwordEnabled" />
+        </div>
+        <div class="setting pass-setting">
+          <input
+            v-if="passwordEnabled"
+            class="setting-input"
+            type="password"
+            placeholder="Your room password"
+            v-model="roomPassword"
+          />
+          <div @click="saveRoomPass" v-if="passwordEnabled" class="save-pass">
+            {{ savingPassword ? "Saving" : "Save" }}
+          </div>
+          <div v-if="passwordEnabled" class="copy-pass" @click="copyRoomPass">
+            {{ roomPassCopiedState ? "Copied!" : "Copy" }}
+          </div>
+        </div>
+        <div class="setting pass-setting pass-notifiers">
+          <div v-if="passwordUpdatedSuccess" class="pass-update-success">
+            Room password successfully updated!
+          </div>
+          <div v-if="passwordUpdateFail" class="pass-update-fail">
+            Failed to update room password! Try again or contact support!
+          </div>
+          <div v-if="passwordWarning" class="pass-update-warning">
+            Warning! No password means any password will work!
+          </div>
+        </div>
+      </div>
+      <div class="toggle-setting">
+        <div class="setting">
+          <div class="setting-name">Require knocking to enter?</div>
+          <Toggle @click.native="toggleKnocking" :boolean="knockingEnabled" />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -49,9 +87,10 @@ import axios from "axios";
 import { mapState } from "vuex";
 import IconBase from "../../../components/IconBase";
 import IconLink from "../../../components/SVG/IconLink";
+import Toggle from "./Toggle";
 
 import DecoupledEditor from "@ckeditor/ckeditor5-build-decoupled-document";
-// import { requestWithAuthentication } from "../../config/api";
+import { requestWithAuthentication } from "../../../config/api";
 
 export default {
   name: "RoomEditor",
@@ -60,9 +99,17 @@ export default {
       gettingRoom: false,
       gettingRoomError: false,
       bio: "",
+      roomPassCopiedState: false,
+      passwordEnabled: false,
+      roomPassword: "",
+      savingPassword: false,
+      passwordUpdatedSuccess: false,
+      passwordUpdateFail: false,
+      passwordWarning: false,
+      knockingEnabled: false,
       editor: DecoupledEditor,
       editorConfig: {
-        placeholder: "Tell the world your crazy, your weird!",
+        placeholder: "What's the purpose of your room?",
         removePlugins: [
           "FontSize",
           "MediaEmbed",
@@ -89,6 +136,7 @@ export default {
   components: {
     IconBase,
     IconLink,
+    Toggle,
   },
   computed: {
     ...mapState({
@@ -101,6 +149,20 @@ export default {
     this.getRoom();
   },
   methods: {
+    togglePassword() {
+      if (this.passwordEnabled == true) {
+        this.disableRoomPass();
+      } else {
+        this.passwordEnabled = true;
+      }
+    },
+    toggleKnocking() {
+      // if (this.knockingEnabled) {
+      //   this.disableRoomPass();
+      // } else {
+      this.knockingEnabled = !this.knockingEnabled;
+      // }
+    },
     async getRoom() {
       try {
         if (!this.user || !this.user._id) {
@@ -115,6 +177,12 @@ export default {
         let eventroomData = result.data.response.eventroom[0];
         if (!eventroomData) throw new Error("Failed to fetch user room.");
 
+        console.log("eventroomDATA", eventroomData);
+        if (eventroomData.roomPasswordEnabled && eventroomData.roomPassword) {
+          this.passwordEnabled = eventroomData.roomPasswordEnabled;
+          this.roomPassword = eventroomData.roomPassword;
+        }
+
         this.$store.dispatch(
           "eventroom/setInitialEventroomData",
           eventroomData
@@ -124,6 +192,99 @@ export default {
         this.gettingRoom = false;
         this.gettingRoomError = true;
       }
+    },
+    async disableRoomPass() {
+      try {
+        this.passwordUpdateFail = false;
+        this.passwordUpdatedSuccess = false;
+        this.passwordWarning = false;
+        this.savingPassword = false;
+        this.roomPassword = "";
+        this.passwordEnabled = false;
+
+        if (!this.eventroom || !this.eventroom.eventroomId) {
+          return alert(
+            "Eventroom data missing! Try refreshing to see if you're still logged in!"
+          );
+        }
+
+        const response = await requestWithAuthentication(
+          "post",
+          `/api/eventroom/disableRoomPassword`,
+          {
+            eventroomId: this.eventroom.eventroomId,
+            userId: this.user._id,
+          }
+        );
+
+        if (response.data.success) {
+          this.roomPassword = "";
+          this.passwordEnabled = false;
+        }
+      } catch (error) {
+        console.log("error: ", error);
+        this.passwordUpdateFail = true;
+        this.passwordUpdatedSuccess = false;
+        this.savingPassword = false;
+        this.passwordWarning = false;
+      }
+    },
+    async saveRoomPass() {
+      try {
+        this.passwordUpdateFail = false;
+        this.passwordUpdatedSuccess = false;
+        if (!this.roomPassword) {
+          this.passwordWarning = true;
+        } else {
+          this.passwordWarning = false;
+        }
+
+        if (!this.eventroom || !this.eventroom.eventroomId) {
+          return alert(
+            "Eventroom data missing! Try refreshing to see if you're still logged in!"
+          );
+        }
+
+        this.savingPassword = true;
+
+        const response = await requestWithAuthentication(
+          "post",
+          `/api/eventroom/updateRoomPassword`,
+          {
+            roomPassword: this.roomPassword,
+            eventroomId: this.eventroom.eventroomId,
+            userId: this.user._id,
+          }
+        );
+
+        let eventroom = response.data.result;
+        if (!eventroom) throw new Error("Failed to fetch update room.");
+
+        if (response.data.success) {
+          this.savingPassword = false;
+          this.passwordUpdatedSuccess = true;
+          setTimeout(() => {
+            this.passwordUpdatedSuccess = false;
+          }, 2000);
+        }
+      } catch (error) {
+        console.log("error: ", error);
+        this.passwordUpdateFail = true;
+        this.savingPassword = false;
+      }
+    },
+    copyRoomPass() {
+      var input = document.createElement("textarea");
+      input.innerHTML = this.roomPassword;
+      document.body.appendChild(input);
+      input.select();
+      var result = document.execCommand("copy");
+      document.body.removeChild(input);
+      this.roomPassCopiedState = true;
+      setTimeout(() => {
+        this.roomPassCopiedState = false;
+      }, 1000);
+      return result;
     },
   },
 };
@@ -226,6 +387,149 @@ export default {
   color: #5600ff;
 }
 
+.save-pass,
+.copy-pass {
+  font-size: 20px;
+  margin-top: 15px;
+  margin-left: 20px;
+  letter-spacing: 0.5px;
+  background-color: #e9eced;
+  padding: 6px 14px;
+  font-weight: 700;
+  border-radius: 360px;
+  cursor: pointer;
+  transition: 0.1s ease;
+}
+
+.save-pass:hover,
+.copy-pass:hover {
+  background-color: #b7bcc194;
+}
+
+.copy-pass {
+  margin-left: 10px;
+}
+
+.pass-notifiers {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.toggle-setting {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  width: 550px;
+  margin: 20px auto;
+  margin-bottom: 30px;
+  box-sizing: border-box;
+  /* padding-right: 50px; */
+}
+
+.setting {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 550px;
+  /* margin: 20px auto;
+  margin-bottom: 30px; */
+  box-sizing: border-box;
+}
+
+.pass-setting {
+  justify-content: unset;
+  margin-top: 10px;
+}
+
+.pass-update-success,
+.pass-update-fail,
+.pass-update-warning {
+  font-size: 18px;
+  margin-top: 15px;
+  letter-spacing: 0.5px;
+  background-color: #e9eced;
+  color: #5600ff;
+  padding: 8px 20px;
+  font-weight: 700;
+  border-radius: 360px;
+  max-width: 515px;
+  box-sizing: border-box;
+}
+
+.pass-update-fail {
+  color: #ff2f2f;
+}
+
+.pass-update-warning {
+  color: #f76d42;
+}
+
+.setting-name {
+  font-size: 25px;
+  font-weight: 600;
+  text-align: left;
+  margin-right: auto;
+  color: #222;
+}
+
+.toggle {
+  background-color: #d7dce0;
+  border-radius: 360px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 45px;
+  padding: 3px;
+  cursor: pointer;
+}
+
+.toggle:hover .toggle-circle {
+  background-color: #f8fafb;
+}
+
+.toggle:hover .blue {
+  background-color: #4d01e2;
+}
+
+.toggle-background {
+  height: 32px;
+  margin: 0;
+  padding: 0px 2px;
+  border-radius: 360px;
+  width: 65px;
+  /* background-color: #5600ff; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s ease-in-out;
+}
+
+.toggle-circle {
+  background-color: #e9eced;
+  height: 28px;
+  width: 28px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0px;
+  border-radius: 360px;
+  transition: 0.2s ease-in-out;
+}
+
+.blue {
+  background-color: #5600ff;
+}
+
+.enabled {
+  margin-left: auto;
+}
+
+.disabled {
+  margin-right: auto;
+}
+
 /* .newRoom {
   background-color: #000000;
   color: white;
@@ -250,7 +554,34 @@ export default {
   font-weight: 600;
   text-align: left;
   margin-right: auto;
-  margin-left: 25px;
+  margin-left: auto;
+  margin-bottom: 20px;
+}
+
+.setting-input {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  width: 300px;
+  caret-color: #666;
+  padding: 8px 14px;
+  font-size: 20px;
+  font-family: "Nunito", sans-serif;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+  margin-top: 14px;
+}
+
+.setting-input:hover {
+  border-color: #ccc;
+}
+
+.setting-input:focus {
+  border-color: #ccc;
+}
+
+.myrooms {
+  margin-bottom: 100px;
 }
 
 .myrooms-sub {
@@ -304,7 +635,7 @@ export default {
 
 .ck-creator-input {
   padding-top: 0px !important;
-  border-radius: 3px !important;
+  border-radius: 8px !important;
   font-size: 23px !important;
   border: 1px solid #edf1f5 !important;
   width: 650px !important;

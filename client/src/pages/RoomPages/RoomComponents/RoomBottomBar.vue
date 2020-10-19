@@ -51,7 +51,18 @@
             "
             @click="toggleMedia(0)"
           >
-            <IconBase icon-name="video" viewBox="0 0 50 50" width="29" height="29" :iconColor="userMediaSettings.cameraOn ? getColor('video') : getSecondColor('video')" ><IconVideo /></IconBase>
+            <IconBase
+              icon-name="video"
+              viewBox="0 0 50 50"
+              width="29"
+              height="29"
+              :iconColor="
+                userMediaSettings.cameraOn
+                  ? getColor('video')
+                  : getSecondColor('video')
+              "
+              ><IconVideo
+            /></IconBase>
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
@@ -69,15 +80,16 @@
             "
             @click="toggleMedia(1)"
           >
-          <IconBase icon-name="microphone" :iconColor="getColor('microphone')" viewBox="0 0 30 30" width="28" height="28"><IconMicrophone /></IconBase>
-            <img
-              :src="userMediaSettings.microphoneOn ? audioIcon : audioIconWhite"
-              :class="
-                userMediaSettings.microphoneOn
-                  ? 'audio-icon'
-                  : 'audio-icon-white'
+            <IconBase
+              icon-name="microphone"
+              :iconColor="
+                userMediaSettings.microphoneOn ? getMicColor : getMicSecondColor
               "
-            />
+              viewBox="0 0 30 30"
+              width="28"
+              height="28"
+              ><IconMicrophone
+            /></IconBase>
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
@@ -199,8 +211,15 @@ export default {
       info: (state) => state.toolbar.toolbarConfig.info,
       settings: (state) => state.toolbar.toolbarConfig.settings,
       userDesignPreferences: (state) => state.preferences.userDesignPreferences,
-      thisRoomDesignPreferences: (state) => state.preferences.thisRoomDesignPreferences,
+      thisRoomDesignPreferences: (state) =>
+        state.preferences.thisRoomDesignPreferences,
     }),
+    getMicColor() {
+      return "#1F3058";
+    },
+    getMicSecondColor() {
+      return "#fff";
+    },
   },
   components: {
     IconBase,
@@ -233,17 +252,34 @@ export default {
       }
     },
     getColor(icon) {
-      let color;
-      if (this.userDesignPreferences[icon]["color"]) {
-        color = this.userDesignPreferences[icon]["color"];
-      } else if (this.userDesignPreferences.defaults.defaultIconColor) {
-        color = this.userDesignPreferences.defaults.defaultIconColor;
-      } else if (this.thisRoomDesignPreferences[icon]["color"]) {
-        color = this.thisRoomDesignPreferences[icon]["color"];
-      } else {
-        color = "#1F3058";
-      }
-      return color;
+      console.log("icon", icon);
+      return "#1F3058";
+      // let color;
+      // if (this.userDesignPreferences[icon]["color"]) {
+      //   color = this.userDesignPreferences[icon]["color"];
+      // } else if (this.userDesignPreferences.defaults.defaultIconColor) {
+      //   color = this.userDesignPreferences.defaults.defaultIconColor;
+      // } else if (this.thisRoomDesignPreferences[icon]["color"]) {
+      //   color = this.thisRoomDesignPreferences[icon]["color"];
+      // } else {
+      //   color = "#1F3058";
+      // }
+      // return color;
+    },
+    getSecondColor(icon) {
+      console.log("icon", icon);
+      return "#fff";
+      // let color;
+      // if (this.userDesignPreferences[icon]["color"]) {
+      //   color = this.userDesignPreferences[icon]["color"];
+      // } else if (this.userDesignPreferences.defaults.defaultIconColor) {
+      //   color = this.userDesignPreferences.defaults.defaultIconColor;
+      // } else if (this.thisRoomDesignPreferences[icon]["color"]) {
+      //   color = this.thisRoomDesignPreferences[icon]["color"];
+      // } else {
+      //   color = "#fff";
+      // }
+      // return color;
     },
   },
 };

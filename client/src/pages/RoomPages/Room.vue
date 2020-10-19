@@ -1,5 +1,36 @@
 <template>
-  <div class="room-container">
+  <div
+    class="room-pass-verif"
+    v-if="ready && passwordNeedsMatching === true && !passwordMatched"
+  >
+    <!-- <div class="enter-room-password-title">eventroom.to</div> -->
+    <router-link to="/" class="logo-link">
+      <img :src="logo" class="logo"
+    /></router-link>
+    <div class="enter-room-password">
+      <div class="enter-room-password-title">
+        Please enter a password to join
+        <span class="pass-room-name">{{ eventroom.eventroomName }}</span>
+      </div>
+      <input
+        class="room-password"
+        type="password"
+        placeholder="Enter room pass"
+        v-model="roomPasswordCheck"
+      />
+      <div
+        id="check-pass"
+        class="check-pass"
+        @click="checkIfRoomPasswordMatches"
+      >
+        Enter room
+      </div>
+    </div>
+  </div>
+  <div
+    v-else-if="ready && passwordNeedsMatching == false"
+    class="room-container"
+  >
     <RoomShortcuts
       v-hotkey="keymap"
       v-show="showShortcutsModal"
@@ -45,11 +76,19 @@ import VanillaRTCVideo from "./VanillaRTC/VanillaRTCVideo";
 import axios from "axios";
 import auth from "../../config/auth";
 import { destroyTempToken, setTempToken } from "../../config/axios";
+
+import logo from "../../assets/logo.png";
 // import SessionController from "../../session/SessionController";
 // import { requestWithAuthentication } from "../../config/api";
 
 function initialState() {
   return {
+    logo: logo,
+    roomPasswordCheck: "",
+    checkingPassword: false,
+    checkingPasswordFailed: false,
+    passwordMatched: false,
+    wrongPassword: false,
     sideBarConfigs: {
       leftSidebar: false,
     },
@@ -79,6 +118,8 @@ export default {
       userMediaSettings: (state) => state.mediastates.userMediaSettings,
       RTCConfig: (state) => state.mediastates.RTCConfig,
       userId: (state) => state.auth.userId,
+      ready: (state) => state.eventroom.ready,
+      passwordNeedsMatching: (state) => state.eventroom.passwordNeedsMatching,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
@@ -216,6 +257,41 @@ export default {
     });
   },
   methods: {
+    async checkIfRoomPasswordMatches() {
+      try {
+        this.checkingPassword = true;
+
+        this.wrongPassword = false;
+        this.checkingPasswordFailed = false;
+
+        const axiosGetQuery = `/api/eventroom/checkIfRoomPasswordMatches`;
+        const queryData = {
+          eventroomId: this.eventroom.eventroomId,
+          roomPasswordCheck: this.roomPasswordCheck,
+        };
+
+        const response = await axios.post(axiosGetQuery, queryData);
+
+        console.log("respo", response);
+        if (!response.data.result) {
+          this.wrongPassword = true;
+          this.roomPasswordCheck = "";
+        }
+
+        if (response.data.result && response.data.success) {
+          this.$store.dispatch("eventroom/passwordMatchedUpdate");
+          this.passwordMatched = true;
+          this.passwordNeedsMatching = false;
+          this.checkingPassword = false;
+          this.roomPasswordCheck = "";
+        }
+      } catch (error) {
+        console.log("error: ", error);
+        this.checkingPassword = false;
+        this.checkingPasswordFailed = true;
+        this.roomPasswordCheck = "";
+      }
+    },
     joinUser() {
       let eventroomData = {
         eventroomId: this.eventroom.eventroomId,
@@ -416,6 +492,14 @@ export default {
           return;
         }
       }
+
+      if (e.target.className == "room-password") {
+        if (e.which == 13) {
+          document.getElementById("check-pass").click();
+        } else {
+          return;
+        }
+      }
       if (e.target.classList.contains("eventroom-name")) return;
 
       if (e.which == 67) {
@@ -497,5 +581,94 @@ export default {
   margin: 0 auto;
   width: 100%;
   position: relative;
+}
+
+.room-pass-verif {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.enter-room-password {
+  width: 699px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 25px 20px;
+  background-color: #f7f8f9;
+  margin-bottom: 100px;
+  margin-top: 25px;
+  border-radius: 35px;
+  padding-bottom: 40px;
+}
+
+.enter-room-password-title {
+  font-size: 34px;
+  font-weight: 600;
+  text-align: center;
+  margin-right: auto;
+  margin-left: auto;
+  margin-bottom: 35px;
+  width: 600px;
+  line-height: 40px;
+}
+
+.room-password {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  width: 300px;
+  caret-color: #666;
+  padding: 8px 14px;
+  font-size: 22px;
+  font-family: "Nunito", sans-serif;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.room-password:hover {
+  border-color: #ccc;
+}
+
+.room-password:focus {
+  border-color: #ccc;
+}
+
+.check-pass {
+  font-size: 25px;
+  margin-top: 15px;
+  letter-spacing: 0.5px;
+  background-color: #e9eced;
+  color: #5600ff;
+  padding: 6px 14px;
+  font-weight: 700;
+  border-radius: 360px;
+  cursor: pointer;
+  transition: 0.1s ease;
+  width: 300px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.check-pass:hover {
+  background-color: #b7bcc194;
+}
+
+.pass-room-name {
+  text-transform: capitalize;
+  color: #5600ff;
+}
+
+.logo {
+  height: 50px;
+  width: 50px;
+}
+
+.logo-link {
+  background-color: #e9eced;
 }
 </style>

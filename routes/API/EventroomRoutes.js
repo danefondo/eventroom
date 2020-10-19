@@ -13,6 +13,12 @@ router.post("/getUserRooms", EventroomController.getUserRooms);
 
 router.post("/claimRoom", EventroomController.claimRoom);
 
+router.post("/updateRoomPassword", EventroomController.updateRoomPassword);
+
+router.post("/disableRoomPassword", EventroomController.disableRoomPassword);
+
+router.post("/checkIfRoomPasswordMatches", EventroomController.checkIfRoomPasswordMatches);
+
 /**
  * Add room participant to room data
  */

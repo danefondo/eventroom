@@ -98,6 +98,7 @@ a:visited {
 
 .page-container {
   height: calc(100vh - 52px);
+  position: relative;
 }
 
 .full {

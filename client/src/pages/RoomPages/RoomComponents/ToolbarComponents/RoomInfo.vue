@@ -20,6 +20,9 @@
               {{ eventroom.eventroomName }}
             </div> -->
           </div>
+          <div v-if="checkingNameFailed" class="inputErrorContainer">
+            <div class="inputErrorText">{{ checkingNameError }}</div>
+          </div>
           <div class="mt-8 tooltip_container">
             <a
               class="room-name_button knpf knpf--link knpf--small knpf--secondary"
@@ -43,7 +46,11 @@
         />
       </div>
       <div class="sidebar-inner">
-        <div class="sidebar-sections">
+        <div
+          :class="
+            checkingNameFailed ? 'sidebar-sections-special' : 'sidebar-sections'
+          "
+        >
           <div class="sidebar-midsection"></div>
           <div class="sidebar-bottom">
             <div v-if="user && isAuthenticated && checkIfOwner" class="claim">
@@ -115,6 +122,8 @@ export default {
       nameExists: false,
       copiedState: false,
       claiming: false,
+      checkingNameError: "",
+      checkingNameFailed: false,
     };
   },
   computed: {
@@ -175,7 +184,10 @@ export default {
 
         if (response.data.success) {
           this.claiming = false;
-          this.$store.dispatch("eventroom/updateEventroomOwner", response.data.result.ownerId);
+          this.$store.dispatch(
+            "eventroom/updateEventroomOwner",
+            response.data.result.ownerId
+          );
         }
       } catch (error) {
         console.log("fail", error);
@@ -233,34 +245,48 @@ export default {
       }
     },
     async checkIfNameExists() {
+      this.checkingNameFailed = false;
+      this.checkingNameError = "";
       if (
         !this.eventroomName ||
         this.eventroomName.length == 0 ||
         this.eventroomName == ""
       ) {
-        // Prevent checking if empty
-        return console.log("Cannot check empty name.");
+        // Prevent if empty
+        this.checkingNameFailed = true;
+        this.checkingNameError = "Room name cannot be empty.";
+        return;
       }
-      console.log("wodddoo");
       try {
         let eventroomName = this.eventroomName;
         let eventroomData = {
           eventroomName: eventroomName,
+          eventroomId: this.eventroom.eventroomId,
         };
+
         const response = await axios.post(
-          `/api/eventroom/checkIfEventroomExistsByName`,
+          `/api/eventroom/checkIfEventroomNameExistsAndIsNotSame`,
           eventroomData
         );
-        console.log("respon", response.data);
-        this.nameExists = response.data.alreadyExists;
+
+        let result = response.data.result;
+
+        this.nameExists = result.doesEventroomExist;
+        let existsButIsSameRoom = result.nameCheckedIsCurrent;
 
         if (!this.nameExists) {
           this.updateEventroomName();
+        } else if (!existsButIsSameRoom) {
+          this.checkingNameFailed = true;
+          this.checkingNameError = "Name already exists!";
         }
       } catch (error) {
         console.log(
-          "@checkIfSlugExists: Emergency, our penguins cannot find igloos to check!"
+          "@checkIfSlugExists: Emergency, our penguins cannot find igloos to check!",
+          error
         );
+        this.checkingNameFailed = true;
+        this.checkingNameError = "Something went wrong!";
       }
     },
     copyLink() {
@@ -676,6 +702,13 @@ a {
   flex-direction: column;
 }
 
+.sidebar-sections-special {
+  height: calc(100vh - 118px);
+  display: flex;
+  box-sizing: border-box;
+  flex-direction: column;
+}
+
 .sidebar-midsection {
   flex: 1;
   display: flex;
@@ -751,5 +784,22 @@ a {
 
 .claim-owner {
   margin-bottom: 20px;
+}
+
+.inputErrorContainer {
+  padding: 5px 0;
+  background-color: #eceff3;
+  border-radius: 360px;
+  margin-bottom: 0px;
+  margin-top: 6px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #9a2442;
+  font-weight: 700;
+  box-sizing: border-box;
+  width: 235px;
+  text-align: center;
+  font-size: 15px;
+  text-transform: none;
 }
 </style>

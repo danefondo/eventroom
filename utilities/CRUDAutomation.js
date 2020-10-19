@@ -56,9 +56,9 @@ const CRUDAutomation = {
     } catch (error) {
       console.log(error);
       if (error.statusCode == 500) {
-        error.errors.exceptionError = true;
+        error.exceptionError = true;
       }
-      return res.status(error.statusCode).send({ errors: error.errors });
+      return res.status(error.statusCode).send(error);
     }
     return res.status(200).send({ result, success: true });
   },

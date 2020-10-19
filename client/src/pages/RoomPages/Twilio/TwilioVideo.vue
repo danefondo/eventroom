@@ -1,11 +1,5 @@
 <template>
   <div class="video-streams">
-    <!-- <div class="roomTitle">
-      <span v-if="loading"> Loading... {{ eventroomId }}</span>
-      <span v-else-if="!loading && eventroomId">
-        Connected to {{ eventroomId }}</span
-      >
-    </div> -->
     <div
       class="left-side side"
       :class="localParticipantScreenData ? 'column-side' : ''"
@@ -42,10 +36,10 @@
       :class="remoteParticipantScreenData ? 'column-side' : ''"
     >
       <div v-if="!remoteParticipantData" class="no-remote-video">
-        Looks like it's just you in here!
+        Looks like it is just you in here!"
       </div>
       <div
-        v-else-if="remoteParticipantData"
+        v-if="remoteParticipantData"
         id="remote-video"
         class="video"
         :class="[
@@ -53,9 +47,7 @@
           remoteParticipantScreenData ? 'remote-split' : '',
         ]"
         ref="remotevideo"
-      >
-        <div class="toggleMirror"></div>
-      </div>
+      ></div>
       <div
         v-if="remoteParticipantScreenData"
         id="remoteScreenshare"
@@ -68,7 +60,6 @@
       ></div>
     </div>
     <div class="row remote_video_container">
-      <!-- <div id="remoteTrack" ref="localVideoBlock"></div> -->
       <div class="remote-containers">
         <div
           class="remote-container video"

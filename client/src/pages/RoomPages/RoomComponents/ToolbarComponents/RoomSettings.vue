@@ -9,7 +9,9 @@
           class="cancelIcon"
         />
       </div>
-      <div class="sidebar-inner"></div>
+      <div class="sidebar-inner">
+        <!-- <router-link to="/account/rooms/"+{{eventroomName}} class="viewSettings">Schedule meeting in room</router-link> -->
+      </div>
     </div>
   </div>
 </template>
@@ -25,11 +27,13 @@ export default {
       cancelIcon: cancelIcon,
     };
   },
+  // props: [""],
   computed: {
     ...mapState({
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
+    // eventroomSettingsLink
   },
   methods: {
     toggleToolbar(toolbarTool) {

@@ -364,7 +364,7 @@ export default {
           eventroomData
         );
         console.log("respon", response.data);
-        this.nameExists = response.data.alreadyExists;
+        this.nameExists = response.data.result.alreadyExists;
 
         if (!this.nameExists) {
           this.updateEventroomName();
@@ -670,7 +670,7 @@ export default {
 .room-title:hover,
 .room-title:focus {
   /* background: #eceff4; */
-  background: #e9eced;
+  background: #edf0f1;
   outline: none;
 }
 
@@ -763,7 +763,7 @@ export default {
   border-radius: 8px !important;
   font-size: 23px !important;
   border: 1px solid #edf1f5 !important;
-  width: 650px !important;
+  width: 600px !important;
   box-sizing: border-box;
   height: 175px !important;
   outline: none !important;

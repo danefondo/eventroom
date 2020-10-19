@@ -17,7 +17,10 @@ router.post("/updateRoomPassword", EventroomController.updateRoomPassword);
 
 router.post("/disableRoomPassword", EventroomController.disableRoomPassword);
 
-router.post("/checkIfRoomPasswordMatches", EventroomController.checkIfRoomPasswordMatches);
+router.post(
+  "/checkIfRoomPasswordMatches",
+  EventroomController.checkIfRoomPasswordMatches
+);
 
 /**
  * Add room participant to room data
@@ -45,13 +48,15 @@ router.post(
   EventroomController.checkIfEventroomExistsById
 );
 
+router.post(
+  "/checkIfEventroomNameExistsAndIsNotSame",
+  EventroomController.checkIfEventroomNameExistsAndIsNotSame
+);
+
 /**
  * Change existing Eventroom name
  */
-router.post(
-  "/changeEventroomName",
-  EventroomController.changeEventroomName
-);
+router.post("/changeEventroomName", EventroomController.changeEventroomName);
 
 /**
  * Generate an Access Token for a chat application user provided via the url

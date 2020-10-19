@@ -18,6 +18,9 @@
         placeholder="Enter room pass"
         v-model="roomPasswordCheck"
       />
+      <div v-if="checkingPasswordFailed" class="inputErrorContainer">
+        <div class="inputErrorText">{{ checkingPasswordError }}</div>
+      </div>
       <div
         id="check-pass"
         class="check-pass"
@@ -87,8 +90,8 @@ function initialState() {
     roomPasswordCheck: "",
     checkingPassword: false,
     checkingPasswordFailed: false,
+    checkingPasswordError: "",
     passwordMatched: false,
-    wrongPassword: false,
     sideBarConfigs: {
       leftSidebar: false,
     },
@@ -258,10 +261,11 @@ export default {
   },
   methods: {
     async checkIfRoomPasswordMatches() {
+      let errors = {};
       try {
         this.checkingPassword = true;
 
-        this.wrongPassword = false;
+        this.checkingPasswordError = "";
         this.checkingPasswordFailed = false;
 
         const axiosGetQuery = `/api/eventroom/checkIfRoomPasswordMatches`;
@@ -274,8 +278,11 @@ export default {
 
         console.log("respo", response);
         if (!response.data.result) {
-          this.wrongPassword = true;
-          this.roomPasswordCheck = "";
+          errors.PasswordDidNotMatch = true;
+          throw { errors: errors };
+          // this.checkingPasswordFailed = true;
+          // this.checkingPasswordError = "Wrong password!";
+          // this.roomPasswordCheck = "";
         }
 
         if (response.data.result && response.data.success) {
@@ -285,10 +292,15 @@ export default {
           this.roomPasswordCheck = "";
         }
       } catch (error) {
-        console.log("error: ", error);
+        console.log("error: ", error.response.data.errors.PasswordDidNotMatch);
         this.checkingPassword = false;
         this.checkingPasswordFailed = true;
         this.roomPasswordCheck = "";
+        if (error.response.data.errors.PasswordDidNotMatch) {
+          this.checkingPasswordError = "Wrong password. Try again!";
+        } else {
+          this.checkingPasswordError = "Failed to check password. Try again.";
+        }
       }
     },
     joinUser() {
@@ -669,5 +681,20 @@ export default {
 
 .logo-link {
   background-color: #e9eced;
+}
+
+.inputErrorContainer {
+  padding: 8px 0;
+  background-color: #e9eced;
+  border-radius: 360px;
+  margin-bottom: 0px;
+  margin-top: 6px;
+  margin-left: auto;
+  margin-right: auto;
+  color: #9a2442;
+  font-weight: 700;
+  box-sizing: border-box;
+  width: 300px;
+  text-align: center;
 }
 </style>

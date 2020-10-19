@@ -2,10 +2,61 @@ const EventroomModel = require("../models/EventroomModel");
 const ProfileModel = require("../../profile/models/ProfileModel");
 
 const EventroomDataController = {
+  async checkIfEventroomNameExistsAndIsNotSame(eventroomData) {
+    let name = eventroomData.eventroomName;
+    name = name.replace(/[^0-9a-z_-]/gi, "");
+    let returnData = {};
+    let errors = {};
+    let eventroom;
+
+    try {
+      const query = { eventroomName: name };
+      returnData.doesEventroomExist = await EventroomModel.exists(query);
+
+      if (returnData.doesEventroomExist) {
+        // If name exists, check to make sure it is not the same as current
+        let idQuery = { _id: eventroomData.eventroomId };
+        eventroom = await EventroomModel.findById(idQuery).exec();
+        if (!eventroom) {
+          errors.FailedToGetRoomWhileCheckingIfNameIsSame = true;
+          throw { errors: errors };
+        }
+
+        if (eventroom.eventroomName == name) {
+          returnData.nameCheckedIsCurrent = true;
+        }
+      }
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    return returnData;
+  },
+
   async checkIfEventroomExistsByName(eventroomName) {
-    const query = { eventroomName: eventroomName };
-    const doesEventroomExist = await EventroomModel.exists(query);
-    return doesEventroomExist;
+    console.log("eventroomName", eventroomName);
+    // let name = eventroomName.replace(/[^0-9a-z]/gi, "");
+    name = eventroomName.replace(/[^0-9a-z_-]/gi, "");
+    console.log("eventroomName2", name);
+    let returnData = {};
+    let errors = {};
+    try {
+      const query = { eventroomName: name };
+      returnData.alreadyExists = await EventroomModel.exists(query);
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
+    }
+    console.log("returnDataX", returnData);
+    return returnData;
   },
 
   async checkIfEventroomExistsById(eventroomId) {
@@ -34,8 +85,13 @@ const EventroomDataController = {
         eventroom.anonParticipantsIdsWhoHaveJoined.push(participantId);
       }
 
-      eventroom.currentParticipantsIds.push(participantId);
-      eventroom.allParticipantsIdsWhoHaveJoined.push(participantId);
+      if (!eventroom.currentParticipantsIds.includes(participantId)) {
+        eventroom.currentParticipantsIds.push(participantId);
+      }
+
+      if (!eventroom.allParticipantsIdsWhoHaveJoined.includes(participantId)) {
+        eventroom.allParticipantsIdsWhoHaveJoined.push(participantId);
+      }
       await eventroom.save();
     } catch (error) {
       if (error.errors) {
@@ -100,14 +156,14 @@ const EventroomDataController = {
 
       if (eventroom.roomPassword == passCheckData.roomPasswordCheck) {
         matching = true;
-      } 
+      }
 
       if (!matching) {
         errors.PasswordDidNotMatch = true;
         throw { errors: errors };
       }
-
     } catch (error) {
+      console.log("to err", error);
       if (error.errors) {
         errors = error.errors;
       } else {
@@ -176,7 +232,8 @@ const EventroomDataController = {
       }
 
       // Todo: Make sure expire date has not arrived yet or that it doesn't before save;
-      eventroom.expire_at = null;
+      // eventroom.expire_at = null;
+      eventroom.expireAt = null;
       eventroom.ownerId = eventroomData.userId;
       eventroom.ownerUsername = eventroomData.username;
 
@@ -221,19 +278,47 @@ const EventroomDataController = {
   async createEventroom(eventroomData) {
     console.log("Creating new Eventroom...");
 
-    let eventroom = new EventroomModel({
-      eventroomName: eventroomData.eventroomName,
-      dateCreated: eventroomData.dateCreated,
-    });
+    let errors = {};
+    let eventroom;
+    let nameExists = false;
+    let hostId = eventroomData.hostId;
+    let name = eventroomData.eventroomName;
+    name = name.replace(/[^0-9a-z_-]/gi, "");
 
-    console.log("@Created Eventroom", eventroom);
+    try {
+      let response = await EventroomDataController.checkIfEventroomExistsByName(
+        name
+      );
 
-    if (eventroomData.hostId) {
-      eventroom.hostId = eventroomData.hostId;
-      eventroom.creatorId = eventroomData.hostId;
+      nameExists = response.alreadyExists;
+
+      if (nameExists) {
+        errors.NameAlreadyExists = true;
+        throw { errors: errors };
+      }
+
+      eventroom = new EventroomModel({
+        eventroomName: eventroomData.eventroomName,
+        dateCreated: new Date(),
+      });
+
+      if (hostId) {
+        eventroom.hostId = eventroomData.hostId;
+        eventroom.creatorId = eventroomData.hostId;
+      }
+
+      console.log("@Created Eventroom", eventroom);
+
+      await eventroom.save();
+    } catch (error) {
+      if (error.errors) {
+        errors = error.errors;
+      } else {
+        errors.error = error;
+      }
+      throw { errors: errors };
     }
-
-    return eventroom.save();
+    return eventroom;
   },
 
   async getEventroomByName(eventroomName) {

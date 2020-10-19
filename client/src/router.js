@@ -23,9 +23,9 @@ import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage"
 /* ====== ROOM PAGES ====== */
 import RoomPage from "./pages/RoomPages/Room";
 
-import RoomEditor from "./pages/RoomPages/RoomEditor/RoomEditor"
+import RoomEditor from "./pages/RoomPages/RoomEditor/RoomEditor";
 
-import RoomsList from "./pages/RoomPages/RoomsList/RoomsList"
+import RoomsList from "./pages/RoomPages/RoomsList/RoomsList";
 
 /* ====== ERROR PAGES ====== */
 import Error404Page from "./pages/ErrorPages/Error404Page";
@@ -85,11 +85,12 @@ const routes = [
       let routeData = {
         eventroomName: to.params.eventroomName,
       };
+      console.log("routeDATA", routeData);
       http
         .post(`/api/eventroom/checkIfEventroomExistsByName`, routeData)
         .then((response) => {
           console.log("responssss", response);
-          if (!response.data.alreadyExists) {
+          if (!response.data.result.alreadyExists) {
             router.push("/");
           } else {
             next();
@@ -145,7 +146,6 @@ const routes = [
     },
   },
 
-
   /* ====== AUTHENTICATION ROUTES ====== */
   { path: "/account/login", component: LoginPage, name: "LoginPage" },
   { path: "/account/logout", component: LogoutPage, name: "LogoutPage" },
@@ -178,7 +178,7 @@ const routes = [
     },
   },
 
-    /* ====== ROOM ROUTES ====== */
+  /* ====== ROOM ROUTES ====== */
 
   {
     path: "/account/rooms",

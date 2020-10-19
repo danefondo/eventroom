@@ -44,7 +44,7 @@ let EventroomSchema = new Schema({
   allParticipantsIdsWhoHaveJoined: [String],
   anonParticipantsIdsWhoHaveJoined: [String],
 
-  expire_at: { type: Date, default: Date.now, expires: 86400 },
+  expireAt: { type: Date, default: Date.now, expires: 86400 },
 
   ownerId: String,
   ownerUsername: String,

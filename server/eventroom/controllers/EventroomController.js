@@ -75,35 +75,55 @@ const EventroomController = {
     return;
   },
 
-  async checkIfEventroomExistsByName(req, res) {
-    if (!req.body) {
-      return res.status(400).send({ error: "Invalid request 400" });
-    }
-
-    let eventroomName = req.body.eventroomName;
-    if (!eventroomName || eventroomName.length == 0 || eventroomName == "") {
-      // Ideally just create a new slug here to maximize UX
-      return res
-        .status(400)
-        .send({ error: "Invalid request: Eventroom name missing" });
-    }
-
-    // eventroomName = eventroomName.replace(/[^0-9a-z]/gi, "");
-
-    try {
-      // Check if Eventroom already exists
-      let eventroom = await checkIfEventroomExistsByName(eventroomName);
-
-      let alreadyExists = false;
-      if (eventroom) {
-        alreadyExists = true;
-      }
-      return res.status(200).send({ alreadyExists });
-    } catch (error) {
-      console.log("@checkIfEventroomExistsByName", error);
-      res.status(500).send({ error: "An unknown error occurred" });
-    }
+  async checkIfEventroomNameExistsAndIsNotSame(req, res) {
+    const options = {
+      validate: ["eventroomId", "eventroomName"],
+      funcToRun: "checkIfEventroomNameExistsAndIsNotSame",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
   },
+
+  async checkIfEventroomExistsByName(req, res) {
+    const options = {
+      validate: ["eventroomName"],
+      funcToRun: "checkIfEventroomExistsByName",
+      dataToPass: req.body.eventroomName,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  // async checkIfEventroomExistsByName(req, res) {
+  //   if (!req.body) {
+  //     return res.status(400).send({ error: "Invalid request 400" });
+  //   }
+
+  //   let eventroomName = req.body.eventroomName;
+  //   if (!eventroomName || eventroomName.length == 0 || eventroomName == "") {
+  //     // Ideally just create a new slug here to maximize UX
+  //     return res
+  //       .status(400)
+  //       .send({ error: "Invalid request: Eventroom name missing" });
+  //   }
+
+  //   try {
+  //     // Check if Eventroom already exists
+  //     let eventroom = await checkIfEventroomExistsByName(eventroomName);
+
+  //     let alreadyExists = false;
+  //     if (eventroom) {
+  //       alreadyExists = true;
+  //     }
+  //     return res.status(200).send({ alreadyExists });
+  //   } catch (error) {
+  //     console.log("@checkIfEventroomExistsByName", error);
+  //     res.status(500).send({ error: "An unknown error occurred" });
+  //   }
+  // },
 
   async checkIfEventroomExistsById(req, res) {
     if (!req.body) {
@@ -133,51 +153,14 @@ const EventroomController = {
   },
 
   async createEventroom(req, res) {
-    if (!req.body) {
-      return res.status(400).send({ error: "Invalid request 400" });
-    }
-
-    let eventroomName = req.body.eventroomName;
-    if (!eventroomName) {
-      // Ideally just create a new slug here to maximize UX
-      return res
-        .status(400)
-        .send({ error: "Invalid request: Eventroom name missing" });
-    }
-    eventroomName = eventroomName.replace(/[^0-9a-z_-]/gi, "");
-    let eventroomData = {};
-    // const userId = req.user._id;
-    const hostId = req.body.hostId;
-    // let userIsHost;
-    try {
-      // Prepare data for creating an Eventroom
-      eventroomData.eventroomName = eventroomName;
-
-      // Check if Eventroom already exists
-      let eventroomExists = await checkIfEventroomExistsByName(eventroomName);
-
-      let alreadyExists = false;
-      if (eventroomExists) {
-        alreadyExists = true;
-        return res.status(200).send({ alreadyExists });
-      }
-
-      eventroomData.dateCreated = new Date();
-
-      if (hostId) {
-        eventroomData.hostId = hostId;
-        // userIsHost = hostId == userId;
-      }
-
-      // Create Eventroom and return it
-      let eventroom = await EventroomDataController.createEventroom(
-        eventroomData
-      );
-      return res.status(200).send({ eventroom });
-    } catch (error) {
-      console.log("@createEventroom", error);
-      res.status(500).send({ error: "An unknown error occurred" });
-    }
+    const options = {
+      validate: ["eventroomName", "hostId"],
+      funcToRun: "createEventroom",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
   },
 
   async getEventroomByName(req, res) {

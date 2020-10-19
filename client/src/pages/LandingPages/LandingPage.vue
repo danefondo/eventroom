@@ -127,10 +127,11 @@ export default {
           eventroomData
         );
         console.log("@createEventroom response", response);
+        let room = response.data.result;
         if (this.showPreScreenPreference) {
-          this.$router.push(`/${response.data.eventroom.eventroomName}/check`);
+          this.$router.push(`/${room.eventroomName}/check`);
         } else {
-          this.$router.push(`/${response.data.eventroom.eventroomName}`);
+          this.$router.push(`/${room.eventroomName}`);
         }
       } catch (error) {
         alert(
@@ -152,8 +153,8 @@ export default {
           eventroomData
         );
         console.log("respon", response.data);
-        this.nameExists = response.data.alreadyExists;
-        return response.data.alreadyExists;
+        this.nameExists = response.data.result.alreadyExists;
+        return response.data.result.alreadyExists;
       } catch (error) {
         console.log(
           "@checkIfSlugExists: Emergency, our penguins cannot find igloos to check!"

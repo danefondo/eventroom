@@ -118,7 +118,7 @@ export default {
       userJoinSuccessful: (state) => state.chat.userJoinSuccessful,
     }),
     sortedMessages: function () {
-      let toSort = this.messagesInThread;
+      let toSort = JSON.parse(JSON.stringify(this.messagesInThread));
       let sorted = toSort.sort((a, b) => {
         return new Date(a.dateSent) - new Date(b.dateSent);
       });

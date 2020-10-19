@@ -188,7 +188,7 @@ const EventroomDataController = {
         errors.FailedToFindUser = true;
         throw { errors: errors };
       }
-      user.push(eventroom._id);
+      user.eventrooms.push(eventroom._id);
       await user.save();
     } catch (error) {
       if (error.errors) {

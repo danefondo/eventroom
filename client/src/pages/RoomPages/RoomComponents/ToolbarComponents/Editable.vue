@@ -4,7 +4,7 @@
     ref="editable"
     spellcheck="false"
     data-max-length="35"
-    data-placeholder="Meeting title"
+    data-placeholder="Eventroom title"
     :class="nameExists ? 'eventroom-name flex name-red' : 'eventroom-name flex'"
     contenteditable="true"
     v-once

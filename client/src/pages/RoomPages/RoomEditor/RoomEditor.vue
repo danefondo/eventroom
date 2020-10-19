@@ -2,14 +2,14 @@
   <div class="myrooms">
     <div v-if="eventroom && eventroom.eventroomName" class="profile">
       <router-link to="/account/rooms" class="goBack">Go back</router-link>
-      <div class="room-title">{{ eventroom.eventroomName }}</div>
+      <input class="room-title" :value="eventroom.eventroomName" />
       <!-- <div class="myrooms-sub">View and manage all of your rooms</div> -->
       <div class="profileImage"></div>
       <div class="link-container">
         <IconBase
           class="link-icon"
           icon-name="link"
-          iconColor="black"
+          iconColor="#555561"
           viewBox="0 0 512 512"
           width="16"
           height="16"
@@ -411,7 +411,7 @@ export default {
 }
 
 .pass-notifiers {
-  flex-direction: column;
+  flex-direction: column !important;
   align-items: flex-start;
 }
 
@@ -454,12 +454,12 @@ export default {
   padding: 8px 20px;
   font-weight: 700;
   border-radius: 360px;
-  max-width: 515px;
+  max-width: 522px;
   box-sizing: border-box;
 }
 
 .pass-update-fail {
-  color: #ff2f2f;
+  color: #a50000;
 }
 
 .pass-update-warning {
@@ -540,13 +540,37 @@ export default {
 } */
 
 .room-title {
-  /* font-size: 45px; */
   font-size: 55px;
   font-weight: 600;
   text-transform: capitalize;
   text-align: center;
   max-width: 600px;
-  overflow: scroll;
+  padding: 2px;
+  transition: all 0.2s;
+  word-break: break-word;
+  cursor: text;
+  border-radius: 10px;
+  /* color: #1e2f58; */
+  display: inline-block;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-left: -2px;
+  margin-right: 2px;
+  padding: 1px 2px;
+  transition: all 0.2s;
+  word-break: break-word;
+  min-width: 215px;
+  outline: none;
+  border: none;
+  font-family: "Nunito", sans-serif;
+  background-color: transparent;
+}
+
+.room-title:hover,
+.room-title:focus {
+  /* background: #eceff4; */
+  background: #e9eced;
+  outline: none;
 }
 
 .edit-title {
@@ -614,8 +638,8 @@ export default {
   margin-top: 5px;
   cursor: pointer;
   display: block;
-  color: #2f2f31;
-  font-weight: 600;
+  color: #555561;
+  font-weight: 700;
   font-size: 18px;
 }
 

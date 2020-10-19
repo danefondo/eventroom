@@ -281,7 +281,6 @@ export default {
         if (response.data.result && response.data.success) {
           this.$store.dispatch("eventroom/passwordMatchedUpdate");
           this.passwordMatched = true;
-          this.passwordNeedsMatching = false;
           this.checkingPassword = false;
           this.roomPasswordCheck = "";
         }

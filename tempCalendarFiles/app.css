@@ -1,0 +1,12 @@
+.wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+
+.calendar {
+    width: 78%;
+}
+
+.sidebar {
+    width: 20%;
+}

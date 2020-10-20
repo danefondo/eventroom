@@ -284,12 +284,14 @@ const ProfileRoutes = require("./routes/API/ProfileRoutes");
 const EventRoutes = require("./routes/API/EventRoutes");
 const UserActionRoutes = require("./routes/API/UserActionRoutes");
 const EventroomRoutes = require("./routes/API/EventroomRoutes");
+const BookingRoutes = require("./routes/API/BookingRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/settings", AccountSettings);
 app.use("/api/profiles", ProfileRoutes);
 app.use("/api/events", EventRoutes);
 app.use("/api/userActions", UserActionRoutes);
 app.use("/api/eventroom", EventroomRoutes);
+app.use("/api/booking", BookingRoutes);
 
 /* ====== REQUESTS HANDLING ====== */
 

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="calendar.css" type="text/css" rel="stylesheet" />
+
+        <link href="modal.css" type="text/css" rel="stylesheet" />
+        <link href="app.css" type="text/css" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css?family=Lora:400,400i,700,700i&display=swap" rel="stylesheet">
+    </head>
+
+    <body>
+        <div class="wrapper">
+            <div class="calendar"></div>    
+            <div class="sidebar">
+                Random things
+            </div>
+        </div>
+
+        <div class="modal">
+            <div class="modal-body">
+                <form>
+                    <input name="title" type="text" placeholder="Event title" /><br />
+                    <input name="date" type="date" value="" placeholder="Date" /><br />
+                    <input name="start-time" type="time" value="" placeholder="Start time" /><br />
+                    <input name="end-time"  type="time" value="" placeholder="End time" />
+
+                    <div class="all-users">
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+    </body>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="jCalendar.js"></script>
+</html>

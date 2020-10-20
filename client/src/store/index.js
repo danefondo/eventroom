@@ -13,6 +13,7 @@ import mediastates from "./modules/mediastates";
 import participants from "./modules/participants";
 import chat from "./modules/chat";
 import preferences from "./modules/preferences";
+import booking from "./modules/booking";
 
 Vue.use(Vuex);
 
@@ -30,6 +31,7 @@ const store = new Vuex.Store({
     participants,
     chat,
     preferences,
+    booking,
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production

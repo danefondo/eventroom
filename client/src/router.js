@@ -7,59 +7,36 @@ const http = axios.create({
   baseURL: BASE_PATH,
 });
 
-/* ====== LANDING PAGES ====== */
-import LandingPage from "./pages/LandingPages/LandingPage";
+/* ====== ROUTE SPLITTING & LAZY LOADING OPTIMIZATION!!! ====== */
+/* https://vueschool.io/articles/vuejs-tutorials/vue-js-router-performance/ */
 
-/* ====== DASHBOARD PAGES ====== */
-import DashboardPage from "./pages/DashboardPages/DashboardPage";
-import AccountSettings from "./pages/DashboardPages/AccountSettings";
-import AccountPreferences from "./pages/DashboardPages/AccountPreferences";
-import AccountPassword from "./pages/DashboardPages/AccountPassword";
-import AccountDangerZone from "./pages/DashboardPages/AccountDangerZone";
-
-/* ====== PRE-EVENT PAGES ====== */
-import MediaDeviceCheckPage from "./pages/MediaDevicePages/MediaDeviceCheckPage";
-
-/* ====== ROOM PAGES ====== */
-import RoomPage from "./pages/RoomPages/Room";
-
-import RoomEditor from "./pages/RoomPages/RoomEditor/RoomEditor";
-
-import RoomsList from "./pages/RoomPages/RoomsList/RoomsList";
-
-/* ====== ERROR PAGES ====== */
-import Error404Page from "./pages/ErrorPages/Error404Page";
-import RoomNotFound from "./pages/RoomPages/RoomNotFound";
-
-/* ====== EVENT PAGES ====== */
-import CreateEventPage from "./pages/CreatorPages/CreateEventPage";
-import EditEventPage from "./pages/CreatorPages/EditEventPage";
-import EventPreviewPage from "./pages/EventPages/EventPreviewPage";
-import EventRoomPage from "./pages/EventPages2/EventRoomPage";
-import TemporaryFix from "./pages/EventPages2/TemporaryFix";
-import HomePage from "./pages/CorePages/HomePage";
+/* DO NOT IMPORT OUTSIDE ACCESSING ROUTE UNLESS VERY VERY GOOD REASON
+SEEK BEST POSSIBLE OPTIMIZATION, ALWAYS, OR I WILL HAUNT YOU IN YOUR SLEEP. */
 
 /* ====== AUTH PAGES ====== */
-import LoginPage from "./pages/AuthPages/LoginPage";
-import LogoutPage from "./pages/AuthPages/LogoutPage";
-import RegisterPage from "./pages/AuthPages/RegisterPage";
-import VerificationPage from "./pages/AuthPages/VerificationPage";
-import RequireVerificationPage from "./pages/AuthPages/RequireVerificationPage";
 // import SuccessPage from "./pages/AuthPages/SuccessPage";
-import PassResetPage from "./pages/AuthPages/PassResetPage";
-import PassResetRedirect from "./pages/AuthPages/PassResetRedirect";
-
-/* ====== PROFILE PAGES ====== */
-import ProfilePage from "./pages/UserPages/ProfilePage";
 
 const routes = [
-  { path: "/discover/home", component: HomePage },
+  {
+    path: "/discover/home",
+    component: () => import("./pages/CorePages/HomePage"),
+  },
+
+  /* ====== COFOCUS BOOKING ROUTES ====== */
+  {
+    path: "/dashboard/booking",
+    component: () => import("./pages/BookingPages/BookingDashboard"),
+    name: "BookingDashboard",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
 
   /* ====== DASHBOARD ROUTES ====== */
 
   {
     path: "/",
-    component: LandingPage,
+    component: () => import("./pages/LandingPages/LandingPage"),
     meta: { landingPage: true },
     name: "LandingPage",
   },
@@ -68,7 +45,7 @@ const routes = [
 
   {
     path: "/:eventroomName/check",
-    component: MediaDeviceCheckPage,
+    component: () => import("./pages/MediaDevicePages/MediaDeviceCheckPage"),
     name: "MediaDeviceCheckPage",
   },
 
@@ -76,7 +53,7 @@ const routes = [
 
   {
     path: "/:eventroomName",
-    component: RoomPage,
+    component: () => import("./pages/RoomPages/Room"),
     name: "RoomPage",
     meta: { hideNavigation: true },
     beforeEnter(to, from, next) {
@@ -103,7 +80,7 @@ const routes = [
   /* ====== DASHBOARD ROUTES ====== */
   {
     path: "/account/dashboard",
-    component: DashboardPage,
+    component: () => import("./pages/DashboardPages/DashboardPage"),
     name: "DashboardPage",
     meta: {
       requireAuthentication: true,
@@ -112,7 +89,7 @@ const routes = [
 
   {
     path: "/account/settings",
-    component: AccountSettings,
+    component: () => import("./pages/DashboardPages/AccountSettings"),
     name: "AccountSettings",
     meta: {
       requireAuthentication: true,
@@ -121,7 +98,7 @@ const routes = [
 
   {
     path: "/account/settings/preferences",
-    component: AccountPreferences,
+    component: () => import("./pages/DashboardPages/AccountPreferences"),
     name: "AccountPreferences",
     meta: {
       requireAuthentication: true,
@@ -130,7 +107,7 @@ const routes = [
 
   {
     path: "/account/settings/password",
-    component: AccountPassword,
+    component: () => import("./pages/DashboardPages/AccountPassword"),
     name: "AccountPassword",
     meta: {
       requireAuthentication: true,
@@ -139,7 +116,7 @@ const routes = [
 
   {
     path: "/account/settings/danger",
-    component: AccountDangerZone,
+    component: () => import("./pages/DashboardPages/AccountDangerZone"),
     name: "AccountDangerZone",
     meta: {
       requireAuthentication: true,
@@ -147,31 +124,45 @@ const routes = [
   },
 
   /* ====== AUTHENTICATION ROUTES ====== */
-  { path: "/account/login", component: LoginPage, name: "LoginPage" },
-  { path: "/account/logout", component: LogoutPage, name: "LogoutPage" },
+  {
+    path: "/account/login",
+    component: () => import("./pages/AuthPages/LoginPage"),
+    name: "LoginPage",
+  },
+  {
+    path: "/account/logout",
+    component: () => import("./pages/AuthPages/LogoutPage"),
+    name: "LogoutPage",
+  },
   {
     path: "/account/register",
-    component: RegisterPage,
+    component: () => import("./pages/AuthPages/RegisterPage"),
     name: "RegisterPage",
     // children: [{ path: "success", component: SuccessPage, name: "Success" }],
   },
   {
     path: "/account/verify/:token",
-    component: VerificationPage,
+    component: () => import("./pages/AuthPages/VerificationPage"),
     name: "VerificationPage",
   },
   {
     path: "/account/verificationRequired",
-    component: RequireVerificationPage,
+    component: () => import("./pages/AuthPages/RequireVerificationPage"),
     name: "RequireVerificationPage",
   },
-  { path: "/account/resetpassword/:token", component: PassResetRedirect },
-  { path: "/account/resetpassword", component: PassResetPage },
+  {
+    path: "/account/resetpassword/:token",
+    component: () => import("./pages/AuthPages/PassResetRedirect"),
+  },
+  {
+    path: "/account/resetpassword",
+    component: () => import("./pages/AuthPages/PassResetPage"),
+  },
 
   /* ====== PROFILE ROUTES ====== */
   {
     path: "/profile/:username",
-    component: ProfilePage,
+    component: () => import("./pages/UserPages/ProfilePage"),
     name: "ProfilePage",
     meta: {
       requireAuthentication: true,
@@ -182,7 +173,7 @@ const routes = [
 
   {
     path: "/account/rooms",
-    component: RoomsList,
+    component: () => import("./pages/RoomPages/RoomsList/RoomsList"),
     name: "RoomsList",
     meta: {
       requireAuthentication: true,
@@ -191,7 +182,7 @@ const routes = [
 
   {
     path: "/account/rooms/:eventroomName",
-    component: RoomEditor,
+    component: () => import("./pages/RoomPages/RoomEditor/RoomEditor"),
     name: "RoomEditor",
     meta: {
       requireAuthentication: true,
@@ -201,7 +192,7 @@ const routes = [
   /* ====== EVENT ROUTES ====== */
   {
     path: "/events/createEvent",
-    component: CreateEventPage,
+    component: () => import("./pages/CreatorPages/CreateEventPage"),
     meta: {
       requireAuthentication: true,
       requireVerification: true,
@@ -209,26 +200,37 @@ const routes = [
   },
   {
     path: "/events/:id/edit",
-    component: EditEventPage,
+    component: () => import("./pages/CreatorPages/EditEventPage"),
     meta: {
       requireAuthentication: true,
       requireVerification: true,
     },
   },
-  { path: "/events/:id", component: EventPreviewPage },
-  { path: "/events/:eventId/rooms/:roomId", component: EventRoomPage },
-  { path: "/temp/fix", component: TemporaryFix },
+  {
+    path: "/events/:id",
+    component: () => import("./pages/EventPages/EventPreviewPage"),
+  },
+  {
+    path: "/events/:eventId/rooms/:roomId",
+    component: () => import("./pages/EventPages2/EventRoomPage"),
+  },
+  {
+    path: "/temp/fix",
+    component: () => import("./pages/EventPages2/TemporaryFix"),
+  },
+
+  /* ====== ERROR ROUTES ====== */
 
   {
     path: "/errors/eventroomNotFound",
     name: "RoomNotFound",
-    component: RoomNotFound,
+    component: () => import("./pages/RoomPages/RoomNotFound"),
   },
 
   {
     path: "/errors/404",
     name: "Error404Page",
-    component: Error404Page,
+    component: () => import("./pages/ErrorPages/Error404Page"),
   },
 
   { path: "*", redirect: "/errors/404" },

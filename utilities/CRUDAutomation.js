@@ -1,11 +1,14 @@
 const ProfileDataController = require("../database/profile/controllers/ProfileDataController");
 const AccountSettingsDataController = require("../database/settings/controllers/AccountSettingsDataController");
 const EventroomDataController = require("../database/eventroom/controllers/EventroomDataController");
+const BookingDataController = require("../database/booking/controllers/BookingDataController");
+
 
 const DataControllers = {
   ProfileDataController,
   AccountSettingsDataController,
-  EventroomDataController
+  EventroomDataController,
+  BookingDataController
 };
 
 const CRUDAutomation = {

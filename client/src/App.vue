@@ -62,13 +62,13 @@ html,
 body {
   height: 100%;
   overflow: hidden;
+  font-family: "Nunito", "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
 }
 
 body {
   overscroll-behavior-y: none;
   overscroll-behavior-x: none;
-  font-family: "Nunito", "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
-    "Lucida Sans", Arial, sans-serif;
 }
 
 a {

@@ -32,6 +32,35 @@ const routes = [
     },
   },
 
+  /* ====== COFOCUS SESSION ROUTES ====== */
+
+  {
+    path: "/session/:sessionName",
+    component: () => import("./pages/RoomPages/Room"),
+    name: "RoomPage",
+    meta: { hideNavigation: true },
+    beforeEnter(to, from, next) {
+      let eventroomName = to.params.sessionName;
+      console.log("Session name:", eventroomName);
+      let routeData = {
+        eventroomName: eventroomName,
+      };
+      console.log("routeDATA", routeData);
+      http
+        .post(`/api/eventroom/checkIfEventroomExistsByName`, routeData)
+        .then((response) => {
+          console.log("responssss", response);
+          if (!response.data.result.alreadyExists) {
+            router.push("/");
+            // Room Not Found Page
+          } else {
+            next();
+          }
+        })
+        .catch((err) => console.log("error", err));
+    },
+  },
+
   /* ====== DASHBOARD ROUTES ====== */
 
   {
@@ -69,6 +98,7 @@ const routes = [
           console.log("responssss", response);
           if (!response.data.result.alreadyExists) {
             router.push("/");
+            // Room Not Found Page
           } else {
             next();
           }

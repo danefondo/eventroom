@@ -17,9 +17,20 @@ const BookingController = {
     return;
   },
 
+  async getAllBookedUsersForSpecificWeek(req, res) {
+    const options = {
+      validate: ["currentWeek", "endOfWeekDate"],
+      funcToRun: "getAllBookedUsersForSpecificWeek",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
   async bookSessionSlot(req, res) {
     const options = {
-      validate: ["userId", "startTime", "endTime", "date"],
+      validate: ["userId", "queryDate", "username"],
       funcToRun: "bookSessionSlot",
       dataToPass: req.body,
       selfComplete: true,

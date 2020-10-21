@@ -1,12 +1,15 @@
 const getDefaultState = () => {
   return {
     bookingData: {
+        queryDate: null,
         startTime: null,
         endTime: null,
         date: null,
         month: null,
         year: null,
         selectedPerson: null,
+        specificUserPreferenceId: null,
+        rawDateTime: null,
     },
   };
 };

@@ -49,6 +49,8 @@ let EventroomSchema = new Schema({
   ownerId: String,
   ownerUsername: String,
 
+  cofocusSessionId: String,
+
   // sessionId: String,
   // sessionTokens: [String],
 });

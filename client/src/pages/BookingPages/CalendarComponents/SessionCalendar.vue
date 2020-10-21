@@ -15,6 +15,8 @@
       :dates="dates"
       :start="start"
       :end="end"
+      :currentStart="currentStart"
+      :calendarData="calendarData"
     />
   </div>
 </template>
@@ -43,7 +45,7 @@ export default {
       // ],
       start: null,
       end: null,
-      interval: 90,
+      interval: 60,
       minimumTime: "08:00",
       maximumTime: "16:00",
       height: 70,
@@ -52,6 +54,7 @@ export default {
       week: true,
     };
   },
+  props: ["bookedSessions"],
   components: {
     Switcher,
     Table,
@@ -118,7 +121,7 @@ export default {
 <style>
 body {
   /* font-family: Helvetica, "sans-serif"; */
-  font-family: "Lora", serif;
+  /* font-family: "Lora", serif; */
 }
 
 .calendar {

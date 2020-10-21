@@ -14,7 +14,16 @@ router.post("/bookSessionSlot", BookingController.bookSessionSlot);
 router.post("/cancelCalendarSlot", BookingController.cancelCalendarSlot);
 
 /* Get all user's booked sessions */
-router.post("/getUserBookedSessionsForThisWeek", BookingController.getUserBookedSessionsForThisWeek);
+router.post(
+  "/getUserBookedSessionsForThisWeek",
+  BookingController.getUserBookedSessionsForThisWeek
+);
+
+/* Get all booked sessions by all users from a particular time, for a particular week*/
+router.post(
+  "/getAllBookedUsersForSpecificWeek",
+  BookingController.getAllBookedUsersForSpecificWeek
+);
 
 /**
  * Second tier PAID MEMBER FEATURES.

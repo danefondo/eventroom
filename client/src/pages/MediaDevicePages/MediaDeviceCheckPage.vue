@@ -635,7 +635,6 @@ export default {
 </script>
 
 <style scoped>
-@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap");
 
 .eventroom-logo {
   font-family: "Nunito", sans-serif;

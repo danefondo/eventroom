@@ -34,6 +34,11 @@
       if I know current week start date (example:19, monday)
       then I know end date (example: 25, sunday)
 
+      I know the hour
+      based on [i] number, I know the day of the week
+      based on week start day I can generate which date
+      somehow need to list an array of this week's dates
+
       i can have in LOCAL STORAGE: current selected week start date + day & end AND month AND year
       and then these will be dynamically calculated;
       
@@ -41,9 +46,18 @@
 
       and if v-modeled or value based,
       then it will dynamically update if I load data
+
+      just populate getTimes with more data
+      it must have 'bookedPeopleInDateTime'
+      it must have 'bookedSessionInDateTime' + metadata if matched, etc.
+
+      that getTimes gets populated at some point
+      and then it gets updated
+
       -->
-      <tr v-for="(each, index) in getTimes" :key="index">
-        <td>{{ each }}</td>
+      <!-- <tr v-for="(each, index) in getTimes" :key="index"> -->
+      <tr v-for="(each, index) in calendarData" :key="index">
+        <td>{{ each.time }}</td>
         <td v-for="(i, index) in 7" :key="index" class="each-day">
           <div
             @click="getBlockData($event)"
@@ -51,6 +65,39 @@
             class="add-highlight"
           >
             This one?
+          </div>
+          <div
+            v-if="
+              each.timeRowDays &&
+              each.timeRowDays.length &&
+              each.timeRowDays[i] &&
+              each.timeRowDays[i].bookedPeopleOnTime &&
+              each.timeRowDays[i].bookedPeopleOnTime[0]
+            "
+            class="booked-person event"
+          >
+            <span>person booked here</span>
+            <div
+              v-for="(person, index) in each.timeRowDays[i].bookedPeopleOnTime"
+              :key="index"
+            >
+              <span>{{ person.queryDateTime }}</span>
+            </div>
+          </div>
+          <div
+            v-if="
+              each.timeRowDays &&
+              each.timeRowDays.length &&
+              each.timeRowDays[i] &&
+              each.timeRowDays[i].bookedSessionsOnTime &&
+              each.timeRowDays[i].bookedSessionsOnTime[0]
+            "
+            class="booked-session"
+          >
+            <span>booked session matched/matching...</span
+            ><span>{{
+              each.timeRowDays[i].bookedSessionsOnTime[0].queryDateTime
+            }}</span>
           </div>
         </td>
       </tr>
@@ -64,7 +111,7 @@ import { mapState } from "vuex";
 
 export default {
   name: "Table",
-  props: ["dates", "start", "end"],
+  props: ["dates", "start", "end", "calendarData"],
   data() {
     return {
       interval: 60,
@@ -87,7 +134,6 @@ export default {
       return caption;
     },
     getTimes() {
-      // EITHER PASS OR USE LOCAL/DB DATA FOR MIN, MAX, INTERVAL
       let min = this.minimumTime;
       let max = this.maximumTime;
       const time = moment(min, "HH:mm");
@@ -110,7 +156,6 @@ export default {
     getNodeIndex(elm) {
       return [...elm.parentNode.children].indexOf(elm);
     },
-    plotEvents() {},
     getBlockData($event) {
       console.log("EVENT", $event);
       console.log("parent td?", $event.path[1]);
@@ -186,11 +231,21 @@ export default {
         year
       );
 
+      let [hours, minutes] = start.split(":");
+      let rawDateTime = new Date(year, month, date, hours, minutes);
+      console.log("rawDateTime", rawDateTime);
+      // rawDateTime.setHours(+hours);
+      // rawDateTime.setMinutes(minutes);
+      rawDateTime.setSeconds("00");
+      console.log("fullDatetime", rawDateTime);
+      let queryDate = `${year}-${month}-${date}-${start}-${end}`;
       let bookDate = `${year}-${month}-${date}`;
       let bookingData = {
         startTime: start,
         endTime: end,
         date: bookDate,
+        queryDate: queryDate,
+        rawDateTime: rawDateTime,
       };
       await this.$store.dispatch("booking/updateBookingData", bookingData);
     },

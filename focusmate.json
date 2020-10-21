@@ -1,0 +1,103 @@
+{"partnerInfo":{"partnerDisplayName":"Maryam M.","partnerId":"af2c518c-dd1b-4354-8401-0ca8b964240a","partnerName":"Maryam","partnerOpenedSessions":1228,"partnerPhoto":"https://focusmate.nyc3.digitaloceanspaces.com/MBQUYJCV2I/iuovl.png","partnerTimezone":"America/Toronto","partnerTotalSessions":1239,"previousPartnerId":null},"sessionInfo":{"hasSessionBooked":true,"meetingRoom":"1603297800t6rOd73zyx","rematchEligible":false,"sessionTime":1603297800000,"state":10}}
+
+
+
+
+
+
+
+
+{
+  "acTrigger": 1603203300000,
+  "attRate": 95.0,
+  "bookLimit": null,
+  "calendarInvites": false,
+  "compSessions": 826,
+  "createdOn": 1574000536813,
+  "displayName": "Robert Foenix",
+  "email": "robertfoenix@gmail.com",
+  "familyName": "Foenix",
+  "features": {
+    "openSessionInSameTab": true,
+    "preferH264Enabled": true,
+    "rematchIfLatePartnerEnabled": true,
+    "showInSessionProfileInfo": true
+  },
+  "firstName": "Robert",
+  "group": [
+    {
+      "groupAdmin": false,
+      "groupDomains": "",
+      "groupId": "bwwhv",
+      "groupInviteNotified": true,
+      "groupInvitedAt": "Tue, 04 Feb 2020 20:51:26 GMT",
+      "groupLogo": "https://focusmate.nyc3.digitaloceanspaces.com/HYT3L59EIR/mebds.png",
+      "groupMember": true,
+      "groupMemberSince": "Tue, 04 Feb 2020 20:51:34 GMT",
+      "groupName": "Lean In Together"
+    },
+    {
+      "groupAdmin": false,
+      "groupDomains": "",
+      "groupId": "wqzsz",
+      "groupInviteNotified": true,
+      "groupInvitedAt": "Wed, 05 Feb 2020 15:40:22 GMT",
+      "groupLogo": "https://focusmate.nyc3.digitaloceanspaces.com/3WV90AVBMX/slofh.jpeg",
+      "groupMember": true,
+      "groupMemberSince": "Wed, 05 Feb 2020 15:40:31 GMT",
+      "groupName": "Getting Things Done Together"
+    },
+    {
+      "groupAdmin": false,
+      "groupDomains": "",
+      "groupId": "crlzc",
+      "groupInviteNotified": true,
+      "groupInvitedAt": "Tue, 29 Sep 2020 07:33:44 GMT",
+      "groupLogo": "https://focusmate.nyc3.digitaloceanspaces.com/1812VKH3OQ/zsynm.jpeg",
+      "groupMember": true,
+      "groupMemberSince": "Tue, 29 Sep 2020 07:33:52 GMT",
+      "groupName": "Inspiring Health Leadership"
+    }
+  ],
+  "hide": false,
+  "monthlyStreak": 10,
+  "newUser": false,
+  "noShowAckNeeded": false,
+  "onboard": true,
+  "openedSessions": 790,
+  "photo": "https://focusmate.nyc3.digitaloceanspaces.com/1CEI39CZ4V/jebjk.jpeg",
+  "planInfo": {
+    "canCancel": true,
+    "checkPrice": false,
+    "isCanceled": false,
+    "planAccess": "turbo",
+    "planName": "intro"
+  },
+  "profileUrl": "robertfoenix",
+  "properties": {
+    "dailyCoToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvIjpmYWxzZSwidm8iOmZhbHNlLCJhbyI6ZmFsc2UsInUiOiJSb2JlcnQgRm9lbml4IiwidWQiOiI5YmVmMjlkYy1hMzMxLTQ4MWMtYmY2OC0wOGVkNjUyYjUzZGYiLCJkIjoiZDFjOTAyODUtY2QxMS00ZGY0LWIxYTMtODgzY2Y0MDdjNGIyIiwiaWF0IjoxNTgwODc0NzYxfQ.84G-cUeogfF7T-R9e2PhtAxzie-HTNUZ5apsDPvf53U",
+    "dailyCoTokenReconnect": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvIjpmYWxzZSwidSI6IlJvYmVydCBGb2VuaXgiLCJ1ZCI6IjliZWYyOWRjLWEzMzEtNDgxYy1iZjY4LTA4ZWQ2NTJiNTNkZiIsImQiOiJkMWM5MDI4NS1jZDExLTRkZjQtYjFhMy04ODNjZjQwN2M0YjIiLCJpYXQiOjE1ODE2NjExNzB9.fxnytbs3OLlBvK4rbsfb40dbCXN6_HRxiPjQcuyr5yU",
+    "dailyVideoExperimentWarningShown": true,
+    "experimentPartnerKnowsIfNewChecked": true,
+    "featureDailyVideoExperiment": true,
+    "firstDailycoSession": "aP3iNGnIFyOOFDilBQyJ",
+    "hasOnboardedCommunityRules": true,
+    "hideLeaveButton": false,
+    "viewedSegmentationSurveyModal": true
+  },
+  "terms": true,
+  "timeZone": "Europe/Tallinn",
+  "userId": "9bef29dc-a331-481c-bf68-08ed652b53df",
+  "videoLinkConfig": "#config.resolution=360&config.constraints.video.height.ideal=360&config.constraints.video.height.max=360&interfaceConfig.DISABLE_VIDEO_BACKGROUND=true&config.constraints.video.frameRate.max=30&config.constraints.video.frameRate.ideal=15",
+  "videoLinkPrefix": "https://meet.jit.si/",
+  "weeklyStats": true,
+  "weeklyStreak": 5
+}
+
+
+
+
+
+
+
+{"app":{"name":"Focusmate","audio_enabled":true,"show_powered_by":true,"active_admins":[{"id":"4152777","first_name":"Nathan","avatar":{"initials":"N","color":"fa7080","image_urls":{"square_25":"https://static.intercomassets.com/avatars/4152777/square_25/FB_IMG_1576912558344-1589486927.jpg?1589486927","square_50":"https://static.intercomassets.com/avatars/4152777/square_50/FB_IMG_1576912558344-1589486927.jpg?1589486927","square_128":"https://static.intercomassets.com/avatars/4152777/square_128/FB_IMG_1576912558344-1589486927.jpg?1589486927"},"image_url":"https://static.intercomassets.com/avatars/4152777/square_128/FB_IMG_1576912558344-1589486927.jpg?1589486927"},"has_photo_avatar":true,"name":"Nathan"},{"id":"1772995","first_name":"Taylor","avatar":{"initials":"T","color":"c8c6c4","image_urls":{"square_25":"https://static.intercomassets.com/avatars/1772995/square_25/square_taylor-1591895070.png?1591895070","square_50":"https://static.intercomassets.com/avatars/1772995/square_50/square_taylor-1591895070.png?1591895070","square_128":"https://static.intercomassets.com/avatars/1772995/square_128/square_taylor-1591895070.png?1591895070"},"image_url":"https://static.intercomassets.com/avatars/1772995/square_128/square_taylor-1591895070.png?1591895070"},"has_photo_avatar":true,"name":"Taylor"}],"team_intro":"Feel free to ask questions or share your feedback with us","team_greeting":"Hey Robert 👋","messenger_background":null,"expected_response_delay_translation_key":"expected_response_delay_86400","launcher_expected_response_delay_translation_key":"the_team_typically_replies_in_86400","compact_expected_response_delay":"Typically replies in 1d","sms_notifications_enabled":false,"inbound_conversations_disabled":false,"access_to_teammate_enabled":true,"office_hours_response":"Tomorrow","help_center_site_url":"http://support.focusmate.com","messenger_logo_url":"https://downloads.intercomcdn.com/i/o/209295/0d21b981271570816a76a205/0c830f33f2ee302e8d02b89a32e330ce.png","launcher_logo_url":null,"user_conversation_attachments_enabled":true,"user_conversation_gifs_enabled":true,"developer_workspace":false,"upfront_email_collection_setting":"never","self_serve_suggestions_match":true,"temporary_expectations_message":"Thanks for your patience, response times may be delayed slightly but we're working hard to get to your messages."},"user":{"id":"5ec7305776951575b9beba04","type":"user","role":"user_role","locale":"en","has_conversations":true,"country_code":"ee","home_screen_slots":[{"messenger_card_id":10741195},{"messenger_card_id":13531660},{"messenger_card_id":13531661},{"messenger_card_id":13531662}],"last_contacted_at":"2020-09-28T01:29:42.084+00:00","new_session":false},"unread_conversation_ids":[],"unread_dismissed_conversation_ids":[],"client_messages":[],"client_matches":[],"modules":{"messages":{"colors":{"base":"#4648aa","secondary":"#4648aa"},"features":{"rtm":true,"inbound_messages":true,"inbound_lead_messaging":true,"outbound_messages":true,"inbound_lead_messaging_docs_site":true,"launcher_discovery_mode":true,"marketo_enrichment_installed":false,"hubspot_installed":false,"google_analytics":false,"periodic_evaluator":false,"single_page_app_rate_limiting":false,"persist_across_pages":false,"new_conversation_card":true,"cross_site_cookies":false,"render_native_picker_in_mobile":false,"render_attachments_as_plain_text":false,"disable_long_polling":true},"instant_boot_enabled":false,"google_analytics_tracking_id":null,"use_activator":false,"can_use_messenger":true,"show_launcher":false,"activator":null},"rtm":{"endpoints":["https://nexus-websocket-a.intercom.io/pubsub/5-ri1dOCIF7b3eO_9BWAF0IT2dcXDPFe03kxZ6cqlGuf56_GvJjU-zkr6G_xNUAixcWsId80RG2JER7ZEuW4yHh3I7L17cS8T_Hc_5"]},"metrics":{"enabled":false},"error_reporting":{"disabled":false},"customization":{"alignment":"right","brand_name":"Focusmate","horizontal_padding":20,"messenger_logo_url":"https://downloads.intercomcdn.com/i/o/209295/0d21b981271570816a76a205/0c830f33f2ee302e8d02b89a32e330ce.png","launcher_logo_url":null,"messenger_wallpaper":null,"vertical_padding":20,"vertical_padding_android":16,"vertical_padding_ios":20}},"composer_state":{"visible":true,"version":0,"self_serve_suggestions_enabled":false},"anonymous_session":"ajNKNjU5dUR3NmhTa1YzbDJLZ0tFeDBrdEJQcldCd2QyUUV4WnJWTUtnT0FDOEQyek5lZUIwUWVwZE5GMG5aVC0tTEZDM1RRSUNoeDJsTFNqS0p6TDMzUT09--b2540ff42620c3ce5b5ddb7afdd10ff95e7d897d","identity_verification_ready":false,"origin_cookie_domain":"focusmate.com","cdas_breaching_limit":[]}

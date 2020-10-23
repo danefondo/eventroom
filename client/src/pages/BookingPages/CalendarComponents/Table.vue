@@ -102,7 +102,7 @@
           </div>
           <!-- highlight is in two boxes to speed up & avoid week check per time, the millisecond difference really makes a difference, rather than having it in each click, even putting emit to function vs direct makes a difference-->
           <div
-            v-else
+            v-else-if="!each.timeRowDays[i].isSelected"
             @click="
               week
                 ? $emit('select-slot', each.timeRowDays[i])
@@ -115,15 +115,23 @@
           </div>
           <div
             v-if="each.timeRowDays[i].isSelected"
-            @click="
-              week
-                ? $emit('select-slot', each.timeRowDays[i])
-                : $emit('select-slot', each.timeRowDay)
-            "
-            :style="getHeights"
-            class="add-highlight"
+            :style="getSelectedHeights"
+            class="selected-container"
           >
-            This one?
+            <div class="selected-info">
+              Selected?
+              <div class="selected-book">Book</div>
+              <div
+                class="selected-close"
+                @click="
+                  week
+                    ? $emit('cancel-slot', each.timeRowDays[i])
+                    : $emit('cancel-slot', each.timeRowDay)
+                "
+              >
+                x
+              </div>
+            </div>
           </div>
         </td>
       </tr>
@@ -152,6 +160,7 @@ export default {
       minimumTime: "08:00",
       maximumTime: "16:00",
       height: 70,
+      selectedHeight: 70,
     };
   },
   computed: {
@@ -184,6 +193,11 @@ export default {
       let height = this.height - 20;
       let heights = `line-height:${this.height}px; height:${height}px;`;
       return heights;
+    },
+    getSelectedHeights() {
+      let height = this.height;
+      height = `height:${height}px;`;
+      return height;
     },
     // isThisSelected() {
 
@@ -305,5 +319,60 @@ export default {
 <style scoped>
 .each-day:hover .add-highlight {
   display: flex;
+}
+
+.selected-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.selected-info {
+  background-color: #eef1f3;
+  border-radius: 4px;
+  height: 95%;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.selected-close {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 16px;
+  height: 16px;
+  border-radius: 360px;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  text-align: center;
+}
+
+.selected-close:hover {
+  background-color: #dcdfe0;
+}
+
+.selected-book {
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  padding: 1px 13px;
+  border-radius: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #dcdfe0;
+  color: #5600ff;
+  font-size: 17px;
+}
+
+.selected-book:hover {
+  background-color: #b4b8b9;
 }
 </style>

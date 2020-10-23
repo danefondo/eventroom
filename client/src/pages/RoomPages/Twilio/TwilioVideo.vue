@@ -313,6 +313,7 @@ export default {
         console.log("I AM PARTICIPANT.");
       }
 
+
       let participantsLength = globalThis.participants.length;
 
       if (participantsLength < 2 && participantsLength > 0) {

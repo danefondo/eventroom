@@ -25,11 +25,26 @@
           :week="week"
           :weekdayNum="weekdayNum"
           @select-slot="selectSlot"
+          @cancel-slot="cancelSlot"
         />
       </div>
       <!-- <div class="sidebar">Random things</div> -->
       <div class="modal">
         <div class="modal-body">
+          <div class="selectedToBook">
+            <div
+              class="sessionToBook"
+              v-for="(session, index) in selectedToBook"
+              :key="index"
+            >
+              <div class="session-header">
+                {{ `${session.dayShort}` }}
+              </div>
+              <div class="session-header">
+                {{ `${session.startTime}-${session.endTime}` }}
+              </div>
+            </div>
+          </div>
           <form>
             <input name="title" type="text" placeholder="Event title" /><br />
             <input
@@ -102,6 +117,7 @@ export default {
   name: "BookingDashboard",
   data() {
     return {
+      selectedSpecificDateTime: null,
       startTime: null,
       endTime: null,
       date: null,
@@ -128,6 +144,8 @@ export default {
       week: true,
       rowNumberForWeekOrDay: 7,
       weekdayNum: null,
+
+      selectedToBook: [],
     };
   },
   computed: {
@@ -723,6 +741,8 @@ export default {
           }
           let monthNum = current.format("MM");
           let yearNum = current.format("YYYY");
+          let dayName = current.format("dddd");
+          let dayShort = current.format("ddd");
           let startNum = timeObject.time;
           let endNum = endTime.format("HH:mm");
           let specificDateTime = `${yearNum}-${monthNum}-${dateNum}-${startNum}-${endNum}`;
@@ -733,6 +753,8 @@ export default {
             bookedSessionsOnTime: [],
             bookedPeopleOnTime: [],
             date: dateNum,
+            day: dayName,
+            dayShort: dayShort,
             month: monthNum,
             year: yearNum,
             startTime: startNum,
@@ -770,6 +792,8 @@ export default {
         let dateNum = current.format("DD");
         let monthNum = current.format("MM");
         let yearNum = current.format("YYYY");
+        let dayName = current.format("dddd");
+        let dayShort = current.format("ddd");
         let startNum = timeObject.time;
         let endNum = endTime.format("HH:mm");
         let specificDateTime = `${yearNum}-${monthNum}-${dateNum}-${startNum}-${endNum}`;
@@ -782,6 +806,8 @@ export default {
           date: dateNum,
           month: monthNum,
           year: yearNum,
+          day: dayName,
+          dayShort: dayShort,
           startTime: startNum,
           endTime: endNum,
           specificDateTime: specificDateTime,
@@ -792,14 +818,80 @@ export default {
         time.add(this.interval, "minutes");
       } while (time.isSameOrBefore(maxTime));
     },
-    selectSlot({ startTime, endTime, date, month, year }) {
-      this.startTime = startTime;
-      this.endTime = endTime;
-      this.date = `${year}-${month}-${date}`;
+    selectSlot(slotData) {
+      console.log("slotData", slotData);
+      let globalThis = this;
+      this.startTime = slotData.startTime;
+      this.endTime = slotData.endTime;
+      this.date = `${slotData.year}-${slotData.month}-${slotData.date}`;
+
+      this.selectedSpecificDateTime = slotData.specificDateTime;
+
+      if (this.week) {
+        this.calendarData.forEach(function (hourRow) {
+          console.log("hourRow", hourRow);
+          if (hourRow.time == slotData.startTime) {
+            console.log("startTime", slotData.startTime);
+            hourRow.timeRowDays.forEach(function (day) {
+              console.log("day", day);
+              console.log("day", day.specificDateTime);
+              console.log("other time", slotData.specificDateTime);
+              if (day.specificDateTime == slotData.specificDateTime) {
+                console.log("day before", day);
+                globalThis.$set(day, "isSelected", true);
+                console.log("day after", day);
+                // console.log("daySpecificTime: ", day.specificDateTime);
+                // console.log("sesSpecificTime: ", session.queryDateTime);
+              }
+            });
+          }
+        });
+      }
+      this.selectedToBook.push(slotData);
       // later add to array of SELECTED SLOTS
+    },
+    cancelSlot(slotData) {
+      let globalThis = this;
+      this.startTime = slotData.startTime;
+      this.endTime = slotData.endTime;
+      this.date = `${slotData.year}-${slotData.month}-${slotData.date}`;
+
+      this.selectedSpecificDateTime = slotData.specificDateTime;
+
+      if (this.week) {
+        this.calendarData.forEach(function (hourRow) {
+          if (hourRow.time == slotData.startTime) {
+            hourRow.timeRowDays.forEach(function (day) {
+              if (day.specificDateTime == slotData.specificDateTime) {
+                globalThis.$set(day, "isSelected", false);
+              }
+            });
+          }
+        });
+      }
+
+      let index = this.selectedToBook.findIndex(
+        (slot) => slot.specificDateTime === slotData.specificDateTime
+      );
+
+      this.selectedToBook.splice(index, 1);
     },
     cancelBooking() {
       console.log("canceling");
+      let globalThis = this;
+      this.selectedToBook.forEach((selection) => {
+        this.calendarData.forEach(function (hourRow) {
+          if (hourRow.time == selection.startTime) {
+            hourRow.timeRowDays.forEach(function (day) {
+              if (day.specificDateTime == selection.specificDateTime) {
+                globalThis.$set(day, "isSelected", false);
+              }
+            });
+          }
+        });
+      });
+
+      this.selectedToBook = [];
     },
   },
 };

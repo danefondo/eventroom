@@ -167,48 +167,48 @@ export default {
               if (day.specificDateTime == session.queryDateTime) {
                 // later also check if all partners contains userId
                 console.log("session====", session);
-                if (session.sessionThroughMatching) {
-                  // If through matching, need not update, only change
-                  let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
-                  let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+                // if (session.sessionThroughMatching) {
+                //   // If through matching, need not update, only change
+                //   let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+                //   let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
 
-                  console.log("p1, p2", partnerOne, partnerTwo);
+                //   console.log("p1, p2", partnerOne, partnerTwo);
 
-                  // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
-                  if (partnerOne && partnerTwo) {
-                    // return if already matched
-                    return;
-                  } else if (
-                    partnerOne &&
-                    partnerOne == globalThis.user._id &&
-                    !partnerTwo
-                  ) {
-                    // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-                    console.log("PARTNER TWO NOT EXIST");
-                    day.bookedSessionsOnTime[0].secondPartnerId =
-                      session.secondPartnerId;
-                    day.bookedSessionsOnTime[0].secondPartnerUsername =
-                      session.secondPartnerUsername;
-                  } else if (
-                    partnerTwo &&
-                    partnerTwo == globalThis.user._id &&
-                    !partnerOne
-                  ) {
-                    console.log("PARTNER ONE NOT EXIST");
-                    day.bookedSessionsOnTime[0].firstPartnerId =
-                      session.firstPartnerId;
-                    day.bookedSessionsOnTime[0].firstPartnerUsername =
-                      session.firstPartnerUsername;
-                  }
-                }
+                //   // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+                //   if (partnerOne && partnerTwo) {
+                //     // return if already matched
+                //     return;
+                //   } else if (
+                //     partnerOne &&
+                //     partnerOne == globalThis.user._id &&
+                //     !partnerTwo
+                //   ) {
+                //     // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+                //     console.log("PARTNER TWO NOT EXIST");
+                //     day.bookedSessionsOnTime[0].secondPartnerId =
+                //       session.secondPartnerId;
+                //     day.bookedSessionsOnTime[0].secondPartnerUsername =
+                //       session.secondPartnerUsername;
+                //   } else if (
+                //     partnerTwo &&
+                //     partnerTwo == globalThis.user._id &&
+                //     !partnerOne
+                //   ) {
+                //     console.log("PARTNER ONE NOT EXIST");
+                //     day.bookedSessionsOnTime[0].firstPartnerId =
+                //       session.firstPartnerId;
+                //     day.bookedSessionsOnTime[0].firstPartnerUsername =
+                //       session.firstPartnerUsername;
+                //   }
+                // }
                 if (
-                  !session.sessionThroughMatching &&
+                  session.sessionThroughMatching &&
                   (session.firstPartnerId == globalThis.user._id ||
                     session.secondPartnerId == globalThis.user._id)
                 ) {
                   day.bookedSessionsOnTime.push(session);
                   globalThis.bookedSessions.push(session);
-                } else if (!session.sessionThroughMatching) {
+                } else if (session.sessionThroughMatching) {
                   day.bookedPeopleOnTime.push(session);
                   globalThis.bookedPeopleOnTime.push(session);
                 }
@@ -219,46 +219,46 @@ export default {
           globalThis.calendarData.forEach((hourRow) => {
             let day = hourRow.timeRowDay;
             if (day.specificDateTime == session.queryDateTime) {
-              if (session.sessionThroughMatching) {
-                // If through matching, need not update, only change
-                let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
-                let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+              // if (session.sessionThroughMatching) {
+              //   // If through matching, need not update, only change
+              //   let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+              //   let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
 
-                console.log("p1, p2", partnerOne, partnerTwo);
+              //   console.log("p1, p2", partnerOne, partnerTwo);
 
-                // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
-                if (partnerOne && partnerTwo) {
-                  // return if already matched
-                  return;
-                } else if (
-                  partnerOne &&
-                  partnerOne == globalThis.user._id &&
-                  !partnerTwo
-                ) {
-                  // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-                  day.bookedSessionsOnTime[0].secondPartnerId =
-                    session.secondPartnerId;
-                  day.bookedSessionsOnTime[0].secondPartnerUsername =
-                    session.secondPartnerUsername;
-                } else if (
-                  partnerTwo &&
-                  partnerTwo == globalThis.user._id &&
-                  !partnerOne
-                ) {
-                  day.bookedSessionsOnTime[0].firstPartnerId =
-                    session.firstPartnerId;
-                  day.bookedSessionsOnTime[0].firstPartnerUsername =
-                    session.firstPartnerUsername;
-                }
-              }
+              //   // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+              //   if (partnerOne && partnerTwo) {
+              //     // return if already matched
+              //     return;
+              //   } else if (
+              //     partnerOne &&
+              //     partnerOne == globalThis.user._id &&
+              //     !partnerTwo
+              //   ) {
+              //     // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+              //     day.bookedSessionsOnTime[0].secondPartnerId =
+              //       session.secondPartnerId;
+              //     day.bookedSessionsOnTime[0].secondPartnerUsername =
+              //       session.secondPartnerUsername;
+              //   } else if (
+              //     partnerTwo &&
+              //     partnerTwo == globalThis.user._id &&
+              //     !partnerOne
+              //   ) {
+              //     day.bookedSessionsOnTime[0].firstPartnerId =
+              //       session.firstPartnerId;
+              //     day.bookedSessionsOnTime[0].firstPartnerUsername =
+              //       session.firstPartnerUsername;
+              //   }
+              // }
               if (
-                !session.sessionThroughMatching &&
+                session.sessionThroughMatching &&
                 (session.firstPartnerId == globalThis.user._id ||
                   session.secondPartnerId == globalThis.user._id)
               ) {
                 day.bookedSessionsOnTime.push(session);
                 globalThis.bookedSessions.push(session);
-              } else if (!session.sessionThroughMatching) {
+              } else if (session.sessionThroughMatching) {
                 day.bookedPeopleOnTime.push(session);
                 globalThis.bookedPeopleOnTime.push(session);
               }

@@ -69,10 +69,7 @@
           :data-daynum="i"
         >
           <div
-            v-if="
-              returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') &&
-              !isMatched(each, i)
-            "
+            v-if="returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') && !isMatched(each, i)"
             @click="
               week
                 ? $emit('select-slot', each.timeRowDays[i])
@@ -80,16 +77,7 @@
             "
             class="booked-person event"
           >
-            <!-- <span>{{
-              `${returnBestBookedToMatch(
-                each,
-                i,
-                "bookedPeopleOnTime"
-              )} is booked here`
-            }}</span> -->
-            <span>{{
-              `Person is booked here`
-            }}</span>
+            <span>person booked here</span>
             <div>
               <span>{{
                 returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
@@ -247,18 +235,10 @@ export default {
           // perform all sorts of check later
           // right now just return the first one
           bestBookedToMatch = each.timeRowDay[type][0];
+          console.log("bestyBOOKEd", bestBookedToMatch);
         }
       }
-      console.log("bestyBOOKEd", bestBookedToMatch);
-      // if (
-      //   bestBookedToMatch &&
-      //   (bestBookedToMatch["firstPartnerUsername"] ||
-      //     bestBookedToMatch["secondPartnerUsername"])
-      // ) {
-      //   bestBookedToMatch =
-      //     bestBookedToMatch["firstPartnerUsername"] ||
-      //     bestBookedToMatch["secondPartnerUsername"];
-      // }
+
       return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
 
       // For single day

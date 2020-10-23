@@ -1,5 +1,8 @@
 /* ====== IMPORT MODULES ====== */
 
+
+const SessionModel = require("./database/booking/models/SessionModel");
+
 const Express = require("express");
 const Mongoose = require("mongoose");
 const BodyParser = require("body-parser");
@@ -315,6 +318,10 @@ app.use("/api/booking", BookingRoutes);
 app.get("*", function (req, res) {
   res.sendFile(Path.join(__dirname, "client/dist/index.html"));
 });
+
+// SessionModel.deleteMany({}).exec();
+
+
 
 /* ====== SERVER SETUP ====== */
 

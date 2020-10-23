@@ -306,8 +306,11 @@ export default {
       // let containerRef = participant.identity;
 
       console.log("participant & room", participant, room);
+      console.log("GLBOAL ID", globalThis.userId);
+      console.log("PARTICIPANT ID", participant.identity);
       if (participant.identity == globalThis.userId) {
         globalThis.localParticipantData = participant;
+        console.log("I AM PARTICIPANT.");
       }
 
       let participantsLength = globalThis.participants.length;

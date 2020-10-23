@@ -41,11 +41,7 @@ const BookingDataController = {
       bookedSessions = await SessionModel.find(query).exec();
       //   console.log("bookedSessions", bookedSessions);
     } catch (error) {
-      if (error.errors) {
-        errors = error.errors;
-      } else {
-        errors.error = error;
-      }
+      errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
     return bookedSessions;
@@ -63,11 +59,7 @@ const BookingDataController = {
       allBookedSessions = await SessionModel.find(query).exec();
       //console.log("allBookedSessions", allBookedSessions);
     } catch (error) {
-      if (error.errors) {
-        errors = error.errors;
-      } else {
-        errors.error = error;
-      }
+      errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
     return allBookedSessions;
@@ -268,11 +260,7 @@ const BookingDataController = {
         );
       }
     } catch (error) {
-      if (error.errors) {
-        errors = error.errors;
-      } else {
-        errors.error = error;
-      }
+      errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
 
@@ -315,11 +303,7 @@ const BookingDataController = {
         };
       }
     } catch (error) {
-      if (error.errors) {
-        errors = error.errors;
-      } else {
-        errors.error = error;
-      }
+      errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
     await returnSession.save();
@@ -329,6 +313,27 @@ const BookingDataController = {
   async createAndBookSessionAndRoom(sessionData) {
     let errors = {};
     let session = null;
+    // let existingSessions = await BookingDataController.checkIfAlreadyHaveSessionAtTime(
+    //   sessionData
+    // );
+
+    let userId = sessionData.userId;
+    let date = sessionData.queryDate;
+
+    let query = {
+      $and: [
+        { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
+        { queryDateTime: date },
+      ],
+    };
+    // Check if already exists
+    let sessionExistsAtTime = await SessionModel.exists(query);
+
+    if (sessionExistsAtTime) {
+      errors.SessionAtTimeAlreadyExists = true;
+      throw { errors: errors };
+    }
+
     try {
       session = new SessionModel({
         firstPartnerId: sessionData.userId,
@@ -360,14 +365,38 @@ const BookingDataController = {
       await eventroom.save();
       await session.save();
     } catch (error) {
-      if (error.errors) {
-        errors = error.errors;
-      } else {
-        errors.error = error;
-      }
+      errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
     return session;
+  },
+
+  async checkIfAlreadyHaveSessionAtTime(sessionData) {
+    // let query = { userId: userData.userId };
+    let userId = sessionData.userId;
+    let date = sessionData.queryDate;
+
+    let query = {
+      $and: [
+        { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
+        { queryDateTime: date },
+      ],
+    };
+    let errors = {};
+    let existingSessions = null;
+    try {
+      existingSessions = await SessionModel.find(query).exec();
+      console.log("existingSessions", existingSessions);
+      if (existingSessions && existingSessions.length) {
+        errors.SessionAtTimeAlreadyExists = true;
+        throw { errors: errors };
+      }
+      //   console.log("bookedSessions", bookedSessions);
+    } catch (error) {
+      errors = prepareErrors(error, errors);
+      throw { errors: errors };
+    }
+    return existingSessions;
   },
 
   async checkIfAnySessionsForSlot(sessionDateTime) {

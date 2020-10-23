@@ -69,7 +69,10 @@
           :data-daynum="i"
         >
           <div
-            v-if="returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') && !isMatched(each, i)"
+            v-if="
+              returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') &&
+              !isMatched(each, i)
+            "
             @click="
               week
                 ? $emit('select-slot', each.timeRowDays[i])
@@ -100,6 +103,18 @@
           <!-- highlight is in two boxes to speed up & avoid week check per time, the millisecond difference really makes a difference, rather than having it in each click, even putting emit to function vs direct makes a difference-->
           <div
             v-else
+            @click="
+              week
+                ? $emit('select-slot', each.timeRowDays[i])
+                : $emit('select-slot', each.timeRowDay)
+            "
+            :style="getHeights"
+            class="add-highlight"
+          >
+            This one?
+          </div>
+          <div
+            v-if="each.timeRowDays[i].isSelected"
             @click="
               week
                 ? $emit('select-slot', each.timeRowDays[i])
@@ -170,52 +185,44 @@ export default {
       let heights = `line-height:${this.height}px; height:${height}px;`;
       return heights;
     },
+    // isThisSelected() {
+
+    // }
   },
   methods: {
     isMatched(each, i) {
-      let matched = null;
+      let matchedSession = null;
+      let partnerUsername = null;
+
       if (this.week) {
-        console.log("SESSION", each, i);
-        let session = each.timeRowDays[i]["bookedSessionsOnTime"][0];
-        if (!session) {
-          return;
-        }
-        let firstPartnerId = session.firstPartnerId;
-        let secondPartnerId = session.secondPartnerId;
-        let firstPartnerUsername = session.firstPartnerUsername;
-        let secondPartnerUsername = session.secondPartnerUsername;
-
-        let partnerUsername;
-        if (firstPartnerId && secondPartnerId) {
-          if (firstPartnerId == this.user._id) {
-            partnerUsername = secondPartnerUsername;
-          } else {
-            partnerUsername = firstPartnerUsername;
-          }
-        }
-        console.log("partnerUsername", partnerUsername, matched);
-        matched = partnerUsername;
+        matchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
       } else {
-        let session = each.timeRowDay["bookedSessionsOnTime"][0];
-        let firstPartnerId = session.firstPartnerId;
-        let secondPartnerId = session.secondPartnerId;
-        let firstPartnerUsername = session.firstPartnerUsername;
-        let secondPartnerUsername = session.secondPartnerUsername;
-
-        let partnerUsername;
-        if (firstPartnerId && secondPartnerId) {
-          if (firstPartnerId == this.user._id) {
-            partnerUsername = secondPartnerUsername;
-          } else {
-            partnerUsername = firstPartnerUsername;
-          }
-        }
-        console.log("partnerUsername", partnerUsername, matched);
-        matched = partnerUsername;
+        matchedSession = each.timeRowDay["bookedSessionsOnTime"][0];
       }
-      console.log("partnerUsername", matched);
-      return matched;
+
+      if (!matchedSession) return;
+      console.log("@isMatched, session: ", matchedSession);
+
+      let firstPartnerId = matchedSession.firstPartnerId;
+      let secondPartnerId = matchedSession.secondPartnerId;
+      let firstPartnerUsername = matchedSession.firstPartnerUsername;
+      let secondPartnerUsername = matchedSession.secondPartnerUsername;
+
+      // Both must have value for there to be a possibility of match
+      if (firstPartnerId && secondPartnerId) {
+        // If first is user itself, make the partner the other one
+        if (firstPartnerId == this.user._id) {
+          partnerUsername = secondPartnerUsername;
+        }
+        // If second is user itself, make the partner the other one
+        else {
+          partnerUsername = firstPartnerUsername;
+        }
+      }
+      console.log("partnerUsername", partnerUsername);
+      return partnerUsername;
     },
+
     returnBestBookedToMatch(each, i, type) {
       let bestBookedToMatch;
       if (this.week) {

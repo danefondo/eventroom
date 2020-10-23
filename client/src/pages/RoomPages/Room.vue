@@ -86,8 +86,9 @@ import logo from "../../assets/logo.png";
 
 function initialState() {
   return {
-   userDisabledAnon: false,
-   isCofocusSession: false,
+    twilioReady: false,
+    userDisabledAnon: false,
+    isCofocusSession: false,
     logo: logo,
     roomPasswordCheck: "",
     checkingPassword: false,
@@ -173,7 +174,7 @@ export default {
 
     // Check if first string after core path contains 'session'
     // Pathname [0] returns empty string, [1] is the real first /path
-    const firstPath = window.location.pathname.split('/')[1];
+    const firstPath = window.location.pathname.split("/")[1];
     if (firstPath == "session") {
       // might be 'hackable', allowing access to anon users if tweaked
       // by some savvy folk; though this is primarily for UX goals
@@ -185,9 +186,13 @@ export default {
     if (this.user && this.isAuthenticated) {
       console.log("@2.5 User exists, getting room.", this.user);
       let userId = this.user._id;
+      console.log()
       this.$store.dispatch("auth/updateUserId", userId);
       // this.getRoom();
       await this.addUserToRoomData(userId);
+      this.getAndSetMediaPreferences();
+      this.initSocketListening();
+      this.joinUserToChat();
     }
 
     // Detect purpose & use case of eventroom
@@ -200,13 +205,18 @@ export default {
       // other than Cofocus, it is possible anon users are
       // desired in the rooms and thus they are to either
       // be added (if already exist) or created
-      if (this.tempUser && this.tempUser._id) {
+
+      // Also check to ensure not logged in case temp someone survived, else replaces id
+      if (this.tempUser && this.tempUser._id && !this.user && !this.isAuthenticated) {
         // Check if temporary user already exists;
         let temp = this.tempUser;
         let userId = temp._id;
         this.$store.dispatch("auth/updateUserId", userId);
         await this.addUserToRoomData(userId, true);
-      } else {
+        this.getAndSetMediaPreferences();
+        this.initSocketListening();
+        this.joinUserToChat();
+      } else if (!this.tempUser && !this.tempUser._id && !this.user && !this.isAuthenticated) {
         await this.createTempUser();
       }
     } else {
@@ -214,14 +224,14 @@ export default {
     }
 
     console.log("@3 Get and set Media Preferences.");
-    this.getAndSetMediaPreferences();
+    // this.getAndSetMediaPreferences();
 
     console.log("logging socket: ", this.$socket);
 
     // Make sure you do not use any sockets before having initialized listening
-    this.initSocketListening();
+    // this.initSocketListening();
 
-    this.joinUserToChat();
+    // this.joinUserToChat();
 
     window.onbeforeunload = () => {
       globalThis.cleanBeforeLeave();

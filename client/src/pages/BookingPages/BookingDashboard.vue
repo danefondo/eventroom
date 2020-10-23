@@ -53,9 +53,14 @@
 
             <div class="all-users"></div>
           </form>
-          <div class="bookSession" @click="bookSession">
+          <button
+            class="bookSession"
+            :class="currentlyBookingSession ? 'not-allowed' : ''"
+            :disabled="currentlyBookingSession == true"
+            @click="bookSession"
+          >
             {{ currentlyBookingSession ? "Booking..." : "Book session" }}
-          </div>
+          </button>
           <div class="cancelBooking" @click="cancelBooking">Cancel</div>
         </div>
       </div>
@@ -467,6 +472,7 @@ export default {
     },
     async bookSession() {
       let errors = {};
+      if (this.currentlyBookingSession) return;
       try {
         this.currentlyBookingSession = true;
         const [year, month, date] = this.date.split("-");
@@ -720,8 +726,8 @@ export default {
           let startNum = timeObject.time;
           let endNum = endTime.format("HH:mm");
           let specificDateTime = `${yearNum}-${monthNum}-${dateNum}-${startNum}-${endNum}`;
-          console.log("dateNumber", dateNum);
-          console.log("specificDateTime", specificDateTime);
+          // console.log("dateNumber", dateNum);
+          // console.log("specificDateTime", specificDateTime);
 
           let dayObject = {
             bookedSessionsOnTime: [],
@@ -732,6 +738,7 @@ export default {
             startTime: startNum,
             endTime: endNum,
             specificDateTime: specificDateTime,
+            isSelected: false,
           };
           timeObject.timeRowDays.push(dayObject);
         }
@@ -778,6 +785,7 @@ export default {
           startTime: startNum,
           endTime: endNum,
           specificDateTime: specificDateTime,
+          isSelected: false,
         };
         timeObject.timeRowDay = dayObject;
         this.calendarData.push(timeObject);
@@ -1024,10 +1032,17 @@ Switcher styles
   cursor: pointer;
   transition: 0.1s ease;
   text-align: center;
+  outline: none;
+  border-color: unset;
+  border: none;
 }
 
 .bookSession {
   color: #5600ff;
+}
+
+.not-allowed {
+  cursor: not-allowed !important;
 }
 
 .cancelBooking {

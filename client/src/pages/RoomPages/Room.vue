@@ -227,6 +227,7 @@ export default {
     // this.getAndSetMediaPreferences();
 
     console.log("logging socket: ", this.$socket);
+    
 
     // Make sure you do not use any sockets before having initialized listening
     // this.initSocketListening();

@@ -56,48 +56,71 @@
 
       -->
       <!-- <tr v-for="(each, index) in getTimes" :key="index"> -->
-      <tr v-for="(each, index) in calendarData" :key="index">
+      <tr
+        v-for="(each, index) in calendarData"
+        :key="index"
+        :data-rowhour="each.time"
+      >
         <td>{{ each.time }}</td>
-        <td v-for="(i, index) in 7" :key="index" class="each-day">
+        <td
+          v-for="(index, i) in rowNumberForWeekOrDay"
+          :key="index"
+          class="each-day"
+          :data-daynum="i"
+        >
           <div
-            @click="getBlockData($event)"
+            v-if="
+              returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') &&
+              !isMatched(each, i)
+            "
+            @click="
+              week
+                ? $emit('select-slot', each.timeRowDays[i])
+                : $emit('select-slot', each.timeRowDay)
+            "
+            class="booked-person event"
+          >
+            <!-- <span>{{
+              `${returnBestBookedToMatch(
+                each,
+                i,
+                "bookedPeopleOnTime"
+              )} is booked here`
+            }}</span> -->
+            <span>{{
+              `Person is booked here`
+            }}</span>
+            <div>
+              <span>{{
+                returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
+              }}</span>
+            </div>
+          </div>
+          <!-- all YOUR booked sessions, either matched or unmatched-->
+          <div
+            v-else-if="returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')"
+            class="booked-session"
+          >
+            <span v-if="isMatched(each, i)">{{
+              `Matched with ${isMatched(each, i)}`
+            }}</span>
+            <span v-else>Not yet matched...</span>
+            <span>{{
+              returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
+            }}</span>
+          </div>
+          <!-- highlight is in two boxes to speed up & avoid week check per time, the millisecond difference really makes a difference, rather than having it in each click, even putting emit to function vs direct makes a difference-->
+          <div
+            v-else
+            @click="
+              week
+                ? $emit('select-slot', each.timeRowDays[i])
+                : $emit('select-slot', each.timeRowDay)
+            "
             :style="getHeights"
             class="add-highlight"
           >
             This one?
-          </div>
-          <div
-            v-if="
-              each.timeRowDays &&
-              each.timeRowDays.length &&
-              each.timeRowDays[i] &&
-              each.timeRowDays[i].bookedPeopleOnTime &&
-              each.timeRowDays[i].bookedPeopleOnTime[0]
-            "
-            class="booked-person event"
-          >
-            <span>person booked here</span>
-            <div
-              v-for="(person, index) in each.timeRowDays[i].bookedPeopleOnTime"
-              :key="index"
-            >
-              <span>{{ person.queryDateTime }}</span>
-            </div>
-          </div>
-          <div
-            v-if="
-              each.timeRowDays &&
-              each.timeRowDays.length &&
-              each.timeRowDays[i] &&
-              each.timeRowDays[i].bookedSessionsOnTime &&
-              each.timeRowDays[i].bookedSessionsOnTime[0]
-            "
-            class="booked-session"
-          >
-            <span>booked session matched/matching...</span
-            ><span>{{
-              each.timeRowDays[i].bookedSessionsOnTime[0].queryDateTime
-            }}</span>
           </div>
         </td>
       </tr>
@@ -111,7 +134,15 @@ import { mapState } from "vuex";
 
 export default {
   name: "Table",
-  props: ["dates", "start", "end", "calendarData"],
+  props: [
+    "dates",
+    "start",
+    "end",
+    "calendarData",
+    "rowNumberForWeekOrDay",
+    "week",
+    "weekdayNum",
+  ],
   data() {
     return {
       interval: 60,
@@ -153,75 +184,107 @@ export default {
     },
   },
   methods: {
-    getNodeIndex(elm) {
-      return [...elm.parentNode.children].indexOf(elm);
+    isMatched(each, i) {
+      let matched = null;
+      if (this.week) {
+        console.log("SESSION", each, i);
+        let session = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+        if (!session) {
+          return;
+        }
+        let firstPartnerId = session.firstPartnerId;
+        let secondPartnerId = session.secondPartnerId;
+        let firstPartnerUsername = session.firstPartnerUsername;
+        let secondPartnerUsername = session.secondPartnerUsername;
+
+        let partnerUsername;
+        if (firstPartnerId && secondPartnerId) {
+          if (firstPartnerId == this.user._id) {
+            partnerUsername = secondPartnerUsername;
+          } else {
+            partnerUsername = firstPartnerUsername;
+          }
+        }
+        console.log("partnerUsername", partnerUsername, matched);
+        matched = partnerUsername;
+      } else {
+        let session = each.timeRowDay["bookedSessionsOnTime"][0];
+        let firstPartnerId = session.firstPartnerId;
+        let secondPartnerId = session.secondPartnerId;
+        let firstPartnerUsername = session.firstPartnerUsername;
+        let secondPartnerUsername = session.secondPartnerUsername;
+
+        let partnerUsername;
+        if (firstPartnerId && secondPartnerId) {
+          if (firstPartnerId == this.user._id) {
+            partnerUsername = secondPartnerUsername;
+          } else {
+            partnerUsername = firstPartnerUsername;
+          }
+        }
+        console.log("partnerUsername", partnerUsername, matched);
+        matched = partnerUsername;
+      }
+      console.log("partnerUsername", matched);
+      return matched;
     },
-    getBlockData($event) {
-      console.log("EVENT", $event);
-      console.log("parent td?", $event.path[1]);
-      let block = $event.target;
-      console.log("block", block);
-      let parent = block.closest("td");
-      console.log("parent", parent);
+    returnBestBookedToMatch(each, i, type) {
+      let bestBookedToMatch;
+      if (this.week) {
+        if (
+          each.timeRowDays &&
+          each.timeRowDays.length &&
+          each.timeRowDays[i] &&
+          each.timeRowDays[i][type] &&
+          each.timeRowDays[i][type].length
+        ) {
+          // perform all sorts of check later
+          // right now just return the first one
+          bestBookedToMatch = each.timeRowDays[i][type][0];
+        }
+      } else {
+        if (each.timeRowDay && each.timeRowDay[type]) {
+          // perform all sorts of check later
+          // right now just return the first one
+          bestBookedToMatch = each.timeRowDay[type][0];
+        }
+      }
+      console.log("bestyBOOKEd", bestBookedToMatch);
+      // if (
+      //   bestBookedToMatch &&
+      //   (bestBookedToMatch["firstPartnerUsername"] ||
+      //     bestBookedToMatch["secondPartnerUsername"])
+      // ) {
+      //   bestBookedToMatch =
+      //     bestBookedToMatch["firstPartnerUsername"] ||
+      //     bestBookedToMatch["secondPartnerUsername"];
+      // }
+      return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
 
-      let ColumnIndex = this.getNodeIndex(parent);
-      console.log("ColumnIndex", ColumnIndex);
+      // For single day
+      // The options are different
+      // It's only...
+      // For this row (e.g. time TODAY)
+      // is there anyone?
 
-      let parentTR = block.closest("tr");
-      console.log("parentTR", parentTR);
-      let RowIndex = this.getNodeIndex(parentTR);
-      console.log("RowIndex", RowIndex);
+      // and [i] kind of needs to be the day's number from the get go
+      // so if !week, then i ? weekdayNum
 
-      let monthBox = document.querySelectorAll("thead tr th")[ColumnIndex];
-      console.log("month", monthBox);
+      // For each calendarData (e.g. per hour)
+      // --> Each.time (e.g. hour, e.g. ROW)
+      // --> For each row, create 7 days (e.g per 7 times day block, seven iterations)
+      // --> In each specific day block, list booked people in the day block
+      // Actually list just one, but you can click to see everyone
+      // each.timeRowDays[i].bookedPeopleOnTime[0]
 
-      let month = monthBox.dataset.month;
-      console.log("month", month);
-
-      let year = monthBox.dataset.year;
-      let date = monthBox.dataset.date;
-
-      console.log("year", year);
-      console.log("date", date);
-
-      let startBox = document.querySelectorAll("tbody tr")[RowIndex];
-      console.log("startBox", startBox);
-
-      let endBox = document.querySelectorAll("tbody tr")[RowIndex + 1];
-      console.log("endBox", endBox);
-
-      let start = startBox.querySelectorAll("td")[0];
-
-      let end = endBox.querySelectorAll("td")[0];
-
-      console.log("start", start);
-      console.log("end", end);
-
-      let startText = start.textContent;
-      let endText = end.textContent;
-
-      console.log("startText", startText);
-      console.log("endText", endText);
-
-      // Later here preferences will also be picked
-      // --> This data will be available in local data, maybe even global?
-
-      this.selectEvent(startText, endText, date, month, year);
-      // const column = $(this).parents("td").index();
-      // const row = $(this).parents("tr").index();
-      // const month = $("thead tr th").eq(column).data("month");
-      // const year = $("thead tr th").eq(column).data("year");
-      // const date = $("thead tr th").eq(column).data("date");
-      // const start = $("tbody tr").eq(row).find("td").eq(0).text();
-      // const end = $("tbody tr")
-      //   .eq(row + 1)
-      //   .find("td")
-      //   .eq(0)
-      //   .text();
-      // this.selectEvent(start, end, date, month, year);
+      // The one person chosen from the list should be best match, or then
+      // the first one, or a random one
     },
+    /*getBlockData(each) {
+      this.selectEvent(each.startTime, each.endTime, each.date, each.month, each.year)
+    },*/
 
-    async selectEvent(start, end, date, month, year) {
+    /*async selectEvent(start, end, date, month, year) {
       console.log(
         "Do you want to add this event? These are the people available for matching in this block.",
         start,
@@ -247,8 +310,8 @@ export default {
         queryDate: queryDate,
         rawDateTime: rawDateTime,
       };
-      await this.$store.dispatch("booking/updateBookingData", bookingData);
-    },
+      thi("booking/updateBookingData", bookingData);
+    },*/
   },
 };
 </script>

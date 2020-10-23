@@ -1,15 +1,17 @@
 <template>
-  <div class="calendar">
+  <div class="cofocus">
     <div class="wrapper">
       <div class="calendar">
         <Switcher
           v-if="start && end && currentStart"
           @switchWeek="switchWeek"
+          @switchDay="switchDay"
           @setToToday="setToToday"
           :start="start"
           :end="end"
           :currentStart="currentStart"
           :week="week"
+          :currentSelectedDay="currentSelectedDay"
           @toggleDayWeekView="toggleDayWeekView"
         />
         <Table
@@ -17,39 +19,45 @@
           :dates="dates"
           :start="start"
           :end="end"
+          :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
           :currentStart="currentStart"
           :calendarData="calendarData"
+          :week="week"
+          :weekdayNum="weekdayNum"
+          @select-slot="selectSlot"
         />
       </div>
-      <div class="sidebar">Random things</div>
-    </div>
+      <!-- <div class="sidebar">Random things</div> -->
+      <div class="modal">
+        <div class="modal-body">
+          <form>
+            <input name="title" type="text" placeholder="Event title" /><br />
+            <input
+              name="date"
+              type="date"
+              v-model="date"
+              placeholder="Date"
+            /><br />
+            <input
+              name="start-time"
+              type="time"
+              v-model="startTime"
+              placeholder="Start time"
+            /><br />
+            <input
+              name="end-time"
+              type="time"
+              v-model="endTime"
+              placeholder="End time"
+            />
 
-    <div class="modal">
-      <div class="modal-body">
-        <form>
-          <input name="title" type="text" placeholder="Event title" /><br />
-          <input
-            name="date"
-            type="date"
-            v-model="date"
-            placeholder="Date"
-          /><br />
-          <input
-            name="start-time"
-            type="time"
-            v-model="startTime"
-            placeholder="Start time"
-          /><br />
-          <input
-            name="end-time"
-            type="time"
-            v-model="endTime"
-            placeholder="End time"
-          />
-
-          <div class="all-users"></div>
-        </form>
-        <div @click="bookSession">Book session</div>
+            <div class="all-users"></div>
+          </form>
+          <div class="bookSession" @click="bookSession">
+            {{ currentlyBookingSession ? "Booking..." : "Book session" }}
+          </div>
+          <div class="cancelBooking" @click="cancelBooking">Cancel</div>
+        </div>
       </div>
     </div>
   </div>
@@ -83,6 +91,8 @@ import moment from "moment";
 import Switcher from "./CalendarComponents/Switcher";
 import Table from "./CalendarComponents/Table";
 
+import { startOfDay, endOfDay, getDay, startOfISOWeek } from "date-fns";
+
 export default {
   name: "BookingDashboard",
   data() {
@@ -90,10 +100,13 @@ export default {
       startTime: null,
       endTime: null,
       date: null,
+      currentlyBookingSession: false,
       gettingBookedSessions: false,
       gettingBookedSessionsError: false,
       gettingAllBookedSessions: false,
       gettingAllBookedSessionsError: false,
+      gettingBookedSessionsForOneDay: false,
+      gettingBookedSessionsForOneDayError: false,
       bookedSessions: [],
       bookedPeopleOnTime: [],
       interval: 60,
@@ -106,45 +119,162 @@ export default {
       end: null,
       dates: null,
       currentStart: moment().startOf("isoWeek"),
+      currentSelectedDay: new Date(),
       week: true,
+      rowNumberForWeekOrDay: 7,
+      weekdayNum: null,
     };
   },
   computed: {
     ...mapState({
-      bookingData: (state) => state.booking.bookingData,
-      startX: (state) => state.booking.bookingData.startTime,
       user: (state) => state.auth.user,
+      isAuthenticated: (state) => state.auth.authenticationStatus,
+      isVerified: (state) => state.auth.verificationStatus,
     }),
   },
   components: {
     Switcher,
     Table,
   },
-  //   computed: {
-  //     ...mapState({
-  //       user: (state) => state.auth.user,
-  //       isAuthenticated: (state) => state.auth.authenticationStatus,
-  //       isVerified: (state) => state.auth.verificationStatus,
-  //     }),
-  //   },
+  beforeRouteLeave(to, from, next) {
+    this.cleanBeforeLeave(true, next);
+  },
   async mounted() {
-    if (
-      this.bookingData.startTime &&
-      this.bookingData.endTime &&
-      this.bookingData.date
-    ) {
-      this.startTime = this.bookingData.startTime;
-      this.endTime = this.bookingData.endTime;
-      this.date = this.bookingData.date;
-    }
     this.initCalendar();
     this.getCalendarTimes();
 
     await this.getAllBookedUsersForSpecificWeek();
-    await this.getUserBookedSessionsForThisWeek();
-    // this.plotEvents();
+
+    this.$socket.emit("joinCofocusCalendar", "cofocus");
+    this.startReceivingPushedSessions();
+
+    let globalThis = this;
+    window.onbeforeunload = () => {
+      globalThis.cleanBeforeLeave();
+    };
   },
   methods: {
+    startReceivingPushedSessions() {
+      let globalThis = this;
+      this.sockets.subscribe("receivePushedSessions", (session) => {
+        console.log("WOWZA SESIONA", session);
+
+        // could be one or many
+        // It also gives all relevant data to know where to insert it
+        if (globalThis.week) {
+          globalThis.calendarData.forEach((hourRow) => {
+            hourRow.timeRowDays.forEach((day) => {
+              if (day.specificDateTime == session.queryDateTime) {
+                // later also check if all partners contains userId
+                console.log("session====", session);
+                if (session.sessionThroughMatching) {
+                  // If through matching, need not update, only change
+                  let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+                  let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+
+                  console.log("p1, p2", partnerOne, partnerTwo);
+
+                  // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+                  if (partnerOne && partnerTwo) {
+                    // return if already matched
+                    return;
+                  } else if (
+                    partnerOne &&
+                    partnerOne == globalThis.user._id &&
+                    !partnerTwo
+                  ) {
+                    // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+                    console.log("PARTNER TWO NOT EXIST");
+                    day.bookedSessionsOnTime[0].secondPartnerId =
+                      session.secondPartnerId;
+                    day.bookedSessionsOnTime[0].secondPartnerUsername =
+                      session.secondPartnerUsername;
+                  } else if (
+                    partnerTwo &&
+                    partnerTwo == globalThis.user._id &&
+                    !partnerOne
+                  ) {
+                    console.log("PARTNER ONE NOT EXIST");
+                    day.bookedSessionsOnTime[0].firstPartnerId =
+                      session.firstPartnerId;
+                    day.bookedSessionsOnTime[0].firstPartnerUsername =
+                      session.firstPartnerUsername;
+                  }
+                }
+                if (
+                  !session.sessionThroughMatching &&
+                  (session.firstPartnerId == globalThis.user._id ||
+                    session.secondPartnerId == globalThis.user._id)
+                ) {
+                  day.bookedSessionsOnTime.push(session);
+                  globalThis.bookedSessions.push(session);
+                } else if (!session.sessionThroughMatching) {
+                  day.bookedPeopleOnTime.push(session);
+                  globalThis.bookedPeopleOnTime.push(session);
+                }
+              }
+            });
+          });
+        } else {
+          globalThis.calendarData.forEach((hourRow) => {
+            let day = hourRow.timeRowDay;
+            if (day.specificDateTime == session.queryDateTime) {
+              if (session.sessionThroughMatching) {
+                // If through matching, need not update, only change
+                let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+                let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+
+                console.log("p1, p2", partnerOne, partnerTwo);
+
+                // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+                if (partnerOne && partnerTwo) {
+                  // return if already matched
+                  return;
+                } else if (
+                  partnerOne &&
+                  partnerOne == globalThis.user._id &&
+                  !partnerTwo
+                ) {
+                  // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+                  day.bookedSessionsOnTime[0].secondPartnerId =
+                    session.secondPartnerId;
+                  day.bookedSessionsOnTime[0].secondPartnerUsername =
+                    session.secondPartnerUsername;
+                } else if (
+                  partnerTwo &&
+                  partnerTwo == globalThis.user._id &&
+                  !partnerOne
+                ) {
+                  day.bookedSessionsOnTime[0].firstPartnerId =
+                    session.firstPartnerId;
+                  day.bookedSessionsOnTime[0].firstPartnerUsername =
+                    session.firstPartnerUsername;
+                }
+              }
+              if (
+                !session.sessionThroughMatching &&
+                (session.firstPartnerId == globalThis.user._id ||
+                  session.secondPartnerId == globalThis.user._id)
+              ) {
+                day.bookedSessionsOnTime.push(session);
+                globalThis.bookedSessions.push(session);
+              } else if (!session.sessionThroughMatching) {
+                day.bookedPeopleOnTime.push(session);
+                globalThis.bookedPeopleOnTime.push(session);
+              }
+            }
+          });
+        }
+      });
+    },
+    cleanBeforeLeave(fromBeforeLeave = false, next = null) {
+      this.sockets.unsubscribe("receivePushedSessions");
+
+      // this.resetData();
+      if (fromBeforeLeave && next !== null) {
+        next();
+      }
+    },
     async getUserBookedSessionsForThisWeek() {
       let globalThis = this;
       try {
@@ -175,6 +305,8 @@ export default {
             globalThis.calendarData.forEach((hourRow) => {
               hourRow.timeRowDays.forEach((day) => {
                 if (day.specificDateTime == session.queryDateTime) {
+                  console.log("daySpecificTime: ", day.specificDateTime);
+                  console.log("sesSpecificTime: ", session.queryDateTime);
                   day.bookedSessionsOnTime.push(session);
                 }
               });
@@ -203,11 +335,10 @@ export default {
         this.gettingAllBookedSessions = true;
 
         let endOfWeekDate = new moment(this.currentStart);
-        endOfWeekDate = endOfWeekDate.add(169, 'hours');
+        endOfWeekDate = endOfWeekDate.endOf("isoWeek");
         endOfWeekDate = endOfWeekDate.toDate();
 
         let weekData = {
-          currentWeek: this.currentStart,
           endOfWeekDate: endOfWeekDate,
         };
 
@@ -226,13 +357,95 @@ export default {
         if (response.data.success) {
           this.gettingAllBookedSessions = false;
 
+          // allBookedSessions.forEach((session) => {
+          //   globalThis.calendarData.forEach((hourRow) => {
+          //     hourRow.timeRowDays.forEach((day) => {
+          //       if (day.specificDateTime == session.queryDateTime) {
+          //         day.bookedPeopleOnTime.push(session);
+          //       }
+          //     });
+          //   });
+          // });
+
           allBookedSessions.forEach((session) => {
             globalThis.calendarData.forEach((hourRow) => {
               hourRow.timeRowDays.forEach((day) => {
                 if (day.specificDateTime == session.queryDateTime) {
-                  day.bookedPeopleOnTime.push(session);
+                  // later also check if all partners contains userId
+                  console.log("session====", session);
+                  if (
+                    session.firstPartnerId == globalThis.user._id ||
+                    session.secondPartnerId == globalThis.user._id
+                  ) {
+                    day.bookedSessionsOnTime.push(session);
+                    globalThis.bookedSessions.push(session);
+                  } else {
+                    day.bookedPeopleOnTime.push(session);
+                    globalThis.bookedPeopleOnTime.push(session);
+                  }
                 }
               });
+            });
+          });
+
+          // allBookedSessions.forEach((room) => {
+          //   globalThis.bookedPeopleOnTime.push(room);
+          // });
+
+          // bookedSessions.forEach((room) => {
+          //   globalThis.bookedSessions.push(room);
+          // });
+          // add rooms to vuex or local storage to display them in order of creation or in the order of chosen preference;
+          // then display the rooms
+        }
+      } catch (error) {
+        console.log("@gettingBookedSessions Error: ", error);
+        this.gettingBookedSessions = false;
+        this.gettingBookedSessionsError = true;
+      }
+    },
+    async getBookedSessionsForOneDay() {
+      // Get everyone's booked sessions for this day from this moment forward (no past sessions) until the end of this particular day
+      let globalThis = this;
+      // Return in two lists, load in one go?
+      try {
+        if (!this.user || !this.user._id) {
+          return (window.location.href = "/");
+        }
+        this.gettingBookedSessionsForOneDay = true;
+
+        let dayData = {
+          startOfDay: startOfDay(this.currentSelectedDay),
+          endOfDay: endOfDay(this.currentSelectedDay),
+        };
+
+        const response = await requestWithAuthentication(
+          `post`,
+          "/api/booking/getBookedSessionsForOneDay",
+          dayData
+        );
+
+        let allBookedSessions = response.data.result;
+        if (!allBookedSessions)
+          throw new Error("Failed to fetch general sessions.");
+
+        console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
+
+        if (response.data.success) {
+          this.gettingBookedSessionsForOneDay = false;
+
+          // Sort here
+          allBookedSessions.forEach((session) => {
+            globalThis.calendarData.forEach((hourRow) => {
+              let day = hourRow.timeRowDay;
+              if (day.specificDateTime == session.queryDateTime) {
+                if (
+                  session.firstPartnerId == globalThis.user._id ||
+                  session.secondPartnerId == globalThis.user._id
+                ) {
+                  day.bookedSessionsOnTime.push(session);
+                }
+              }
             });
           });
 
@@ -247,14 +460,26 @@ export default {
           // then display the rooms
         }
       } catch (error) {
-        console.log("@gettingBookedSessions Error: ", error);
-        this.gettingBookedSessions = false;
-        this.gettingBookedSessionsError = true;
+        console.log("@gettingAllBookedSessionsForOneDay Error: ", error);
+        this.gettingBookedSessionsForOneDay = false;
+        this.gettingBookedSessionsForOneDayError = true;
       }
     },
     async bookSession() {
+      let errors = {};
       try {
-        let sendData = JSON.parse(JSON.stringify(this.bookingData));
+        this.currentlyBookingSession = true;
+        const [year, month, date] = this.date.split("-");
+        let sendData = {
+          queryDate: `${year}-${month}-${date}-${this.startTime}-${this.endTime}`,
+          startTime: this.startTime,
+          endTime: this.endTime,
+          date: this.date,
+          rawDateTime: new moment(
+            `${year}-${month}-${date} ${this.startTime}`,
+            "YYYY-MM-DD HH:mm"
+          ),
+        };
         sendData.userId = this.user._id;
         sendData.username = this.user.username;
         const response = await requestWithAuthentication(
@@ -262,22 +487,111 @@ export default {
           `api/booking/bookSessionSlot`,
           sendData
         );
-        console.log("response", response);
+        let session = response.data.result;
+        if (!session) {
+          errors.FailedToBookSession = true;
+          throw { errors: errors };
+        }
+
+        if (this.week) {
+          this.calendarData.forEach((hourRow) => {
+            hourRow.timeRowDays.forEach((day) => {
+              if (day.specificDateTime == session.queryDateTime) {
+                if (
+                  session.firstPartnerId == this.user._id ||
+                  session.secondPartnerId == this.user._id
+                ) {
+                  day.bookedSessionsOnTime.push(session);
+                }
+              }
+            });
+          });
+        } else {
+          this.calendarData.forEach((hourRow) => {
+            let day = hourRow.timeRowDay;
+            if (day.specificDateTime == session.queryDateTime) {
+              if (
+                session.firstPartnerId == this.user._id ||
+                session.secondPartnerId == this.user._id
+              ) {
+                day.bookedSessionsOnTime.push(session);
+              }
+            }
+          });
+        }
+
+        let sessionInfo = {
+          userId: this.user._id,
+          session: session,
+          roomType: "cofocus",
+        };
+        this.$socket.emit("pushNewSessionToOthers", sessionInfo);
+
+        this.currentlyBookingSession = false;
       } catch (error) {
         console.log("errorBooking", error);
+        this.currentlyBookingSession = false;
       }
     },
 
-    toggleDayWeekView() {
+    async toggleDayWeekView() {
       this.week = !this.week;
+      if (this.week) {
+        this.rowNumberForWeekOrDay = 7;
+        this.initCalendar();
+        this.getCalendarTimes();
+        await this.getAllBookedUsersForSpecificWeek();
+        // await this.getUserBookedSessionsForThisWeek();
+      } else if (!this.week) {
+        this.rowNumberForWeekOrDay = 1;
+        this.weekdayNum = getDay(this.currentSelectedDay) - 1;
+        this.getOneDate();
+        this.getDayCalendarTimes();
+        await this.getBookedSessionsForOneDay();
+      }
     },
-    switchWeek(currentStart) {
+    async switchWeek(currentStart) {
       this.currentStart = currentStart;
+
+      // if new week start = current time week start
+      // --> then set today as selected day
+      // else if any other week, set start of week as day
+      let newWeekStart = currentStart.toDate();
+      let todayWeekStart = moment().startOf("isoWeek").toDate();
+      if (newWeekStart == todayWeekStart) {
+        this.currentSelectedDay = new Date();
+      } else {
+        this.currentSelectedDay = currentStart.toDate();
+      }
       this.initCalendar();
+      this.getCalendarTimes();
+      await this.getAllBookedUsersForSpecificWeek();
+      // await this.getUserBookedSessionsForThisWeek();
     },
-    setToToday() {
+    async switchDay(newSelectedDay) {
+      this.currentSelectedDay = newSelectedDay;
+      // In case week changes, set up current week to match day's week
+      let isoWeekStart = startOfISOWeek(this.currentSelectedDay);
+      this.currentStart = moment(isoWeekStart);
+      this.weekdayNum = getDay(this.currentSelectedDay) - 1;
+      this.getOneDate();
+      this.getDayCalendarTimes();
+      await this.getBookedSessionsForOneDay();
+      // this.initCalendar();
+      // this.getCalendarTimes();
+    },
+    async setToToday() {
       this.currentStart = moment().startOf("isoWeek");
-      this.initCalendar();
+      this.currentSelectedDay = new Date();
+      if (this.week) {
+        this.initCalendar();
+        this.getCalendarTimes();
+        await this.getAllBookedUsersForSpecificWeek();
+      } else {
+        this.getOneDate();
+        this.getDayCalendarTimes();
+        this.getBookedSessionsForOneDay();
+      }
     },
     initCalendar() {
       let startOfPeriod = this.currentStart;
@@ -308,6 +622,25 @@ export default {
       this.start = this.dates[0];
       this.end = this.dates[this.dates.length - 1];
     },
+    getOneDate() {
+      // get current week first day
+      // if currentSelectedDay is not of selectedweek
+      // select firstDate of the week
+
+      // then use current selected date
+      let momentDate = moment(this.currentSelectedDay);
+      const date = {
+        date: momentDate.format("DD"),
+        day: momentDate.format("ddd"),
+        month: momentDate.format("MMM"),
+        monthInNum: momentDate.format("MM"),
+        year: momentDate.format("YYYY"),
+      };
+      this.dates = [];
+      this.dates.push(date);
+      this.start = this.dates[0];
+      this.end = this.dates[0];
+    },
     getTimes(min, max, interval) {
       const time = moment(min, "HH:mm");
       const maximumTime = moment(max, "HH:mm");
@@ -335,47 +668,6 @@ export default {
     // then either match up with first available if only one free
     // else filter against the person by preferences
 
-    // See OTHERS on the calendar
-    plotEvents() {
-      // clearAllEvents();
-      this.bookedSessions.forEach((eachEvent) => {
-        const diffMinutes = moment(eachEvent.scheduledStartTime, "HH:mm").diff(
-          moment(this.minimumTime, "HH:mm"),
-          "minutes"
-        );
-
-        console.log("diffMin", diffMinutes);
-        // this will fail for events that transcend a day
-        const eventLength = moment(eachEvent.scheduledEndTime, "HH:mm").diff(
-          moment(eachEvent.scheduledStartTime, "HH:mm"),
-          "minutes"
-        );
-        const rowIndex = Math.floor(diffMinutes / this.interval);
-        const diffMinutesInTimeFrame = diffMinutes - rowIndex * this.interval;
-        let date = eachEvent.scheduledDate.split("-");
-        let dateNumber = new Date(eachEvent.scheduledDate);
-        dateNumber = dateNumber.getUTCDate();
-        console.log("date", date);
-        const column = document.querySelector(`[data-date="${dateNumber}"]`);
-        if (column && column.dataset.month === date[1]) {
-          const columnIndex = parseInt(column.dataset.index);
-          const eventHtml = `<div class="event">My Booked Session</div>`;
-          const cell = document.querySelector(
-            `tbody tr:nth-of-type(${rowIndex + 1}) td:nth-of-type(${
-              columnIndex + 1
-            })`
-          );
-          cell.innerHTML = eventHtml;
-          cell.children[0].style.height = `${
-            (eventLength / this.interval) * this.height
-          }px`;
-          //console.log(minute, ((minute % interval) / interval) * height)
-          cell.children[0].style.top = `${
-            (diffMinutesInTimeFrame / this.interval) * this.height
-          }px`;
-        }
-      });
-    },
     // NOW SOMEHOW POPULATE bookedPeopleOnTime for each day & bookedSessionsOnTime
     // one where userId == this.user._id & everyone else
     // I must somehow decide WHICH ONE is the correct one to push data into
@@ -393,18 +685,17 @@ export default {
 
       // MUST ALSO IMPLEMENT TIMEZONES + SET GLOBAL TIMEZONE?
 
-      let globalThis = this;
+      //let globalThis = this;
 
       let min = this.minimumTime;
       let max = this.maximumTime;
       const time = moment(min, "HH:mm");
       const endTimeCounter = moment(min, "HH:mm");
-      let inter = this.interval;
-
       const maxTime = moment(max, "HH:mm");
+      this.calendarData = [];
       do {
         let endTime = endTimeCounter;
-        endTime = endTime.add(inter, "minutes");
+        endTime = endTime.add(this.interval, "minutes");
 
         let timeObject = {
           time: time.format("HH:mm"),
@@ -412,21 +703,22 @@ export default {
         };
         // each iteration is for one day out of 7
         // each 7 is for
-        let current = new moment(globalThis.currentStart);
+        let current = new moment(this.currentStart);
         for (var i = 0; i < 7; i++) {
           // COMPUTE DATE-TIME-STRING
-
-          let monthNum = current.format("MM");
-          let yearNum = current.format("YYYY");
-          let startNum = timeObject.time;
-          let endNum = endTime.format("HH:mm");
           let dateNum;
+
+          // If first day, don't add day
           if (i == 0) {
             dateNum = current.format("DD");
           } else {
             dateNum = current.add(1, "d");
             dateNum = dateNum.format("DD");
           }
+          let monthNum = current.format("MM");
+          let yearNum = current.format("YYYY");
+          let startNum = timeObject.time;
+          let endNum = endTime.format("HH:mm");
           let specificDateTime = `${yearNum}-${monthNum}-${dateNum}-${startNum}-${endNum}`;
           console.log("dateNumber", dateNum);
           console.log("specificDateTime", specificDateTime);
@@ -434,36 +726,72 @@ export default {
           let dayObject = {
             bookedSessionsOnTime: [],
             bookedPeopleOnTime: [],
+            date: dateNum,
+            month: monthNum,
+            year: yearNum,
+            startTime: startNum,
+            endTime: endNum,
             specificDateTime: specificDateTime,
           };
           timeObject.timeRowDays.push(dayObject);
         }
-        globalThis.calendarData.push(timeObject);
+        this.calendarData.push(timeObject);
         time.add(this.interval, "minutes");
       } while (time.isSameOrBefore(maxTime));
-      console.log("calendarTime", globalThis.calendarData);
     },
-    // async getAllEvents() {
-    //   try {
-    //     const { data } = await axios.get(`/api/events/getAllEvents`);
-    //     console.log("@home data", data);
-    //     this.events = data.events;
-    //   } catch (error) {
-    //     console.log("error", error);
-    //   }
-    // },
-  },
-  watch: {
-    startX: function () {
-      if (
-        this.bookingData.startTime &&
-        this.bookingData.endTime &&
-        this.bookingData.date
-      ) {
-        this.startTime = this.bookingData.startTime;
-        this.endTime = this.bookingData.endTime;
-        this.date = this.bookingData.date;
-      }
+    getDayCalendarTimes() {
+      let min = this.minimumTime;
+      let max = this.maximumTime;
+      const time = moment(min, "HH:mm");
+      const endTimeCounter = moment(min, "HH:mm");
+      const maxTime = moment(max, "HH:mm");
+      this.calendarData = [];
+      // Iterate and do for each hour, one row
+      do {
+        let endTime = endTimeCounter;
+        endTime = endTime.add(this.interval, "minutes");
+
+        let timeObject = {
+          time: time.format("HH:mm"),
+          timeRowDay: [],
+        };
+        // each iteration is for one day out of 7
+        // each 7 is for
+        let current = new moment(this.currentSelectedDay);
+        // COMPUTE DATE-TIME-STRING
+
+        let dateNum = current.format("DD");
+        let monthNum = current.format("MM");
+        let yearNum = current.format("YYYY");
+        let startNum = timeObject.time;
+        let endNum = endTime.format("HH:mm");
+        let specificDateTime = `${yearNum}-${monthNum}-${dateNum}-${startNum}-${endNum}`;
+        console.log("dateNumber", dateNum);
+        console.log("specificDateTime", specificDateTime);
+
+        let dayObject = {
+          bookedSessionsOnTime: [],
+          bookedPeopleOnTime: [],
+          date: dateNum,
+          month: monthNum,
+          year: yearNum,
+          startTime: startNum,
+          endTime: endNum,
+          specificDateTime: specificDateTime,
+        };
+        timeObject.timeRowDay = dayObject;
+        this.calendarData.push(timeObject);
+        time.add(this.interval, "minutes");
+      } while (time.isSameOrBefore(maxTime));
+    },
+    selectSlot({ startTime, endTime, date, month, year }) {
+      this.startTime = startTime;
+      this.endTime = endTime;
+      this.date = `${year}-${month}-${date}`;
+      // later add to array of SELECTED SLOTS
+    },
+    cancelBooking() {
+      console.log("canceling");
     },
   },
 };
@@ -473,6 +801,11 @@ export default {
 .wrapper {
   display: flex;
   justify-content: space-between;
+  background-color: #f6f5f8;
+}
+
+.cofocus {
+  width: 100%;
 }
 
 .calendar {
@@ -484,14 +817,14 @@ export default {
 }
 
 .modal {
-  position: fixed;
+  /* position: fixed; */
   width: 22%;
   height: 100vh;
-  top: 0;
+  /* top: 0;
   right: -22%;
-  right: 17%;
+  right: 17%; */
   z-index: 3;
-  background: #fff;
+  /* background: #fff; */
   align-items: center;
   justify-content: center;
   display: flex;
@@ -601,6 +934,16 @@ Switcher styles
   font-size: 14px;
   color: #393954;
   font-weight: bold;
+  cursor: pointer;
+  transition: 0.1s ease;
+}
+
+.calendar .switcher .today:hover {
+  background-color: #b7bcc194;
+}
+
+.today:hover {
+  background-color: #b7bcc194;
 }
 
 .calendar .switcher .date-range {
@@ -664,5 +1007,37 @@ Switcher styles
   left: 0;
   right: 0;
   margin: 0 auto;
+}
+
+/** BOOKING MODAL */
+.bookSession,
+.cancelBooking {
+  font-size: 20px;
+  margin-top: 15px;
+  margin-left: 5px;
+  margin-right: 5px;
+  letter-spacing: 0.5px;
+  background-color: #e9eced;
+  padding: 6px 14px;
+  font-weight: 700;
+  border-radius: 360px;
+  cursor: pointer;
+  transition: 0.1s ease;
+  text-align: center;
+}
+
+.bookSession {
+  color: #5600ff;
+}
+
+.cancelBooking {
+  margin-top: 7px;
+  padding: 4px 15px;
+  font-size: 18px;
+}
+
+.bookSession:hover,
+.cancelBooking:hover {
+  background-color: #b7bcc194;
 }
 </style>

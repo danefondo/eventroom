@@ -1,8 +1,34 @@
 const SessionModel = require("../models/SessionModel");
 const EventroomModel = require("../../eventroom/models/EventroomModel");
-const moment = require('moment')
+const moment = require("moment");
+
+function prepareErrors(error, errors) {
+  if (error.errors) {
+    errors = error.errors;
+  } else {
+    errors.error = error;
+  }
+  return errors;
+}
 
 const BookingDataController = {
+  async getBookedSessionsForOneDay(dayData) {
+    let startOfDay = dayData.startOfDay;
+    let endOfDay = dayData.endOfDay;
+
+    let query = { rawDateTime: { $gt: startOfDay, $lt: endOfDay } };
+
+    let errors = {};
+    let allBookedSessions;
+    try {
+      allBookedSessions = await SessionModel.find(query).exec();
+    } catch (error) {
+      errors = prepareErrors(error, errors);
+      throw { errors: errors };
+    }
+    return allBookedSessions;
+  },
+
   async getUserBookedSessionsForThisWeek(userData) {
     // let query = { userId: userData.userId };
     let userId = userData.userId;
@@ -13,7 +39,7 @@ const BookingDataController = {
     let bookedSessions;
     try {
       bookedSessions = await SessionModel.find(query).exec();
-      console.log("bookedSessions", bookedSessions);
+      //   console.log("bookedSessions", bookedSessions);
     } catch (error) {
       if (error.errors) {
         errors = error.errors;
@@ -26,26 +52,16 @@ const BookingDataController = {
   },
 
   async getAllBookedUsersForSpecificWeek(weekData) {
-    console.log("weekData", weekData);
-    let currentWeek = weekData.currentWeek;
     let endOfWeekDate = weekData.endOfWeekDate;
-    console.log("endOfWeekDate", endOfWeekDate);
     let currentMoment = new Date();
 
-    // let query = { "rawDateTime": { $gt: currentWeek, $lt: endOfWeekDate }};
-    let query = {};
+    let query = { rawDateTime: { $gt: currentMoment, $lt: endOfWeekDate } };
 
-    // Filter by current week somehow (queryDate?)
-    // And then moment
-
-    // let query = {
-    //   $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }],
-    // };
     let errors = {};
     let allBookedSessions;
     try {
       allBookedSessions = await SessionModel.find(query).exec();
-      console.log("allBookedSessions", allBookedSessions);
+      //console.log("allBookedSessions", allBookedSessions);
     } catch (error) {
       if (error.errors) {
         errors = error.errors;
@@ -63,6 +79,7 @@ const BookingDataController = {
   async bookSessionSlot(sessionData) {
     let returnSession = null;
     let userId = sessionData.userId;
+    let username = sessionData.username;
     let errors = {};
     // Is a preferred user specified?
     /**
@@ -105,7 +122,7 @@ const BookingDataController = {
         response.sessionsExistForTime &&
         response.existingSessionsArray.length
       ) {
-        console.log("response", response);
+        console.log("SESSIONS EXIST", response);
 
         // Prepare container for any available sessions
         let availableSessions = [];
@@ -221,6 +238,7 @@ const BookingDataController = {
           let matchingData = {
             sessionToMatch,
             userId,
+            username,
             partnerId,
           };
           returnSession = await BookingDataController.matchWithExistingSession(
@@ -266,6 +284,7 @@ const BookingDataController = {
     let errors = {};
     try {
       let userId = matchingData.userId;
+      let username = matchingData.username;
       let partnerId = matchingData.partnerId;
       let sessionToMatch = matchingData.sessionToMatch;
       let sessionId = sessionToMatch._id;
@@ -282,9 +301,13 @@ const BookingDataController = {
       if (returnSession.firstPartnerId == partnerId) {
         // Set yourself as the other partner;
         returnSession.secondPartnerId = userId;
+        returnSession.secondPartnerUsername = username;
+        returnSession.sessionThroughMatching = true;
       } else if (returnSession.secondPartnerId == partnerId) {
         // Set yourself as the other partner;
         returnSession.firstPartnerId = userId;
+        returnSession.firstPartnerUsername = username;
+        returnSession.sessionThroughMatching = true;
       } else {
         // Throw error and create new session instead
         returnSession = {
@@ -309,6 +332,7 @@ const BookingDataController = {
     try {
       session = new SessionModel({
         firstPartnerId: sessionData.userId,
+        firstPartnerUsername: sessionData.username,
         scheduledDate: sessionData.date,
         scheduledStartTime: sessionData.startTime,
         scheduledEndTime: sessionData.endTime,
@@ -351,13 +375,14 @@ const BookingDataController = {
     let errors = {};
 
     try {
-      let query = { queryDate: sessionDateTime };
+      let query = { queryDateTime: sessionDateTime };
       let response = await SessionModel.find(query).exec();
 
       if (response) {
         responseData.sessionsExistForTime = true;
         responseData.existingSessionsArray = response;
       }
+      console.log("WOW", response);
     } catch (error) {
       errors.FailedToCheckSessionsExist = true;
       errors.error = error;

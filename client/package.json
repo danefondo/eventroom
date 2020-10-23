@@ -13,6 +13,7 @@
     "autolinker": "^3.14.1",
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
+    "date-fns": "^2.16.1",
     "detectrtc": "^1.4.1",
     "jwt-decode": "^2.2.0",
     "maxlength-contenteditable": "^1.0.1",

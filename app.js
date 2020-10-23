@@ -270,6 +270,23 @@ io.on("connection", function (socket) {
   // socket.on("disconnect", function () {
   //   socket.removeAllListeners();
   // });
+
+  /** COFOCUS */
+  socket.on("joinCofocusCalendar", function (data) {
+    console.log("User joined room type: ", data);
+    socket.join(data);
+  });
+
+  socket.on("pushNewSessionToOthers", function (data) {
+    if (!data || ! data.userId || !data.roomType || !data.session) {
+      // let response = "Session data missing";
+      return;
+      // return socket.emit("messageSendFailed", response);
+    }
+    console.log("Session:", data.session);
+    socket.to(data.roomType).emit("receivePushedSessions", data.session);
+    // io.removeAllListeners();
+  });
 });
 
 let twilio = require("twilio")(

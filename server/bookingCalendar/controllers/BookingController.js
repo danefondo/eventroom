@@ -5,7 +5,6 @@ const { processPostRequest } = require("../../../utilities/CRUDAutomation");
 const controller = "BookingDataController";
 
 const BookingController = {
-
   async getUserBookedSessionsForThisWeek(req, res) {
     const options = {
       validate: ["userId"],
@@ -19,8 +18,19 @@ const BookingController = {
 
   async getAllBookedUsersForSpecificWeek(req, res) {
     const options = {
-      validate: ["currentWeek", "endOfWeekDate"],
+      validate: ["endOfWeekDate"],
       funcToRun: "getAllBookedUsersForSpecificWeek",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  async getBookedSessionsForOneDay(req, res) {
+    const options = {
+      validate: ["startOfDay", "endOfDay"],
+      funcToRun: "getBookedSessionsForOneDay",
       dataToPass: req.body,
       selfComplete: true,
     };

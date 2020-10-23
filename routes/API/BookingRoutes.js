@@ -25,6 +25,12 @@ router.post(
   BookingController.getAllBookedUsersForSpecificWeek
 );
 
+/* Get all booked sessions for a specific day */
+router.post(
+  "/getBookedSessionsForOneDay",
+  BookingController.getBookedSessionsForOneDay
+);
+
 /**
  * Second tier PAID MEMBER FEATURES.
  * Set booking configuration, e.g. 'only be seen by X person' or 'only get matched with people from X group'

@@ -37,6 +37,10 @@ const SessionSchema = new Schema({
   secondPartnerLastName: String,
   secondPartnerDisplayName: String,
 
+  sessionIsMatched: Boolean,
+
+  sessionThroughMatching: Boolean,
+
   // In case of group sessions
   manyMatchedPartnerIds: [String],
 

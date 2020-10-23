@@ -202,13 +202,13 @@ export default {
                 //   }
                 // }
                 if (
-                  session.sessionThroughMatching &&
+                  !session.sessionThroughMatching &&
                   (session.firstPartnerId == globalThis.user._id ||
                     session.secondPartnerId == globalThis.user._id)
                 ) {
                   day.bookedSessionsOnTime.push(session);
                   globalThis.bookedSessions.push(session);
-                } else if (session.sessionThroughMatching) {
+                } else if (!session.sessionThroughMatching) {
                   day.bookedPeopleOnTime.push(session);
                   globalThis.bookedPeopleOnTime.push(session);
                 }
@@ -252,13 +252,13 @@ export default {
               //   }
               // }
               if (
-                session.sessionThroughMatching &&
+                !session.sessionThroughMatching &&
                 (session.firstPartnerId == globalThis.user._id ||
                   session.secondPartnerId == globalThis.user._id)
               ) {
                 day.bookedSessionsOnTime.push(session);
                 globalThis.bookedSessions.push(session);
-              } else if (session.sessionThroughMatching) {
+              } else if (!session.sessionThroughMatching) {
                 day.bookedPeopleOnTime.push(session);
                 globalThis.bookedPeopleOnTime.push(session);
               }

@@ -1,5 +1,5 @@
 const state = {
-  tempUser: {},
+  tempUser: null,
 };
 
 // Synchronous

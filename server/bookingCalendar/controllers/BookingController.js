@@ -29,7 +29,7 @@ const BookingController = {
 
   async getBookedSessionsForOneDay(req, res) {
     const options = {
-      validate: ["startOfDay", "endOfDay"],
+      validate: ["endOfDay"],
       funcToRun: "getBookedSessionsForOneDay",
       dataToPass: req.body,
       selfComplete: true,

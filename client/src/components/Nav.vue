@@ -119,6 +119,11 @@ export default {
       }
     },
   },
+  watch: {
+    $route() {
+      this.navDropdown = false;
+    },
+  },
   // watch: {
   //   "$store.state.auth.ready": function () {
   //     this.loading = false;

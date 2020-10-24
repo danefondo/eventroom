@@ -6,9 +6,9 @@
     <router-link to="/account/rooms" class="dropdown-item">
       <div>My Rooms</div>
     </router-link>
-    <div class="dropdown-item">
+    <router-link to="/" class="dropdown-item">
       <div class="new-eventroom">+ New Eventroom</div>
-    </div>
+    </router-link>
     <div class="dropdown-item logout">
       <div @click="logUserOut" class="logout-button">Logout</div>
     </div>

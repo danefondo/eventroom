@@ -30,63 +30,73 @@
           v-for="(index, i) in rowNumberForWeekOrDay"
           :key="index"
           class="each-day"
-          :class="isPastDay(each, i) ? 'past-day' : ''"
+          :class="isPastDay(each) ? 'past-day' : ''"
           :data-daynum="i"
         >
+          <div v-if="isPastDay(each)">
+            <div
+              v-if="unmatchedBookedPeople(each)"
+              @click="$emit('select-slot', each.timeRowDay)"
+              class="booked-person event"
+            >
+              <span>person booked here</span>
+              <div>
+                <span>{{
+                  returnBestBookedToMatch(each, "bookedPeopleOnTime")
+                }}</span>
+              </div>
+            </div>
+            <!-- all YOUR booked sessions, either matched or unmatched-->
+            <div
+              v-else-if="
+                returnBestBookedToMatch(each, 'bookedSessionsOnTime')
+              "
+              class="booked-session"
+            >
+              <span v-if="isMatched(each)">{{
+                `Matched with ${isMatched(each, i)}`
+              }}</span>
+              <span v-else>Not yet matched...</span>
+              <span>{{
+                returnBestBookedToMatch(each, "bookedSessionsOnTime")
+              }}</span>
+            </div>
+          </div>
           <div
-            v-if="
-              !isPastDay(each, i) &&
-              returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') &&
-              !isMatched(each, i)
-            "
-            @click="
-              week
-                ? $emit('select-slot', each.timeRowDays[i])
-                : $emit('select-slot', each.timeRowDay)
-            "
+            v-if="unmatchedBookedPeople(each)"
+            @click="$emit('select-slot', each.timeRowDay)"
             class="booked-person event"
           >
             <span>person booked here</span>
             <div>
               <span>{{
-                returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
+                returnBestBookedToMatch(each, "bookedPeopleOnTime")
               }}</span>
             </div>
           </div>
           <!-- all YOUR booked sessions, either matched or unmatched-->
           <div
-            v-else-if="returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')"
+            v-else-if="returnBestBookedToMatch(each, 'bookedSessionsOnTime')"
             class="booked-session"
           >
-            <span v-if="isMatched(each, i)">{{
+            <span v-if="isMatched(each)">{{
               `Matched with ${isMatched(each, i)}`
             }}</span>
             <span v-else>Not yet matched...</span>
             <span>{{
-              returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
+              returnBestBookedToMatch(each, "bookedSessionsOnTime")
             }}</span>
           </div>
-          <!-- highlight is in two boxes to speed up & avoid week check per time, the millisecond difference really makes a difference, rather than having it in each click, even putting emit to function vs direct makes a difference-->
           <div
-            v-else-if="
-              week
-                ? !each.timeRowDays[i].isSelected
-                : !each.timeRowDay.isSelected
-            "
-            @click="
-              week
-                ? $emit('select-slot', each.timeRowDays[i])
-                : $emit('select-slot', each.timeRowDay)
-            "
+            v-else-if="!isPastDay(each) && !each.timeRowDay.isSelected"
+            @click="$emit('select-slot', each.timeRowDay)"
             :style="getHeights"
             class="add-highlight"
           >
             This one?
           </div>
           <div
-            v-if="
-              week ? each.timeRowDays[i].isSelected : each.timeRowDay.isSelected
-            "
+            v-if="!isPastDay(each) && each.timeRowDay.isSelected"
             :style="getSelectedHeights"
             class="selected-container"
           >
@@ -95,11 +105,7 @@
               <div class="selected-book">Book</div>
               <div
                 class="selected-close"
-                @click="
-                  week
-                    ? $emit('cancel-slot', each.timeRowDays[i])
-                    : $emit('cancel-slot', each.timeRowDay)
-                "
+                @click="$emit('cancel-slot', each.timeRowDay)"
               >
                 x
               </div>
@@ -125,7 +131,6 @@ export default {
     "end",
     "calendarData",
     "rowNumberForWeekOrDay",
-    "week",
     "weekdayNum",
   ],
   data() {
@@ -182,117 +187,70 @@ export default {
   },
   methods: {
     // checkIfPastDay(each, i) {
-    isPastDay(each, i) {
+    isPastDay(each) {
       // is day box time before current moment
       let isPastDay = false;
-      if (this.week) {
-        each.timeRowDays[i].startTime;
-        let startHour = each.timeRowDays[i].startTime.split(":")[0];
-        let dayBoxDate = new Date(
-          each.timeRowDays[i].year,
-          each.timeRowDays[i].month - 1,
-          each.timeRowDays[i].date,
-          startHour
-        );
 
-        let now = new Date();
-        console.log("daybox", dayBoxDate);
-        console.log("now", now);
-        isPastDay = isBefore(dayBoxDate, now);
-        console.log("isPastDay", isPastDay);
-      } else {
-        each.timeRowDay.startTime;
-        let startHour = each.timeRowDay.startTime.split(":")[0];
-        let dayBoxDate = new Date(
-          each.timeRowDay.year,
-          each.timeRowDay.month - 1,
-          each.timeRowDay.date,
-          startHour
-        );
-        let now = new Date();
-        console.log("daybox", dayBoxDate);
-        console.log("now", now);
-        isPastDay = isBefore(dayBoxDate, now);
-        console.log("isPastDay", isPastDay);
-      }
+      each.timeRowDay.startTime;
+      let startHour = each.timeRowDay.startTime.split(":")[0];
+      let dayBoxDate = new Date(
+        each.timeRowDay.year,
+        each.timeRowDay.month - 1,
+        each.timeRowDay.date,
+        startHour
+      );
+      let now = new Date();
+      console.log("daybox", dayBoxDate);
+      console.log("now", now);
+      isPastDay = isBefore(dayBoxDate, now);
+      console.log("isPastDay", isPastDay);
+
       return isPastDay;
     },
-    isMatched(each, i) {
+    isMatched(each) {
       let matchedSession = null;
       let partnerUsername = null;
 
-      if (this.week) {
-        matchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
-      } else {
-        matchedSession = each.timeRowDay["bookedSessionsOnTime"][0];
-      }
+      matchedSession = each.timeRowDay["bookedSessionsOnTime"][0];
 
-      if (!matchedSession) return;
+      if (!matchedSession) return console.log("@isMatched: Missing session.");
       console.log("@isMatched, session: ", matchedSession);
 
-      let firstPartnerId = matchedSession.firstPartnerId;
-      let secondPartnerId = matchedSession.secondPartnerId;
-      let firstPartnerUsername = matchedSession.firstPartnerUsername;
-      let secondPartnerUsername = matchedSession.secondPartnerUsername;
-
       // Both must have value for there to be a possibility of match
-      if (firstPartnerId && secondPartnerId) {
+      if (matchedSession.firstPartnerId && matchedSession.secondPartnerId) {
         // If first is user itself, make the partner the other one
-        if (firstPartnerId == this.user._id) {
-          partnerUsername = secondPartnerUsername;
+        if (matchedSession.firstPartnerId == this.user._id) {
+          partnerUsername = matchedSession.secondPartnerUsername;
         }
         // If second is user itself, make the partner the other one
-        else {
-          partnerUsername = firstPartnerUsername;
+        else if (matchedSession.secondPartnerId == this.user._id) {
+          partnerUsername = matchedSession.firstPartnerUsername;
         }
       }
       console.log("partnerUsername", partnerUsername);
       return partnerUsername;
     },
 
-    returnBestBookedToMatch(each, i, type) {
+    returnBestBookedToMatch(each, type) {
       let bestBookedToMatch;
-      if (this.week) {
-        if (
-          each.timeRowDays &&
-          each.timeRowDays.length &&
-          each.timeRowDays[i] &&
-          each.timeRowDays[i][type] &&
-          each.timeRowDays[i][type].length
-        ) {
-          // perform all sorts of check later
-          // right now just return the first one
-          bestBookedToMatch = each.timeRowDays[i][type][0];
-        }
-      } else {
-        if (each.timeRowDay && each.timeRowDay[type]) {
-          // perform all sorts of check later
-          // right now just return the first one
-          bestBookedToMatch = each.timeRowDay[type][0];
-          console.log("bestyBOOKEd", bestBookedToMatch);
-        }
+
+      if (each.timeRowDay && each.timeRowDay[type]) {
+        // perform all sorts of check later
+        // right now just return the first one
+        bestBookedToMatch = each.timeRowDay[type][0];
       }
-
       return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
-
-      // For single day
-      // The options are different
-      // It's only...
-      // For this row (e.g. time TODAY)
-      // is there anyone?
-
-      // and [i] kind of needs to be the day's number from the get go
-      // so if !week, then i ? weekdayNum
-
-      // For each calendarData (e.g. per hour)
-      // --> Each.time (e.g. hour, e.g. ROW)
-      // --> For each row, create 7 days (e.g per 7 times day block, seven iterations)
-      // --> In each specific day block, list booked people in the day block
-      // Actually list just one, but you can click to see everyone
-      // each.timeRowDays[i].bookedPeopleOnTime[0]
-
-      // The one person chosen from the list should be best match, or then
-      // the first one, or a random one
+    },
+    unmatchedBookedPeople(each) {
+      if (
+        !this.isPastDay(each) &&
+        this.returnBestBookedToMatch(each, "bookedPeopleOnTime") &&
+        !this.isMatched(each)
+      ) {
+        return true;
+      } else {
+        return false;
+      }
     },
   },
 };

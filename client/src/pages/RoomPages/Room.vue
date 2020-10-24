@@ -186,13 +186,11 @@ export default {
     if (this.user && this.isAuthenticated) {
       console.log("@2.5 User exists, getting room.", this.user);
       let userId = this.user._id;
-      console.log()
+      console.log();
       this.$store.dispatch("auth/updateUserId", userId);
       // this.getRoom();
       await this.addUserToRoomData(userId);
-      this.getAndSetMediaPreferences();
-      this.initSocketListening();
-      this.joinUserToChat();
+      this.initRoomPostUserLoading();
     }
 
     // Detect purpose & use case of eventroom
@@ -207,19 +205,22 @@ export default {
       // be added (if already exist) or created
 
       // Also check to ensure not logged in case temp someone survived, else replaces id
-      if (this.tempUser && this.tempUser._id && !this.user && !this.isAuthenticated) {
+      console.log("I make it here yes");
+      if (this.tempUser && !this.user && !this.isAuthenticated) {
         // Check if temporary user already exists;
+        console.log("I make it here");
         let temp = this.tempUser;
         let userId = temp._id;
         this.$store.dispatch("auth/updateUserId", userId);
         await this.addUserToRoomData(userId, true);
-        this.getAndSetMediaPreferences();
-        this.initSocketListening();
-        this.joinUserToChat();
-      } else if (!this.tempUser && !this.tempUser._id && !this.user && !this.isAuthenticated) {
+        this.initRoomPostUserLoading();
+      } else if (!this.tempUser && !this.user && !this.isAuthenticated) {
+        console.log("welp here I am");
         await this.createTempUser();
       }
     } else {
+      // Ideally show screen that you need to make an account to use Cofocus
+      // also, can create two separate components
       window.location.href = "/account/login";
     }
 
@@ -227,7 +228,6 @@ export default {
     // this.getAndSetMediaPreferences();
 
     console.log("logging socket: ", this.$socket);
-    
 
     // Make sure you do not use any sockets before having initialized listening
     // this.initSocketListening();
@@ -239,6 +239,11 @@ export default {
     };
   },
   methods: {
+    initRoomPostUserLoading() {
+      this.getAndSetMediaPreferences();
+      this.initSocketListening();
+      this.joinUserToChat();
+    },
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       if (this.RTCConfig.vanillaRTC) {
         this.$refs.vanillaRTC.prepareToExit();
@@ -262,8 +267,8 @@ export default {
 
       this.$store.dispatch("tempuser/destroyTempUser");
       destroyTempToken();
-      this.$store.dispatch("eventroom/clearEventroom");
       this.$store.dispatch("auth/updateUserId", "");
+      this.$store.dispatch("eventroom/clearEventroom");
       window.removeEventListener("keyup", this.handler);
       this.resetData();
 
@@ -390,6 +395,7 @@ export default {
     },
     async createTempUser() {
       let globalThis = this;
+      console.log("CREATING TEMP USER?!");
       try {
         //- Get room parameter
         const eventroomName = this.$route.params.eventroomName;
@@ -413,6 +419,7 @@ export default {
           let userId = temporaryUser._id;
           this.$store.dispatch("auth/updateUserId", userId);
           await this.addUserToRoomData(userId, true);
+          this.initRoomPostUserLoading();
         }
       } catch (error) {
         console.log("@createTempUser: Failed to create temporary user", error);

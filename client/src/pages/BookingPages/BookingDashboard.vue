@@ -14,8 +14,18 @@
           :currentSelectedDay="currentSelectedDay"
           @toggleDayWeekView="toggleDayWeekView"
         />
+        <!-- 
+          Splitting into two different tables
+          based on week / day to maximize
+          speed, as otherwise there are a lot of
+          if (week) checks
+          And this app needs to be the absolute
+          fastest. We hate slow apps. With our guts.
+          It's not right to give people slow shit.
+          Life's too short for a bad app experience.
+        -->
         <Table
-          v-if="dates && start && end"
+          v-if="dates && start && end && week"
           :dates="dates"
           :start="start"
           :end="end"
@@ -23,6 +33,18 @@
           :currentStart="currentStart"
           :calendarData="calendarData"
           :week="week"
+          :weekdayNum="weekdayNum"
+          @select-slot="selectSlot"
+          @cancel-slot="cancelSlot"
+        />
+        <DayTable
+          v-else-if="dates && start && end && !week"
+          :dates="dates"
+          :start="start"
+          :end="end"
+          :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
+          :currentStart="currentStart"
+          :calendarData="calendarData"
           :weekdayNum="weekdayNum"
           @select-slot="selectSlot"
           @cancel-slot="cancelSlot"
@@ -111,7 +133,7 @@ import moment from "moment";
 import Switcher from "./CalendarComponents/Switcher";
 import Table from "./CalendarComponents/Table";
 
-import { startOfDay, endOfDay, getDay, startOfISOWeek } from "date-fns";
+import { endOfDay, getDay, startOfISOWeek } from "date-fns";
 
 export default {
   name: "BookingDashboard",
@@ -158,6 +180,7 @@ export default {
   components: {
     Switcher,
     Table,
+    DayTable: () => import("./CalendarComponents/DayTable"),
   },
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
@@ -438,7 +461,6 @@ export default {
         this.gettingBookedSessionsForOneDay = true;
 
         let dayData = {
-          startOfDay: startOfDay(this.currentSelectedDay),
           endOfDay: endOfDay(this.currentSelectedDay),
         };
 
@@ -846,6 +868,15 @@ export default {
             });
           }
         });
+      } else {
+        this.calendarData.forEach(function (hourRow) {
+          if (hourRow.time == slotData.startTime) {
+            let day = hourRow.timeRowDay;
+            if (day.specificDateTime == slotData.specificDateTime) {
+              globalThis.$set(day, "isSelected", true);
+            }
+          }
+        });
       }
       this.selectedToBook.push(slotData);
       // later add to array of SELECTED SLOTS
@@ -868,6 +899,15 @@ export default {
             });
           }
         });
+      } else {
+        this.calendarData.forEach(function (hourRow) {
+          if (hourRow.time == slotData.startTime) {
+            let day = hourRow.timeRowDay;
+            if (day.specificDateTime == slotData.specificDateTime) {
+              globalThis.$set(day, "isSelected", false);
+            }
+          }
+        });
       }
 
       let index = this.selectedToBook.findIndex(
@@ -879,16 +919,27 @@ export default {
     cancelBooking() {
       console.log("canceling");
       let globalThis = this;
-      this.selectedToBook.forEach((selection) => {
-        this.calendarData.forEach(function (hourRow) {
-          if (hourRow.time == selection.startTime) {
-            hourRow.timeRowDays.forEach(function (day) {
-              if (day.specificDateTime == selection.specificDateTime) {
+      this.selectedToBook.forEach((slotData) => {
+        if (this.week) {
+          this.calendarData.forEach(function (hourRow) {
+            if (hourRow.time == slotData.startTime) {
+              hourRow.timeRowDays.forEach(function (day) {
+                if (day.specificDateTime == slotData.specificDateTime) {
+                  globalThis.$set(day, "isSelected", false);
+                }
+              });
+            }
+          });
+        } else {
+          this.calendarData.forEach(function (hourRow) {
+            if (hourRow.time == slotData.startTime) {
+              let day = hourRow.timeRowDay;
+              if (day.specificDateTime == slotData.specificDateTime) {
                 globalThis.$set(day, "isSelected", false);
               }
-            });
-          }
-        });
+            }
+          });
+        }
       });
 
       this.selectedToBook = [];

@@ -49,6 +49,7 @@
     <!-- If you change the input's class, shortcut events will break in RoomBottomBar which prevents key shortcuts if event.target.className == "chatInputBox"-->
     <div class="chatSubmitContainer">
       <input
+        id="chatInputBox"
         class="chatInputBox"
         type="text"
         placeholder="Whatcha wanna say?"

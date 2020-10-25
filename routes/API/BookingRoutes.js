@@ -10,6 +10,8 @@ const router = Express.Router();
  */
 router.post("/bookSessionSlot", BookingController.bookSessionSlot);
 
+router.post("/bookManySessionSlots", BookingController.bookManySessionSlots);
+
 /* Cancel a booked session */
 router.post("/cancelCalendarSlot", BookingController.cancelCalendarSlot);
 

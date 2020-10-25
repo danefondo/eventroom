@@ -31,12 +31,14 @@ const mutations = {
   },
 
   toggleMediaSetting(state, settingToToggle) {
+    console.log("ABOUT TO TOGGLE: ", settingToToggle);
     state.userMediaSettings[settingToToggle] = !state.userMediaSettings[
       settingToToggle
     ];
   },
 
   setSpecificMediaSettingState(state, settingData) {
+    console.log("ABOUT TO SET: ", settingData);
     state.userMediaSettings[settingData.settingToToggle] =
       settingData.settingState;
   },

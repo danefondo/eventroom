@@ -68,20 +68,29 @@
             </div>
           </div>
           <form>
-            <input name="title" type="text" placeholder="Event title" /><br />
             <input
+              class="booking-input"
+              autocomplete="off"
+              name="title"
+              type="text"
+              placeholder="Event title"
+            /><br />
+            <input
+              class="booking-input"
               name="date"
               type="date"
               v-model="date"
               placeholder="Date"
             /><br />
             <input
+              class="booking-input"
               name="start-time"
               type="time"
               v-model="startTime"
               placeholder="Start time"
             /><br />
             <input
+              class="booking-input"
               name="end-time"
               type="time"
               v-model="endTime"
@@ -92,11 +101,11 @@
           </form>
           <button
             class="bookSession"
-            :class="currentlyBookingSession ? 'not-allowed' : ''"
-            :disabled="currentlyBookingSession == true"
+            :class="currentlyBookingSessions ? 'not-allowed' : ''"
+            :disabled="currentlyBookingSessions == true"
             @click="bookSession"
           >
-            {{ currentlyBookingSession ? "Booking..." : "Book session" }}
+            {{ returnBookButtonText }}
           </button>
           <div class="cancelBooking" @click="cancelBooking">Cancel</div>
         </div>
@@ -133,7 +142,7 @@ import moment from "moment";
 import Switcher from "./CalendarComponents/Switcher";
 import Table from "./CalendarComponents/Table";
 
-import { endOfDay, getDay, startOfISOWeek } from "date-fns";
+import { endOfDay, getDay, startOfISOWeek, isSameWeek } from "date-fns";
 
 export default {
   name: "BookingDashboard",
@@ -143,7 +152,7 @@ export default {
       startTime: null,
       endTime: null,
       date: null,
-      currentlyBookingSession: false,
+      currentlyBookingSessions: false,
       gettingBookedSessions: false,
       gettingBookedSessionsError: false,
       gettingAllBookedSessions: false,
@@ -166,8 +175,6 @@ export default {
       week: true,
       rowNumberForWeekOrDay: 7,
       weekdayNum: null,
-
-      selectedToBook: [],
     };
   },
   computed: {
@@ -175,7 +182,25 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      selectedToBook: (state) => state.booking.selectedToBook,
     }),
+    returnBookButtonText() {
+      let bookText = "";
+      if (this.currentlyBookingSessions) {
+        bookText = "Booking...";
+      } else if (
+        !this.currentlyBookingSessions &&
+        this.selectedToBook.length > 1
+      ) {
+        bookText = "Book sessions";
+      } else if (
+        !this.currentlyBookingSessions &&
+        this.selectedToBook.length < 2
+      ) {
+        bookText = "Book session";
+      }
+      return bookText;
+    },
   },
   components: {
     Switcher,
@@ -190,6 +215,7 @@ export default {
     this.getCalendarTimes();
 
     await this.getAllBookedUsersForSpecificWeek();
+    this.renderSavedSelectionsIfAny();
 
     this.$socket.emit("joinCofocusCalendar", "cofocus");
     this.startReceivingPushedSessions();
@@ -512,9 +538,11 @@ export default {
     },
     async bookSession() {
       let errors = {};
-      if (this.currentlyBookingSession) return;
+      if (this.currentlyBookingSessions) return;
+      if (this.selectedToBook.length > 1) return;
+      if (this.selectedToBook.length < 1) return;
       try {
-        this.currentlyBookingSession = true;
+        this.currentlyBookingSessions = true;
         const [year, month, date] = this.date.split("-");
         let sendData = {
           queryDate: `${year}-${month}-${date}-${this.startTime}-${this.endTime}`,
@@ -573,45 +601,144 @@ export default {
         };
         this.$socket.emit("pushNewSessionToOthers", sessionInfo);
 
-        this.currentlyBookingSession = false;
+        this.currentlyBookingSessions = false;
       } catch (error) {
         console.log("errorBooking", error);
-        this.currentlyBookingSession = false;
+        this.currentlyBookingSessions = false;
+      }
+    },
+
+    async bookManySessions() {
+      let errors = {};
+      let globalThis = this;
+      if (this.currentlyBookingSessions) return;
+      // Client-side prevent use of wrong book function if bypassed
+      if (this.selectedToBook.length < 2) return;
+
+      try {
+        this.currentlyBookingSessions = true;
+
+        let sessionsToBook = [];
+        // Prepare selected to book data
+        this.selectedToBook.forEach((toBook) => {
+          const [year, month, date] = toBook.date.split("-");
+          let slotData = {
+            queryDate: `${year}-${month}-${date}-${toBook.startTime}-${toBook.endTime}`,
+            startTime: toBook.startTime,
+            endTime: toBook.endTime,
+            date: toBook.date,
+            rawDateTime: new moment(
+              `${year}-${month}-${date} ${toBook.startTime}`,
+              "YYYY-MM-DD HH:mm"
+            ),
+          };
+
+          sessionsToBook.push(slotData);
+        });
+
+        let sendData = {
+          sessionsToBook: sessionsToBook,
+          userId: this.user._id,
+          username: globalThis.user.username,
+        };
+
+        const response = await requestWithAuthentication(
+          `post`,
+          `api/booking/bookManySessionSlots`,
+          sendData
+        );
+        let session = response.data.result;
+        if (!session) {
+          errors.FailedToBookSession = true;
+          throw { errors: errors };
+        }
+
+        if (this.week) {
+          this.calendarData.forEach((hourRow) => {
+            hourRow.timeRowDays.forEach((day) => {
+              if (day.specificDateTime == session.queryDateTime) {
+                if (
+                  session.firstPartnerId == this.user._id ||
+                  session.secondPartnerId == this.user._id
+                ) {
+                  day.bookedSessionsOnTime.push(session);
+                }
+              }
+            });
+          });
+        } else {
+          this.calendarData.forEach((hourRow) => {
+            let day = hourRow.timeRowDay;
+            if (day.specificDateTime == session.queryDateTime) {
+              if (
+                session.firstPartnerId == this.user._id ||
+                session.secondPartnerId == this.user._id
+              ) {
+                day.bookedSessionsOnTime.push(session);
+              }
+            }
+          });
+        }
+
+        let sessionInfo = {
+          userId: this.user._id,
+          session: session,
+          roomType: "cofocus",
+        };
+        this.$socket.emit("pushNewSessionToOthers", sessionInfo);
+
+        this.currentlyBookingSessions = false;
+      } catch (error) {
+        console.log("errorBooking", error);
+        this.currentlyBookingSessions = false;
       }
     },
 
     async toggleDayWeekView() {
       this.week = !this.week;
+      // If week == current week, set currentDay to today
       if (this.week) {
+        this.setNewCurrentDay();
+        // For rendering grid
         this.rowNumberForWeekOrDay = 7;
         this.initCalendar();
         this.getCalendarTimes();
         await this.getAllBookedUsersForSpecificWeek();
+        this.renderSavedSelectionsIfAny();
         // await this.getUserBookedSessionsForThisWeek();
       } else if (!this.week) {
+        this.setNewCurrentDay();
+        // For rendering grid
         this.rowNumberForWeekOrDay = 1;
+        // -1 is here for...?
         this.weekdayNum = getDay(this.currentSelectedDay) - 1;
         this.getOneDate();
         this.getDayCalendarTimes();
         await this.getBookedSessionsForOneDay();
+        this.renderSavedSelectionsIfAny();
+      }
+    },
+    setNewCurrentDay() {
+      // if new week start = current time week start
+      // --> then set today as selected day
+      // else if any other week, set start of week as day
+      let newWeekStart = this.currentStart.toDate();
+      let todayWeekStart = moment().startOf("isoWeek").toDate();
+      console.log("new and today", newWeekStart, todayWeekStart);
+      let checkIfSameWeek = isSameWeek(newWeekStart, todayWeekStart);
+      if (checkIfSameWeek) {
+        this.currentSelectedDay = new Date();
+      } else {
+        this.currentSelectedDay = this.currentStart.toDate();
       }
     },
     async switchWeek(currentStart) {
       this.currentStart = currentStart;
-
-      // if new week start = current time week start
-      // --> then set today as selected day
-      // else if any other week, set start of week as day
-      let newWeekStart = currentStart.toDate();
-      let todayWeekStart = moment().startOf("isoWeek").toDate();
-      if (newWeekStart == todayWeekStart) {
-        this.currentSelectedDay = new Date();
-      } else {
-        this.currentSelectedDay = currentStart.toDate();
-      }
+      this.setNewCurrentDay();
       this.initCalendar();
       this.getCalendarTimes();
       await this.getAllBookedUsersForSpecificWeek();
+      this.renderSavedSelectionsIfAny();
       // await this.getUserBookedSessionsForThisWeek();
     },
     async switchDay(newSelectedDay) {
@@ -623,6 +750,7 @@ export default {
       this.getOneDate();
       this.getDayCalendarTimes();
       await this.getBookedSessionsForOneDay();
+      this.renderSavedSelectionsIfAny();
       // this.initCalendar();
       // this.getCalendarTimes();
     },
@@ -633,10 +761,12 @@ export default {
         this.initCalendar();
         this.getCalendarTimes();
         await this.getAllBookedUsersForSpecificWeek();
+        this.renderSavedSelectionsIfAny();
       } else {
         this.getOneDate();
         this.getDayCalendarTimes();
         this.getBookedSessionsForOneDay();
+        this.renderSavedSelectionsIfAny();
       }
     },
     initCalendar() {
@@ -878,7 +1008,8 @@ export default {
           }
         });
       }
-      this.selectedToBook.push(slotData);
+      slotData = JSON.parse(JSON.stringify(slotData));
+      this.$store.dispatch("booking/selectSlot", slotData);
       // later add to array of SELECTED SLOTS
     },
     cancelSlot(slotData) {
@@ -910,11 +1041,8 @@ export default {
         });
       }
 
-      let index = this.selectedToBook.findIndex(
-        (slot) => slot.specificDateTime === slotData.specificDateTime
-      );
-
-      this.selectedToBook.splice(index, 1);
+      slotData = JSON.parse(JSON.stringify(slotData));
+      this.$store.dispatch("booking/cancelSlot", slotData);
     },
     cancelBooking() {
       console.log("canceling");
@@ -942,7 +1070,34 @@ export default {
         }
       });
 
-      this.selectedToBook = [];
+      this.$store.dispatch("booking/cancelAllSelections");
+    },
+    renderSavedSelectionsIfAny() {
+      let globalThis = this;
+      if (this.selectedToBook.length) {
+        this.selectedToBook.forEach((slotData) => {
+          if (this.week) {
+            this.calendarData.forEach(function (hourRow) {
+              if (hourRow.time == slotData.startTime) {
+                hourRow.timeRowDays.forEach(function (day) {
+                  if (day.specificDateTime == slotData.specificDateTime) {
+                    globalThis.$set(day, "isSelected", slotData.isSelected);
+                  }
+                });
+              }
+            });
+          } else {
+            this.calendarData.forEach(function (hourRow) {
+              if (hourRow.time == slotData.startTime) {
+                let day = hourRow.timeRowDay;
+                if (day.specificDateTime == slotData.specificDateTime) {
+                  globalThis.$set(day, "isSelected", slotData.isSelected);
+                }
+              }
+            });
+          }
+        });
+      }
     },
   },
 };
@@ -1148,16 +1303,18 @@ Switcher styles
 .calendar tbody td .add-highlight {
   position: absolute;
   display: none;
-  width: 90%;
+  width: 95%;
+  height: 95%;
   background: #59599e;
-  top: 10px;
   border-radius: 4px;
   font-size: 20px;
   color: #fff;
   text-align: center;
+  top: 0;
+  bottom: 0;
   left: 0;
   right: 0;
-  margin: 0 auto;
+  margin: auto;
 }
 
 /** BOOKING MODAL */
@@ -1197,5 +1354,23 @@ Switcher styles
 .bookSession:hover,
 .cancelBooking:hover {
   background-color: #b7bcc194;
+}
+
+.booking-input {
+  border: 1px solid #eee;
+  border-radius: 3px;
+  width: 250px;
+  caret-color: #666;
+  padding: 8px 14px;
+  font-size: 17px;
+  font-family: "Nunito", sans-serif;
+  transition: 0.2s ease;
+  box-sizing: border-box;
+  outline: none;
+  margin-bottom: 5px;
+}
+
+.booking-input:hover {
+  border-color: #ccc;
 }
 </style>

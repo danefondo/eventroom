@@ -1,7 +1,7 @@
 <template>
-  <div class="toolbar-container">
+  <div :style="getThemeBorderColor" class="toolbar-container">
     <div class="toolbar">
-      <router-link to="/" class="e">e</router-link>
+      <router-link to="/" :style="getThemeLogoColor" class="e">e</router-link>
       <div class="buttonContainer">
         <div class="toolbar-top">
           <div class="media-buttons">
@@ -10,7 +10,15 @@
                 class="settings-button toolbar-icon-container"
                 @click="toggleToolbar('participants')"
               >
-                <img :src="groupIcon" class="toolbar-icon group-icon" />
+                <IconBase
+                  class="toolbar-icon group-icon"
+                  icon-name="settings"
+                  :iconColor="getCoreColor"
+                  viewBox="0 0 32 32"
+                  width="25"
+                  height="25"
+                  ><IconGroup
+                /></IconBase>
               </div>
               <div class="tooltip tooltip--top tooltip--middle">
                 <span class="tooltip_tip">{{
@@ -26,7 +34,16 @@
                 class="settings-button toolbar-icon-container"
                 @click="toggleToolbar('chat')"
               >
-                <img :src="chatIcon" class="toolbar-icon chat-icon" />
+                <IconBase
+                  class="toolbar-icon chat-icon"
+                  icon-name="settings"
+                  :iconColor="getCoreColor"
+                  viewBox="0 0 477.867 477.867"
+                  width="25"
+                  height="25"
+                  ><IconChat
+                /></IconBase>
+                <div class="chat-indicator"></div>
               </div>
               <div class="tooltip tooltip--top tooltip--middle">
                 <span class="tooltip_tip">{{
@@ -53,7 +70,15 @@
               class="settings-button toolbar-icon-container"
               @click="toggleToolbar('info')"
             >
-              <img :src="infoIcon" class="toolbar-icon info-icon" />
+              <IconBase
+                class="toolbar-icon info-icon"
+                icon-name="settings"
+                :iconColor="getCoreColor"
+                viewBox="0 0 330 330"
+                width="25"
+                height="25"
+                ><IconInfo
+              /></IconBase>
             </div>
             <div class="tooltip tooltip--top tooltip--middle">
               <span class="tooltip_tip">{{
@@ -68,7 +93,15 @@
               class="settings-button toolbar-icon-container"
               @click="toggleToolbar('settings')"
             >
-              <img :src="settingsIcon" class="settings-icon toolbar-icon" />
+              <IconBase
+                class="toolbar-icon"
+                icon-name="settings"
+                :iconColor="getCoreColor"
+                viewBox="0 0 24 24"
+                width="32"
+                height="32"
+                ><IconSettings
+              /></IconBase>
             </div>
             <div class="tooltip tooltip--top tooltip--middle">
               <span class="tooltip_tip">{{
@@ -91,6 +124,12 @@ import groupIcon from "../../../assets/images/group.png";
 import chatIcon from "../../../assets/images/chat.png";
 // import { requestWithAuthentication } from "../../../config/api";
 
+import IconBase from "../../../components/IconBase";
+import IconSettings from "../../../components/SVG/IconSettings";
+import IconInfo from "../../../components/SVG/IconInfo";
+import IconGroup from "../../../components/SVG/IconGroup";
+import IconChat from "../../../components/SVG/IconChat";
+
 export default {
   name: "RoomToolbar",
   data() {
@@ -100,6 +139,8 @@ export default {
       infoIcon: infoIcon,
       chatIcon: chatIcon,
       groupIcon: groupIcon,
+      themeBorderColor: "#e8e8e9",
+      themeLogoColor: "#111158",
       //   toolbarConfiguration: [],
       //   toolOpened: false,
       //   openedComponent: "",
@@ -107,6 +148,13 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener("keyup", this.handler);
+  },
+  components: {
+    IconBase,
+    IconSettings,
+    IconInfo,
+    IconGroup,
+    IconChat,
   },
   computed: {
     ...mapState({
@@ -117,6 +165,15 @@ export default {
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
+    getCoreColor() {
+      return "#111158";
+    },
+    getThemeBorderColor() {
+      return `color: ${this.themeBorderColor};`;
+    },
+    getThemeLogoColor() {
+      return `color: ${this.themeLogoColor};`;
+    },
   },
   methods: {
     toggleToolbar(toolbarTool) {
@@ -175,6 +232,7 @@ export default {
   display: flex;
   justify-content: center;
   min-width: 32px;
+  position: relative;
 }
 
 .toolbar-icon {
@@ -184,8 +242,8 @@ export default {
 }
 
 .info-icon {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 }
 
 .group-icon {
@@ -313,5 +371,16 @@ export default {
   font-size: 24px;
   font-weight: 600;
   color: #1e2f58;
+}
+
+.chat-indicator {
+  width: 10px;
+  height: 10px;
+  position: absolute;
+  border-radius: 360px;
+  background-color: #d12c54;
+  right: 1px;
+  top: -3px;
+  cursor: pointer;
 }
 </style>

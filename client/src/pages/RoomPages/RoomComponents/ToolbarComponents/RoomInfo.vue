@@ -1,7 +1,7 @@
 <template>
   <div class="settings">
     <div class="sidebar-container">
-      <div class="sidebar-header flex pbt-16 plr-16">
+      <div :style="styleSidebarTitle" class="sidebar-header flex pbt-16 plr-16">
         <header class="heading">
           <div class="flex title-row">
             <Editable
@@ -124,6 +124,7 @@ export default {
       claiming: false,
       checkingNameError: "",
       checkingNameFailed: false,
+      themeCoreColor: "#111158",
     };
   },
   computed: {
@@ -134,6 +135,9 @@ export default {
       info: (state) => state.toolbar.toolbarConfig.info,
       eventroom: (state) => state.eventroom.eventroomData,
     }),
+    styleSidebarTitle() {
+      return `color: ${this.themeLogoColor};`;
+    },
     checkIfOwner() {
       let returnValue;
       if (!this.eventroom || !this.eventroom.ownerId || !this.user) {

@@ -2,12 +2,14 @@
   <div class="video-streams">
     <div
       class="left-side side"
+      :style="getLeftSideConfig"
       :class="localParticipantScreenData ? 'column-side' : ''"
     >
       <div
         v-if="localParticipantData"
         id="local-video"
         class="video"
+        :style="getLocalVideoConfig"
         :class="[
           localParticipantScreenData ? 'split' : '',
           videoIsMirrored ? 'mirrored' : '',
@@ -16,7 +18,16 @@
       >
         <div class="videoControls">
           <div class="toggleMirror" @click="toggleMirror">
-            <img :src="flipImageIcon" class="toggleMirrorIcon" />
+            <IconBase
+              icon-name="Reverse"
+              class="toggleMirrorIcon"
+              iconColor="#000
+              "
+              viewBox="0 0 512 512"
+              width="30"
+              height="30"
+              ><IconFlip
+            /></IconBase>
           </div>
         </div>
       </div>
@@ -33,9 +44,10 @@
     </div>
     <div
       class="right-side side"
+      :style="getRightSideConfig"
       :class="remoteParticipantScreenData ? 'column-side' : ''"
     >
-      <div v-if="!remoteParticipantData" class="no-remote-video">
+      <div :style="styleNoRemoteVideo" v-if="!remoteParticipantData" class="no-remote-video">
         Looks like it is just you in here!"
       </div>
       <div
@@ -77,7 +89,9 @@
 </template>
 
 <script>
-import flipImageIcon from "../../../assets/images/flip-icon.png";
+import IconBase from "../../../components/IconBase";
+import IconFlip from "../../../components/SVG/IconFlip";
+
 import {
   connect,
   LocalVideoTrack,
@@ -89,8 +103,10 @@ import { mapState } from "vuex";
 
 function initialState() {
   return {
-    flipImageIcon: flipImageIcon,
     // localVideoMirror: false,
+    themeCoreColor: "#111158",
+    themeBorderColor: "#e8e8e9",
+    themeLightBackgroundColor: "#fafafb",
     localParticipantData: null,
     remoteParticipantData: null,
     localParticipantScreenData: null,
@@ -133,12 +149,66 @@ export default {
   mounted() {
     this.localVideoBlock = this.$refs.localVideoBlock;
   },
+  components: {
+    IconBase,
+    IconFlip,
+  },
   computed: {
     ...mapState({
       localVideoTrack: (state) => state.mediastates.twilioVideo.localVideoTrack,
       userMediaSettings: (state) => state.mediastates.userMediaSettings,
       videoIsMirrored: (state) => state.preferences.videoIsMirrored,
+      localVideoConfig: (state) =>
+        state.preferences.layoutConfig.localVideoConfig,
+      leftSideConfig: (state) => state.preferences.layoutConfig.leftSideConfig,
+      rightSideConfig: (state) =>
+        state.preferences.layoutConfig.rightSideConfig,
     }),
+    styleNoRemoteVideo() {
+      return `color: ${this.themeCoreColor}; border-color: ${this.themeBorderColor}; background-color: ${this.themeLightBackgroundColor};`;
+    },
+    getLocalVideoConfig() {
+      // let height = this.height;
+      // height = `height:${height}px;`;
+      // return height;
+
+      let config = this.localVideoConfig;
+      let style = "";
+      if (config == 0) {
+        console.log("default");
+      } else if (config == 1) {
+        style =
+          "position: absolute; width: 20%; z-index:9999; bottom:10px; left:10px; height:30%; margin-bottom:unset;";
+      } else if (config == 2) {
+        style =
+          "position: absolute; width: 20%; z-index:9999; bottom:10px; right:10px; height:30%; margin-bottom:unset;";
+      }
+      return style;
+    },
+    getLeftSideConfig() {
+      let config = this.localVideoConfig;
+      let style = "";
+      if (config == 0) {
+        console.log("default");
+      } else if (config == 1) {
+        style = "width:0%";
+      } else if (config == 2) {
+        style = "width:0%";
+      }
+      return style;
+    },
+    getRightSideConfig() {
+      let config = this.localVideoConfig;
+      let style = "";
+      if (config == 0) {
+        console.log("default");
+      } else if (config == 1) {
+        style = "width:97%";
+      } else if (config == 2) {
+        style = "width:97%";
+      }
+      return style;
+    },
   },
   methods: {
     prepareToExit() {
@@ -312,7 +382,6 @@ export default {
         globalThis.localParticipantData = participant;
         console.log("I AM PARTICIPANT.");
       }
-
 
       let participantsLength = globalThis.participants.length;
 
@@ -790,6 +859,17 @@ export default {
       // this.localVideoMirror = !this.localVideoMirror;
       this.$store.dispatch("preferences/toggleMirror");
     },
+    toggleLayout(number) {
+      if (number == 0) {
+        this.localVideoConfig = 0;
+        this.leftSideConfig = 0;
+        this.rightSideConfig = 0;
+      } else if (number == 1) {
+        this.localVideoConfig = 1;
+        this.leftSideConfig = 1;
+        this.rightSideConfig = 1;
+      }
+    },
   },
   watch: {
     participants: function () {
@@ -997,6 +1077,7 @@ When RemoteParticipant disconnects from the Room
   position: absolute;
   right: 15px;
   top: 15px;
+  cursor: pointer;
 }
 
 .mirrored {

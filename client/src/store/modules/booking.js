@@ -1,16 +1,17 @@
 const getDefaultState = () => {
   return {
     bookingData: {
-        queryDate: null,
-        startTime: null,
-        endTime: null,
-        date: null,
-        month: null,
-        year: null,
-        selectedPerson: null,
-        specificUserPreferenceId: null,
-        rawDateTime: null,
+      queryDate: null,
+      startTime: null,
+      endTime: null,
+      date: null,
+      month: null,
+      year: null,
+      selectedPerson: null,
+      specificUserPreferenceId: null,
+      rawDateTime: null,
     },
+    selectedToBook: [],
   };
 };
 
@@ -29,6 +30,22 @@ const mutations = {
       state.bookingData[key] = bookingData[key];
     }
   },
+
+  selectSlot(state, slotData) {
+    state.selectedToBook.push(slotData);
+  },
+
+  cancelSlot(state, slotData) {
+    let index = state.selectedToBook.findIndex(
+      (slot) => slot.specificDateTime === slotData.specificDateTime
+    );
+
+    state.selectedToBook.splice(index, 1);
+  },
+
+  cancelAllSelections(state) {
+    state.selectedToBook = [];
+  },
 };
 
 // Asynchronous
@@ -39,6 +56,18 @@ const actions = {
 
   updateBookingData(state, bookingData) {
     state.commit("updateBookingData", bookingData);
+  },
+
+  selectSlot(state, slotData) {
+    state.commit("selectSlot", slotData);
+  },
+
+  cancelSlot(state, slotData) {
+    state.commit("cancelSlot", slotData);
+  },
+
+  cancelAllSelections(state) {
+    state.commit("cancelAllSelections");
   },
 };
 

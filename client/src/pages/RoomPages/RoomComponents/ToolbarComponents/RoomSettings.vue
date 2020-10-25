@@ -1,7 +1,7 @@
 <template>
   <div class="settings">
     <div class="sidebar-container">
-      <div class="sidebar-header flex pbt-16 plr-16">
+      <div :style="styleSidebarTitle" class="sidebar-header flex pbt-16 plr-16">
         <h1 data-v-6b4e9726="" class="sidebar-title flex">Settings</h1>
         <img
           @click="toggleToolbar('settings')"
@@ -25,6 +25,7 @@ export default {
   data() {
     return {
       cancelIcon: cancelIcon,
+      themeCoreColor: "#111158",
     };
   },
   // props: [""],
@@ -33,6 +34,9 @@ export default {
       leftSidebar: (state) => state.toolbar.containersConfig.leftSidebar,
       settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
+    styleSidebarTitle() {
+      return `color: ${this.themeLogoColor};`;
+    },
     // eventroomSettingsLink
   },
   methods: {

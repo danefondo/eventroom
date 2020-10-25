@@ -1,7 +1,7 @@
 <template>
   <div class="settings">
     <div class="sidebar-container">
-      <div class="sidebar-header flex pbt-16 plr-16">
+      <div :style="styleSidebarTitle" class="sidebar-header flex pbt-16 plr-16">
         <h1 class="sidebar-title flex">Chat</h1>
         <img
           @click="toggleToolbar('chat')"
@@ -34,6 +34,7 @@ export default {
       awaitingTyping: false,
       nameExists: false,
       copiedState: false,
+      themeLogoColor: "#111158",
     };
   },
   computed: {
@@ -43,6 +44,9 @@ export default {
       eventroom: (state) => state.eventroom.eventroomData,
       userId: (state) => state.auth.userId,
     }),
+    styleSidebarTitle() {
+      return `color: ${this.themeLogoColor};`;
+    },
   },
   components: {
     Chat,

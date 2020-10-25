@@ -19,18 +19,18 @@
             "
             @click="toggleMedia(2)"
           >
-            <img
-              :src="
+            <IconBase
+              icon-name="screenshare"
+              :iconColor="
                 userMediaSettings.screenBeingShared
-                  ? screenIconWhite
-                  : screenIcon
+                  ? getColor('video')
+                  : getSecondColor('video')
               "
-              :class="
-                userMediaSettings.screenBeingShared
-                  ? 'screen-icon-white'
-                  : 'screen-icon'
-              "
-            />
+              viewBox="0 0 469.333 469.333"
+              width="28"
+              height="28"
+              ><IconScreenshare
+            /></IconBase>
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">{{
@@ -58,8 +58,8 @@
               height="29"
               :iconColor="
                 userMediaSettings.cameraOn
-                  ? getColor('video')
-                  : getSecondColor('video')
+                  ? getSecondColor('video')
+                  : getColor('video')
               "
               ><IconVideo
             /></IconBase>
@@ -83,7 +83,9 @@
             <IconBase
               icon-name="microphone"
               :iconColor="
-                userMediaSettings.microphoneOn ? getMicColor : getMicSecondColor
+                userMediaSettings.microphoneOn
+                  ? getSecondColor('video')
+                  : getColor('video')
               "
               viewBox="0 0 30 30"
               width="28"
@@ -144,10 +146,17 @@
           </div>
         </div> -->
       </div>
-      <div class="media-buttons leave">
+      <div :style="getLeaveConfig" class="media-buttons leave">
         <div class="tooltip_container">
           <div class="leave-button" @click="leaveRoom">
-            <img :src="hangUpIcon" class="leave-icon" />
+            <IconBase
+              icon-name="leave-icon"
+              :iconColor="getCoreColor"
+              viewBox="0 0 53.943 53.943"
+              width="28"
+              height="28"
+              ><IconPhone
+            /></IconBase>
           </div>
           <div class="tooltip tooltip--top tooltip--middle">
             <span class="tooltip_tip">Leave room</span>
@@ -178,6 +187,8 @@ import hangUpIcon from "../../../assets/images/hangup.png";
 import IconBase from "../../../components/IconBase";
 import IconVideo from "../../../components/SVG/IconVideo";
 import IconMicrophone from "../../../components/SVG/IconMicrophone";
+import IconScreenshare from "../../../components/SVG/IconScreenshare";
+import IconPhone from "../../../components/SVG/IconPhone";
 // import { requestWithAuthentication } from "../../../config/api";
 
 export default {
@@ -213,18 +224,36 @@ export default {
       userDesignPreferences: (state) => state.preferences.userDesignPreferences,
       thisRoomDesignPreferences: (state) =>
         state.preferences.thisRoomDesignPreferences,
+      leaveConfig: (state) => state.preferences.layoutConfig.leaveConfig,
     }),
     getMicColor() {
       return "#1F3058";
     },
+    getCoreColor() {
+      return "#07213A";
+    },
     getMicSecondColor() {
-      return "#fff";
+      return "#07213A";
+    },
+    getLeaveConfig() {
+      let config = this.leaveConfig;
+      let style = "";
+      if (config == 0) {
+        style = "";
+      } else if (config == 1) {
+        style = "";
+      } else if (config == 2) {
+        style = "right:unset; left:5px;";
+      }
+      return style;
     },
   },
   components: {
     IconBase,
     IconVideo,
     IconMicrophone,
+    IconScreenshare,
+    IconPhone,
   },
   props: ["moreThanOneAndLessThanThreeInSession"],
   methods: {
@@ -253,7 +282,8 @@ export default {
     },
     getColor(icon) {
       console.log("icon", icon);
-      return "#1F3058";
+      // return "#1F3058";
+      return "#fff";
       // let color;
       // if (this.userDesignPreferences[icon]["color"]) {
       //   color = this.userDesignPreferences[icon]["color"];
@@ -268,7 +298,7 @@ export default {
     },
     getSecondColor(icon) {
       console.log("icon", icon);
-      return "#fff";
+      return "#111158";
       // let color;
       // if (this.userDesignPreferences[icon]["color"]) {
       //   color = this.userDesignPreferences[icon]["color"];

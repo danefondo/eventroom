@@ -49,6 +49,17 @@ const BookingController = {
     return;
   },
 
+  async bookManySessionSlots(req, res) {
+    const options = {
+      validate: ["userId", "username", "sessionsToBook"],
+      funcToRun: "bookManySessionSlots",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
   async cancelCalendarSlot(req, res) {
     const options = {
       validate: ["eventroomName", "participant"],

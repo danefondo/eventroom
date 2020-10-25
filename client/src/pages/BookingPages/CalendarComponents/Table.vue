@@ -33,75 +33,88 @@
           :class="isPastDay(each, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
-          <div
-            v-if="
-              !isPastDay(each, i) &&
-              returnBestBookedToMatch(each, i, 'bookedPeopleOnTime') &&
-              !isMatched(each, i)
-            "
-            @click="
-              week
-                ? $emit('select-slot', each.timeRowDays[i])
-                : $emit('select-slot', each.timeRowDay)
-            "
-            class="booked-person event"
-          >
-            <span>person booked here</span>
-            <div>
+          <div class="past-container" v-if="isPastDay(each, i)">
+            <div @mousemove="showIsPast" class="past-inner tooltip">
+              <span id="tooltip-span"> This hour has passed. </span>
+            </div>
+            <div
+              v-if="unmatchedBookedPeople(each, i)"
+              @click="$emit('select-slot', each.timeRowDays[i])"
+              class="booked-person event"
+            >
+              <span>person booked here</span>
+              <div>
+                <span>{{
+                  returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
+                }}</span>
+              </div>
+            </div>
+            <!-- all YOUR booked sessions, either matched or unmatched-->
+            <div
+              v-else-if="
+                returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')
+              "
+              class="booked-session"
+            >
+              <span v-if="isMatched(each, i)">{{
+                `Matched with ${isMatched(each, i)}`
+              }}</span>
+              <span v-else>Not yet matched...</span>
               <span>{{
-                returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
+                returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
               }}</span>
             </div>
           </div>
-          <!-- all YOUR booked sessions, either matched or unmatched-->
-          <div
-            v-else-if="returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')"
-            class="booked-session"
-          >
-            <span v-if="isMatched(each, i)">{{
-              `Matched with ${isMatched(each, i)}`
-            }}</span>
-            <span v-else>Not yet matched...</span>
-            <span>{{
-              returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
-            }}</span>
-          </div>
-          <!-- highlight is in two boxes to speed up & avoid week check per time, the millisecond difference really makes a difference, rather than having it in each click, even putting emit to function vs direct makes a difference-->
-          <div
-            v-else-if="
-              week
-                ? !each.timeRowDays[i].isSelected
-                : !each.timeRowDay.isSelected
-            "
-            @click="
-              week
-                ? $emit('select-slot', each.timeRowDays[i])
-                : $emit('select-slot', each.timeRowDay)
-            "
-            :style="getHeights"
-            class="add-highlight"
-          >
-            This one?
-          </div>
-          <div
-            v-if="
-              week ? each.timeRowDays[i].isSelected : each.timeRowDay.isSelected
-            "
-            :style="getSelectedHeights"
-            class="selected-container"
-          >
-            <div class="selected-info">
-              Selected?
-              <div class="selected-book">Book</div>
-              <div
-                class="selected-close"
-                @click="
-                  week
-                    ? $emit('cancel-slot', each.timeRowDays[i])
-                    : $emit('cancel-slot', each.timeRowDay)
-                "
-              >
-                x
+          <div v-else-if="!isPastDay(each, i)">
+            <div
+              v-if="unmatchedBookedPeople(each, i)"
+              @click="$emit('select-slot', each.timeRowDays[i])"
+              class="booked-person event"
+            >
+              <span>person booked here</span>
+              <div>
+                <span>{{
+                  returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
+                }}</span>
+              </div>
+            </div>
+            <!-- all YOUR booked sessions, either matched or unmatched-->
+            <div
+              v-else-if="
+                returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')
+              "
+              class="booked-session"
+            >
+              <span v-if="isMatched(each, i)">{{
+                `Matched with ${isMatched(each, i)}`
+              }}</span>
+              <span v-else>Not yet matched...</span>
+              <span>{{
+                returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
+              }}</span>
+            </div>
+            <div
+              v-else-if="!each.timeRowDays[i].isSelected"
+              @click="$emit('select-slot', each.timeRowDays[i])"
+              :style="getHeights"
+              class="add-highlight"
+            >
+              <div class="highlight-info">Select?</div>
+            </div>
+            <div
+              v-if="each.timeRowDays[i].isSelected"
+              :style="getSelectedHeights"
+              class="selected-container"
+            >
+              <div class="selected-info">
+                Selected?
+                <div class="selected-book">Book</div>
+                <div
+                  class="selected-close"
+                  @click="$emit('cancel-slot', each.timeRowDays[i])"
+                >
+                  x
+                </div>
               </div>
             </div>
           </div>
@@ -125,7 +138,6 @@ export default {
     "end",
     "calendarData",
     "rowNumberForWeekOrDay",
-    "week",
     "weekdayNum",
   ],
   data() {
@@ -173,77 +185,58 @@ export default {
       height = `height:${height}px;`;
       return height;
     },
-    // isPastDay() {
-    //   return (each, i) => this.checkIfPastDay(each, i);
-    // },
-    // isThisSelected() {
-
-    // }
+    isPastDay() {
+      return (each, i) => this.checkIfPastDay(each, i);
+    },
   },
   methods: {
+    showIsPast(e) {
+      // if (!document.hidden) {
+      let tooltip = e.target.children[0];
+      if (tooltip) {
+        var x = e.clientX,
+          y = e.clientY;
+        tooltip.style.top = y + 20 + "px";
+        tooltip.style.left = x + 20 + "px";
+      }
+      // }
+    },
     // checkIfPastDay(each, i) {
-    isPastDay(each, i) {
+    checkIfPastDay(each, i) {
       // is day box time before current moment
       let isPastDay = false;
-      if (this.week) {
-        each.timeRowDays[i].startTime;
-        let startHour = each.timeRowDays[i].startTime.split(":")[0];
-        let dayBoxDate = new Date(
-          each.timeRowDays[i].year,
-          each.timeRowDays[i].month - 1,
-          each.timeRowDays[i].date,
-          startHour
-        );
+      each.timeRowDays[i].startTime;
+      let startHour = each.timeRowDays[i].startTime.split(":")[0];
+      let dayBoxDate = new Date(
+        each.timeRowDays[i].year,
+        each.timeRowDays[i].month - 1,
+        each.timeRowDays[i].date,
+        startHour
+      );
 
-        let now = new Date();
-        console.log("daybox", dayBoxDate);
-        console.log("now", now);
-        isPastDay = isBefore(dayBoxDate, now);
-        console.log("isPastDay", isPastDay);
-      } else {
-        each.timeRowDay.startTime;
-        let startHour = each.timeRowDay.startTime.split(":")[0];
-        let dayBoxDate = new Date(
-          each.timeRowDay.year,
-          each.timeRowDay.month - 1,
-          each.timeRowDay.date,
-          startHour
-        );
-        let now = new Date();
-        console.log("daybox", dayBoxDate);
-        console.log("now", now);
-        isPastDay = isBefore(dayBoxDate, now);
-        console.log("isPastDay", isPastDay);
-      }
+      let now = new Date();
+      isPastDay = isBefore(dayBoxDate, now);
+
       return isPastDay;
     },
     isMatched(each, i) {
       let matchedSession = null;
       let partnerUsername = null;
 
-      if (this.week) {
-        matchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
-      } else {
-        matchedSession = each.timeRowDay["bookedSessionsOnTime"][0];
-      }
+      matchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
 
       if (!matchedSession) return;
       console.log("@isMatched, session: ", matchedSession);
 
-      let firstPartnerId = matchedSession.firstPartnerId;
-      let secondPartnerId = matchedSession.secondPartnerId;
-      let firstPartnerUsername = matchedSession.firstPartnerUsername;
-      let secondPartnerUsername = matchedSession.secondPartnerUsername;
-
       // Both must have value for there to be a possibility of match
-      if (firstPartnerId && secondPartnerId) {
+      if (matchedSession.firstPartnerId && matchedSession.secondPartnerId) {
         // If first is user itself, make the partner the other one
-        if (firstPartnerId == this.user._id) {
-          partnerUsername = secondPartnerUsername;
+        if (matchedSession.firstPartnerId == this.user._id) {
+          partnerUsername = matchedSession.secondPartnerUsername;
         }
         // If second is user itself, make the partner the other one
-        else {
-          partnerUsername = firstPartnerUsername;
+        else if (matchedSession.secondPartnerId == this.user._id) {
+          partnerUsername = matchedSession.firstPartnerUsername;
         }
       }
       console.log("partnerUsername", partnerUsername);
@@ -252,25 +245,16 @@ export default {
 
     returnBestBookedToMatch(each, i, type) {
       let bestBookedToMatch;
-      if (this.week) {
-        if (
-          each.timeRowDays &&
-          each.timeRowDays.length &&
-          each.timeRowDays[i] &&
-          each.timeRowDays[i][type] &&
-          each.timeRowDays[i][type].length
-        ) {
-          // perform all sorts of check later
-          // right now just return the first one
-          bestBookedToMatch = each.timeRowDays[i][type][0];
-        }
-      } else {
-        if (each.timeRowDay && each.timeRowDay[type]) {
-          // perform all sorts of check later
-          // right now just return the first one
-          bestBookedToMatch = each.timeRowDay[type][0];
-          console.log("bestyBOOKEd", bestBookedToMatch);
-        }
+      if (
+        each.timeRowDays &&
+        each.timeRowDays.length &&
+        each.timeRowDays[i] &&
+        each.timeRowDays[i][type] &&
+        each.timeRowDays[i][type].length
+      ) {
+        // perform all sorts of check later
+        // right now just return the first one
+        bestBookedToMatch = each.timeRowDays[i][type][0];
       }
 
       return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
@@ -294,6 +278,17 @@ export default {
       // The one person chosen from the list should be best match, or then
       // the first one, or a random one
     },
+    unmatchedBookedPeople(each, i) {
+      if (
+        !this.isPastDay(each, i) &&
+        this.returnBestBookedToMatch(each, i, "bookedPeopleOnTime") &&
+        !this.isMatched(each, i)
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    },
   },
 };
 </script>
@@ -306,12 +301,14 @@ export default {
   background-color: #fbfbfb;
 }
 
+/* .highlight-container,  */
 .selected-container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* .highlight-info, */
 .selected-info {
   background-color: #eef1f3;
   border-radius: 4px;
@@ -359,5 +356,42 @@ export default {
 
 .selected-book:hover {
   background-color: #b4b8b9;
+}
+
+.past-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 70px;
+  cursor: default;
+}
+
+.past-inner {
+  background-color: #eef1f3;
+  border-radius: 4px;
+  height: 95%;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: default;
+}
+
+.tooltip {
+  text-decoration: none;
+  position: relative;
+}
+.tooltip span {
+  display: none;
+  z-index: 9999;
+  background-color: white;
+  padding: 4px 8px;
+  border-radius: 360px;
+}
+.tooltip:hover span {
+  display: block;
+  position: fixed;
+  overflow: hidden;
 }
 </style>

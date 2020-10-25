@@ -544,6 +544,9 @@ export default {
       if (e.target.className == "chatInputBox") {
         if (e.which == 13) {
           document.getElementById("chatInputSend").click();
+        } else if (e.which == 27) {
+          // escape input box
+          document.getElementById("chatInputBox").blur();
         } else {
           return;
         }
@@ -570,6 +573,15 @@ export default {
         globalThis.$refs.bottomBar.toggleToolbar("info");
       } else if (e.which == 83) {
         globalThis.$refs.bottomBar.toggleToolbar("settings");
+      } else if (e.which == 49) {
+        globalThis.$store.dispatch("preferences/toggleLayout", 1);
+      } else if (e.which == 48) {
+        globalThis.$store.dispatch("preferences/toggleLayout", 0);
+      } else if (e.which == 50) {
+        globalThis.$store.dispatch("preferences/toggleLayout", 2);
+      } else if (e.which == 70) {
+        // flip mirror
+        globalThis.$store.dispatch("preferences/toggleMirror");
       }
     },
 

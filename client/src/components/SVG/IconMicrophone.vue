@@ -5,7 +5,7 @@
         fill-rule: nonzero;
         fill: rgb(0%, 0%, 0%);
         fill-opacity: 1;
-        stroke-width: 4;
+        stroke-width: 3;
         stroke-linecap: butt;
         stroke-linejoin: round;
         stroke-opacity: 1;

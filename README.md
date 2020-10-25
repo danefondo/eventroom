@@ -21,3 +21,8 @@ npm run dev
 - info icon: https://www.flaticon.com/free-icon/information_157933
 - settings icon: https://icons8.com/icon/83666/settings--v1
 - link icon: https://www.flaticon.com/free-icon/link_1011407
+- dice icon: https://www.flaticon.com/free-icon/dice_246569
+- flip switch: https://www.flaticon.com/premium-icon/flip_1687775 
+- chat icon: https://www.flaticon.com/free-icon/chat_876170
+- group icon: https://www.flaticon.com/premium-icon/group_3394785
+- down arrow: https://www.flaticon.com/premium-icon/down-arrow_2989989

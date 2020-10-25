@@ -4,6 +4,12 @@ const getDefaultState = () => {
         customChatEmoji: String,
         theme: String,
         mode: String,
+        layoutConfig: {
+          leaveConfig: 0,
+          localVideoConfig: 0,
+          leftSideConfig: 0,
+          rightSideConfig: 0,
+        },
         userDesignPreferences: {
             logoColor: String,
             defaults: {
@@ -123,6 +129,13 @@ const getDefaultState = () => {
     toggleMirror(state) {
       state.videoIsMirrored = !state.videoIsMirrored;
     },
+
+    toggleLayout(state, layoutNum) {
+      let layout = state.layoutConfig;
+      for (var key in layout) {
+        layout[key] = layoutNum;
+      }
+    }
   };
   
   // Asynchronous
@@ -134,6 +147,10 @@ const getDefaultState = () => {
     toggleMirror(state) {
       state.commit("toggleMirror");
     },
+
+    toggleLayout(state, layoutNum) {
+      state.commit("toggleLayout", layoutNum);
+    }
   
   };
   

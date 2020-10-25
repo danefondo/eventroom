@@ -1,7 +1,7 @@
 <template>
   <div class="settings">
     <div class="sidebar-container">
-      <div class="sidebar-header flex pbt-16 plr-16">
+      <div :style="styleSidebarTitle" class="sidebar-header flex pbt-16 plr-16">
         <h1 class="sidebar-title flex">Participants</h1>
         <img
           @click="toggleToolbar('participants')"
@@ -36,6 +36,7 @@ export default {
   data() {
     return {
       cancelIcon: cancelIcon,
+      themeCoreColor: "#111158",
     };
   },
   computed: {
@@ -44,6 +45,9 @@ export default {
       participants: (state) => state.toolbar.toolbarConfig.participants,
       participantsList: (state) => state.participants.participantsData,
     }),
+    styleSidebarTitle() {
+      return `color: ${this.themeLogoColor};`;
+    },
   },
   components: {
     Participant,

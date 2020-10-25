@@ -47,11 +47,16 @@
       :style="getRightSideConfig"
       :class="remoteParticipantScreenData ? 'column-side' : ''"
     >
-      <div :style="styleNoRemoteVideo" v-if="!remoteParticipantData" class="no-remote-video">
+      <div
+        :style="(styleNoRemoteVideo, getNoRemoteVideoConfig)"
+        v-if="!remoteParticipantData"
+        class="no-remote-video"
+      >
         Looks like it is just you in here!"
       </div>
       <div
         v-if="remoteParticipantData"
+        :style="getRemoteVideoConfig"
         id="remote-video"
         class="video"
         :class="[
@@ -160,6 +165,8 @@ export default {
       videoIsMirrored: (state) => state.preferences.videoIsMirrored,
       localVideoConfig: (state) =>
         state.preferences.layoutConfig.localVideoConfig,
+      remoteVideoConfig: (state) =>
+        state.preferences.layoutConfig.remoteVideoConfig,
       leftSideConfig: (state) => state.preferences.layoutConfig.leftSideConfig,
       rightSideConfig: (state) =>
         state.preferences.layoutConfig.rightSideConfig,
@@ -182,11 +189,43 @@ export default {
       } else if (config == 2) {
         style =
           "position: absolute; width: 20%; z-index:9999; bottom:10px; right:10px; height:30%; margin-bottom:unset;";
+      } else if (config == 3) {
+        style = "";
+      }
+      return style;
+    },
+    getRemoteVideoConfig() {
+      let config = this.remoteVideoConfig;
+      let style = "";
+      if (config == 0) {
+        style = "";
+      } else if (config == 1) {
+        style = "";
+      } else if (config == 2) {
+        style = "";
+      } else if (config == 3) {
+        style =
+          "position: absolute; width: 20%; z-index:9999; bottom:10px; left:10px; height:30%; margin-bottom:unset;";
+      }
+      return style;
+    },
+    getNoRemoteVideoConfig() {
+      let config = this.remoteVideoConfig;
+      let style = "";
+      if (config == 0) {
+        style = "";
+      } else if (config == 1) {
+        style = "";
+      } else if (config == 2) {
+        style = "";
+      } else if (config == 3) {
+        style =
+          "position: absolute; width: 20%; z-index:9999; bottom:10px; left:10px; height:30%; margin-bottom:unset; text-align: center";
       }
       return style;
     },
     getLeftSideConfig() {
-      let config = this.localVideoConfig;
+      let config = this.leftSideConfig;
       let style = "";
       if (config == 0) {
         console.log("default");
@@ -194,11 +233,13 @@ export default {
         style = "width:0%";
       } else if (config == 2) {
         style = "width:0%";
+      } else if (config == 3) {
+        style = "width:97%";
       }
       return style;
     },
     getRightSideConfig() {
-      let config = this.localVideoConfig;
+      let config = this.rightSideConfig;
       let style = "";
       if (config == 0) {
         console.log("default");
@@ -206,6 +247,8 @@ export default {
         style = "width:97%";
       } else if (config == 2) {
         style = "width:97%";
+      } else if (config == 3) {
+        style = "width:0%";
       }
       return style;
     },

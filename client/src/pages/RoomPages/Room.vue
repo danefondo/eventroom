@@ -579,6 +579,8 @@ export default {
         globalThis.$store.dispatch("preferences/toggleLayout", 0);
       } else if (e.which == 50) {
         globalThis.$store.dispatch("preferences/toggleLayout", 2);
+      } else if (e.which == 51) {
+        globalThis.$store.dispatch("preferences/toggleLayout", 3);
       } else if (e.which == 70) {
         // flip mirror
         globalThis.$store.dispatch("preferences/toggleMirror");

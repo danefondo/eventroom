@@ -52,7 +52,7 @@
         v-if="!remoteParticipantData"
         class="no-remote-video"
       >
-        Looks like it is just you in here!"
+        Looks like it is just you in here!
       </div>
       <div
         v-if="remoteParticipantData"

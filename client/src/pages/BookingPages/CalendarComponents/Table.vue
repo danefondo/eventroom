@@ -144,7 +144,7 @@ export default {
     return {
       interval: 60,
       minimumTime: "08:00",
-      maximumTime: "16:00",
+      maximumTime: "23:00",
       height: 70,
       selectedHeight: 70,
     };

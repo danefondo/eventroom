@@ -163,7 +163,7 @@ export default {
       bookedPeopleOnTime: [],
       interval: 60,
       minimumTime: "08:00",
-      maximumTime: "16:00",
+      maximumTime: "23:00",
       height: 70,
       calendarData: [],
 
@@ -561,15 +561,30 @@ export default {
           `api/booking/bookSessionSlot`,
           sendData
         );
+        console.log("response from boooked", response);
         let session = response.data.result;
         if (!session) {
           errors.FailedToBookSession = true;
           throw { errors: errors };
         }
 
-        if (this.week) {
-          this.calendarData.forEach((hourRow) => {
-            hourRow.timeRowDays.forEach((day) => {
+        if (response.data.success) {
+          if (this.week) {
+            this.calendarData.forEach((hourRow) => {
+              hourRow.timeRowDays.forEach((day) => {
+                if (day.specificDateTime == session.queryDateTime) {
+                  if (
+                    session.firstPartnerId == this.user._id ||
+                    session.secondPartnerId == this.user._id
+                  ) {
+                    day.bookedSessionsOnTime.push(session);
+                  }
+                }
+              });
+            });
+          } else {
+            this.calendarData.forEach((hourRow) => {
+              let day = hourRow.timeRowDay;
               if (day.specificDateTime == session.queryDateTime) {
                 if (
                   session.firstPartnerId == this.user._id ||
@@ -579,29 +594,18 @@ export default {
                 }
               }
             });
-          });
-        } else {
-          this.calendarData.forEach((hourRow) => {
-            let day = hourRow.timeRowDay;
-            if (day.specificDateTime == session.queryDateTime) {
-              if (
-                session.firstPartnerId == this.user._id ||
-                session.secondPartnerId == this.user._id
-              ) {
-                day.bookedSessionsOnTime.push(session);
-              }
-            }
-          });
+          }
+          this.cancelBooking();
+
+          let sessionInfo = {
+            userId: this.user._id,
+            session: session,
+            roomType: "cofocus",
+          };
+          this.$socket.emit("pushNewSessionToOthers", sessionInfo);
+
+          this.currentlyBookingSessions = false;
         }
-
-        let sessionInfo = {
-          userId: this.user._id,
-          session: session,
-          roomType: "cofocus",
-        };
-        this.$socket.emit("pushNewSessionToOthers", sessionInfo);
-
-        this.currentlyBookingSessions = false;
       } catch (error) {
         console.log("errorBooking", error);
         this.currentlyBookingSessions = false;
@@ -1070,7 +1074,7 @@ export default {
         }
       });
 
-      this.$store.dispatch("booking/cancelAllSelections");
+      this.$store.dispatch("booking/clearAllSelections");
     },
     renderSavedSelectionsIfAny() {
       let globalThis = this;

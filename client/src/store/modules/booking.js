@@ -43,7 +43,7 @@ const mutations = {
     state.selectedToBook.splice(index, 1);
   },
 
-  cancelAllSelections(state) {
+  clearAllSelections(state) {
     state.selectedToBook = [];
   },
 };
@@ -66,8 +66,8 @@ const actions = {
     state.commit("cancelSlot", slotData);
   },
 
-  cancelAllSelections(state) {
-    state.commit("cancelAllSelections");
+  clearAllSelections(state) {
+    state.commit("clearAllSelections");
   },
 };
 

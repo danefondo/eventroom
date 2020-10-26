@@ -51,7 +51,7 @@ const BookingController = {
 
   async bookManySessionSlots(req, res) {
     const options = {
-      validate: ["userId", "username", "sessionsToBook"],
+      validate: ["userId", "username", "slotsToBookArray", "slotsToBookTimesArray"],
       funcToRun: "bookManySessionSlots",
       dataToPass: req.body,
       selfComplete: true,

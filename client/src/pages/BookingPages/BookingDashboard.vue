@@ -103,7 +103,7 @@
             class="bookSession"
             :class="currentlyBookingSessions ? 'not-allowed' : ''"
             :disabled="currentlyBookingSessions == true"
-            @click="bookSession"
+            @click="isBookMany ? bookManySessions() : bookSession()"
           >
             {{ returnBookButtonText }}
           </button>
@@ -201,6 +201,15 @@ export default {
       }
       return bookText;
     },
+    isBookMany() {
+      let isMany = false;
+      console.log("isbookymany");
+      if (this.selectedToBook.length > 1) {
+        isMany = true;
+      }
+      console.log("isagani", isMany);
+      return isMany;
+    },
   },
   components: {
     Switcher,
@@ -228,17 +237,93 @@ export default {
   methods: {
     startReceivingPushedSessions() {
       let globalThis = this;
-      this.sockets.subscribe("receivePushedSessions", (session) => {
-        console.log("WOWZA SESIONA", session);
+      this.sockets.subscribe("receivePushedSessions", (sessions) => {
+        console.log("WOWZA SESIONA", sessions);
 
         // could be one or many
         // It also gives all relevant data to know where to insert it
         if (globalThis.week) {
-          globalThis.calendarData.forEach((hourRow) => {
-            hourRow.timeRowDays.forEach((day) => {
+          sessions.forEach((session) => {
+            globalThis.calendarData.forEach((hourRow) => {
+              hourRow.timeRowDays.forEach((day) => {
+                if (day.specificDateTime == session.queryDateTime) {
+                  // later also check if all partners contains userId
+                  console.log("session====", session);
+                  if (session.sessionThroughMatching) {
+                    // If through matching, need not update, only change
+                    let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+                    let partnerTwo =
+                      day.bookedSessionsOnTime[0].secondPartnerId;
+
+                    console.log("p1, p2", partnerOne, partnerTwo);
+
+                    // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+                    if (partnerOne && partnerTwo) {
+                      console.log("goot both");
+                      // return if already matched
+                      return;
+                    } else if (
+                      partnerOne &&
+                      partnerOne == globalThis.user._id &&
+                      !partnerTwo
+                    ) {
+                      // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+                      console.log("PARTNER TWO NOT EXIST");
+                      let daySession = day.bookedSessionsOnTime[0];
+
+                      globalThis.$set(
+                        daySession,
+                        "secondPartnerId",
+                        session.secondPartnerId
+                      );
+
+                      globalThis.$set(
+                        daySession,
+                        "secondPartnerUsername",
+                        session.secondPartnerUsername
+                      );
+                    } else if (
+                      partnerTwo &&
+                      partnerTwo == globalThis.user._id &&
+                      !partnerOne
+                    ) {
+                      console.log("PARTNER ONE NOT EXIST");
+
+                      let daySession = day.bookedSessionsOnTime[0];
+
+                      globalThis.$set(
+                        daySession,
+                        "firstPartnerId",
+                        session.firstPartnerId
+                      );
+
+                      globalThis.$set(
+                        daySession,
+                        "firstPartnerUsername",
+                        session.firstPartnerUsername
+                      );
+                    }
+                  }
+                  if (
+                    !session.sessionThroughMatching &&
+                    (session.firstPartnerId == globalThis.user._id ||
+                      session.secondPartnerId == globalThis.user._id)
+                  ) {
+                    day.bookedSessionsOnTime.push(session);
+                    globalThis.bookedSessions.push(session);
+                  } else if (!session.sessionThroughMatching) {
+                    day.bookedPeopleOnTime.push(session);
+                    globalThis.bookedPeopleOnTime.push(session);
+                  }
+                }
+              });
+            });
+          });
+        } else {
+          sessions.forEach((session) => {
+            globalThis.calendarData.forEach((hourRow) => {
+              let day = hourRow.timeRowDay;
               if (day.specificDateTime == session.queryDateTime) {
-                // later also check if all partners contains userId
-                console.log("session====", session);
                 // if (session.sessionThroughMatching) {
                 //   // If through matching, need not update, only change
                 //   let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
@@ -256,7 +341,6 @@ export default {
                 //     !partnerTwo
                 //   ) {
                 //     // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-                //     console.log("PARTNER TWO NOT EXIST");
                 //     day.bookedSessionsOnTime[0].secondPartnerId =
                 //       session.secondPartnerId;
                 //     day.bookedSessionsOnTime[0].secondPartnerUsername =
@@ -266,7 +350,6 @@ export default {
                 //     partnerTwo == globalThis.user._id &&
                 //     !partnerOne
                 //   ) {
-                //     console.log("PARTNER ONE NOT EXIST");
                 //     day.bookedSessionsOnTime[0].firstPartnerId =
                 //       session.firstPartnerId;
                 //     day.bookedSessionsOnTime[0].firstPartnerUsername =
@@ -286,55 +369,6 @@ export default {
                 }
               }
             });
-          });
-        } else {
-          globalThis.calendarData.forEach((hourRow) => {
-            let day = hourRow.timeRowDay;
-            if (day.specificDateTime == session.queryDateTime) {
-              // if (session.sessionThroughMatching) {
-              //   // If through matching, need not update, only change
-              //   let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
-              //   let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
-
-              //   console.log("p1, p2", partnerOne, partnerTwo);
-
-              //   // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
-              //   if (partnerOne && partnerTwo) {
-              //     // return if already matched
-              //     return;
-              //   } else if (
-              //     partnerOne &&
-              //     partnerOne == globalThis.user._id &&
-              //     !partnerTwo
-              //   ) {
-              //     // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-              //     day.bookedSessionsOnTime[0].secondPartnerId =
-              //       session.secondPartnerId;
-              //     day.bookedSessionsOnTime[0].secondPartnerUsername =
-              //       session.secondPartnerUsername;
-              //   } else if (
-              //     partnerTwo &&
-              //     partnerTwo == globalThis.user._id &&
-              //     !partnerOne
-              //   ) {
-              //     day.bookedSessionsOnTime[0].firstPartnerId =
-              //       session.firstPartnerId;
-              //     day.bookedSessionsOnTime[0].firstPartnerUsername =
-              //       session.firstPartnerUsername;
-              //   }
-              // }
-              if (
-                !session.sessionThroughMatching &&
-                (session.firstPartnerId == globalThis.user._id ||
-                  session.secondPartnerId == globalThis.user._id)
-              ) {
-                day.bookedSessionsOnTime.push(session);
-                globalThis.bookedSessions.push(session);
-              } else if (!session.sessionThroughMatching) {
-                day.bookedPeopleOnTime.push(session);
-                globalThis.bookedPeopleOnTime.push(session);
-              }
-            }
           });
         }
       });
@@ -537,6 +571,7 @@ export default {
       }
     },
     async bookSession() {
+      console.log("er");
       let errors = {};
       if (this.currentlyBookingSessions) return;
       if (this.selectedToBook.length > 1) return;
@@ -597,12 +632,16 @@ export default {
           }
           this.cancelBooking();
 
+          // Prepare data for socket
+          let sessions = [];
+          sessions.push(session);
+
           let sessionInfo = {
             userId: this.user._id,
-            session: session,
+            sessions: sessions,
             roomType: "cofocus",
           };
-          this.$socket.emit("pushNewSessionToOthers", sessionInfo);
+          this.$socket.emit("pushSessionsToOthers", sessionInfo);
 
           this.currentlyBookingSessions = false;
         }
@@ -613,6 +652,7 @@ export default {
     },
 
     async bookManySessions() {
+      console.log("book many");
       let errors = {};
       let globalThis = this;
       if (this.currentlyBookingSessions) return;
@@ -623,25 +663,27 @@ export default {
         this.currentlyBookingSessions = true;
 
         let sessionsToBook = [];
+        let sessionTimes = [];
         // Prepare selected to book data
         this.selectedToBook.forEach((toBook) => {
-          const [year, month, date] = toBook.date.split("-");
           let slotData = {
-            queryDate: `${year}-${month}-${date}-${toBook.startTime}-${toBook.endTime}`,
+            queryDate: toBook.specificDateTime,
             startTime: toBook.startTime,
             endTime: toBook.endTime,
-            date: toBook.date,
+            date: `${toBook.year}-${toBook.month}-${toBook.date}`,
             rawDateTime: new moment(
-              `${year}-${month}-${date} ${toBook.startTime}`,
+              `${toBook.year}-${toBook.month}-${toBook.date} ${toBook.startTime}`,
               "YYYY-MM-DD HH:mm"
             ),
           };
 
+          sessionTimes.push(toBook.specificDateTime);
           sessionsToBook.push(slotData);
         });
 
         let sendData = {
-          sessionsToBook: sessionsToBook,
+          slotsToBookArray: sessionsToBook,
+          slotsToBookTimesArray: sessionTimes,
           userId: this.user._id,
           username: globalThis.user.username,
         };
@@ -651,15 +693,31 @@ export default {
           `api/booking/bookManySessionSlots`,
           sendData
         );
-        let session = response.data.result;
-        if (!session) {
+        let sessions = response.data.result;
+        if (!sessions) {
           errors.FailedToBookSession = true;
           throw { errors: errors };
         }
 
         if (this.week) {
-          this.calendarData.forEach((hourRow) => {
-            hourRow.timeRowDays.forEach((day) => {
+          sessions.forEach((session) => {
+            this.calendarData.forEach((hourRow) => {
+              hourRow.timeRowDays.forEach((day) => {
+                if (day.specificDateTime == session.queryDateTime) {
+                  if (
+                    session.firstPartnerId == this.user._id ||
+                    session.secondPartnerId == this.user._id
+                  ) {
+                    day.bookedSessionsOnTime.push(session);
+                  }
+                }
+              });
+            });
+          });
+        } else {
+          sessions.forEach((session) => {
+            this.calendarData.forEach((hourRow) => {
+              let day = hourRow.timeRowDay;
               if (day.specificDateTime == session.queryDateTime) {
                 if (
                   session.firstPartnerId == this.user._id ||
@@ -670,26 +728,14 @@ export default {
               }
             });
           });
-        } else {
-          this.calendarData.forEach((hourRow) => {
-            let day = hourRow.timeRowDay;
-            if (day.specificDateTime == session.queryDateTime) {
-              if (
-                session.firstPartnerId == this.user._id ||
-                session.secondPartnerId == this.user._id
-              ) {
-                day.bookedSessionsOnTime.push(session);
-              }
-            }
-          });
         }
 
-        let sessionInfo = {
+        let sessionsInfo = {
           userId: this.user._id,
-          session: session,
+          sessions: sessions,
           roomType: "cofocus",
         };
-        this.$socket.emit("pushNewSessionToOthers", sessionInfo);
+        this.$socket.emit("pushSessionsToOthers", sessionsInfo);
 
         this.currentlyBookingSessions = false;
       } catch (error) {

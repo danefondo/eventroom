@@ -42,7 +42,7 @@
               @click="$emit('select-slot', each.timeRowDays[i])"
               class="booked-person event"
             >
-              <span>person booked here</span>
+              <span>{{ `${isMatched(each, i)} is booked here` }}</span>
               <div>
                 <span>{{
                   returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
@@ -71,7 +71,9 @@
               @click="$emit('select-slot', each.timeRowDays[i])"
               class="booked-person event"
             >
-              <span>person booked here</span>
+              <span>{{
+                `${getPersonBookedHere(each, i)} is booked here`
+              }}</span>
               <div>
                 <span>{{
                   returnBestBookedToMatch(each, i, "bookedPeopleOnTime")
@@ -289,6 +291,27 @@ export default {
         return false;
       }
     },
+    getPersonBookedHere(each, i) {
+      let unmatchedSession = null;
+      let partnerUsername = null;
+
+      unmatchedSession = each.timeRowDays[i]["bookedPeopleOnTime"][0];
+
+      if (!unmatchedSession) return;
+      console.log("@getPersonBookedHere, session: ", unmatchedSession);
+
+      // Both must have value for there to be a possibility of match
+      if (unmatchedSession.firstPartnerId || unmatchedSession.secondPartnerId) {
+        partnerUsername =
+          unmatchedSession.firstPartnerUsername ||
+          unmatchedSession.secondPartnerUsername;
+      }
+      console.log("partnerUsername", partnerUsername);
+      return partnerUsername;
+    },
+    // getPersonBookedHereString(each, i) {
+    //   unmatchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+    // },
   },
 };
 </script>

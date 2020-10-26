@@ -280,14 +280,14 @@ io.on("connection", function (socket) {
     socket.join(data);
   });
 
-  socket.on("pushNewSessionToOthers", function (data) {
-    if (!data || ! data.userId || !data.roomType || !data.session) {
+  socket.on("pushSessionsToOthers", function (data) {
+    if (!data || ! data.userId || !data.roomType || !data.sessions) {
       // let response = "Session data missing";
       return;
       // return socket.emit("messageSendFailed", response);
     }
-    console.log("Session:", data.session);
-    socket.to(data.roomType).emit("receivePushedSessions", data.session);
+    // console.log("Session:", data.session);
+    socket.to(data.roomType).emit("receivePushedSessions", data.sessions);
     // io.removeAllListeners();
   });
 });

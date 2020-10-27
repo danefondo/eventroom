@@ -40,10 +40,10 @@ function removeOwnSessionsFromArray(sessionsArray, userId) {
 
   //   let alreadyMatchedForTime = [];
 
+  //   console.log("available BEFORE", sessionsArray);
   sessionsArray.forEach(function (eachSession, index, array) {
     firstMatchCompare = eachSession.firstPartnerId == userId;
     secondMatchCompare = eachSession.secondPartnerId == userId;
-    console.log("available BEFORE", sessionsArray);
     // If either partner is equal to user's id, remove from sessionsArray
     if (firstMatchCompare || secondMatchCompare) {
       console.log("found session with own id, removing from array");
@@ -59,10 +59,10 @@ function removeOwnSessionsFromArray(sessionsArray, userId) {
       //   };
       //   alreadyMatchedForTime.push(alreadyMatchedForTimeSession);
     }
-    console.log("available BEFORE", sessionsArray);
+    // console.log("available after ONE iteration", sessionsArray);
   });
 
-  console.log("array after processing", sessionsArray);
+  //   console.log("array after processing", sessionsArray);
 
   return sessionsArray;
 }
@@ -184,6 +184,18 @@ function getBestRandomMatch(
   return randomGoodMatch;
 }
 
+// Iterate over all sessions and see if
+// any match slot time
+function filterAvailableSessionsForSlot(availableSessions, slot) {
+  let filteredAvailableSessions = [];
+  availableSessions.forEach((session) => {
+    if (session.queryDateTime == slot.queryDateTime) {
+      filteredAvailableSessions.push(session);
+    }
+  });
+  return filteredAvailableSessions;
+}
+
 // PAIR UP BOTH
 // Assign a match from available sessions
 // This is a filter function essentially dividing slot data into two arrays
@@ -198,53 +210,70 @@ function findMatchesForAllPossibleSlots(availableSessions, slotsToBookArray) {
   slotsToBookArray.forEach(function (slot) {
     let sessionToMatch = null;
 
-    /* ===== CHECK IF MATCH PREFERENCE AVAILABLE ===== */
-    let desiredUserId = slot.specificUserPreferenceId;
-    let preferredUserSession = checkIfMatchPreferenceAvailable(
-      desiredUserId,
-      sessionToMatch,
-      availableSessions
+    /*
+    Because current slots contain many times
+    and all available sessions also contain 
+    many times for the many slots, it is
+    necessary to find, per slot, the available
+    sessions specifically matching each slot
+    */
+    let filteredAvailableSessions = filterAvailableSessionsForSlot(
+      availableSessions,
+      slot
     );
 
-    /* ===== IF PREFERRED MATCH AVAILABLE, SET TO MATCH ===== */
-    if (preferredUserSession) {
-      sessionToMatch = preferredUserSession;
-    }
+    if (filteredAvailableSessions && filteredAvailableSessions.length) {
+      /* ===== CHECK IF MATCH PREFERENCE AVAILABLE ===== */
+      let desiredUserId = slot.specificUserPreferenceId;
+      let preferredUserSession = checkIfMatchPreferenceAvailable(
+        desiredUserId,
+        sessionToMatch,
+        filteredAvailableSessions
+      );
 
-    /* ===== IF NO MATCH && IF PREFERENCES CHECK FOR BEST AVAILABLE MATCH ===== */
-    let preferences = slot.generalPreferences;
-    let bestAvailableMatchByPreferences = getBestAvailableMatchByPreferences(
-      preferences,
-      preferredUserSession,
-      sessionToMatch,
-      availableSessions
-    );
+      /* ===== IF PREFERRED MATCH AVAILABLE, SET TO MATCH ===== */
+      if (preferredUserSession) {
+        sessionToMatch = preferredUserSession;
+      }
 
-    /* ===== IF BEST MATCH FOUND, SET TO MATCH ===== */
-    if (bestAvailableMatchByPreferences) {
-      sessionToMatch = bestAvailableMatchByPreferences;
-    }
+      /* ===== IF NO MATCH && IF PREFERENCES CHECK FOR BEST AVAILABLE MATCH ===== */
+      let preferences = slot.generalPreferences;
+      let bestAvailableMatchByPreferences = getBestAvailableMatchByPreferences(
+        preferences,
+        preferredUserSession,
+        sessionToMatch,
+        filteredAvailableSessions
+      );
 
-    /* ===== IF NO MATCH && NO PREFERENCES, PICK AT RANDOM / SELECT BEST ===== */
-    let randomBestMatch = getBestRandomMatch(
-      preferences,
-      preferredUserSession,
-      sessionToMatch,
-      availableSessions
-    );
+      /* ===== IF BEST MATCH FOUND, SET TO MATCH ===== */
+      if (bestAvailableMatchByPreferences) {
+        sessionToMatch = bestAvailableMatchByPreferences;
+      }
 
-    /* ===== IF RANDOM BEST MATCH FOUND, SET TO MATCH ===== */
-    if (randomBestMatch) {
-      sessionToMatch = randomBestMatch;
-    }
+      /* ===== IF NO MATCH && NO PREFERENCES, PICK AT RANDOM / SELECT BEST ===== */
+      let randomBestMatch = getBestRandomMatch(
+        preferences,
+        preferredUserSession,
+        sessionToMatch,
+        filteredAvailableSessions
+      );
 
-    if (sessionToMatch) {
-      let matchedPair = {
-        sessionToMatch: sessionToMatch,
-        slotMatched: slot,
-      };
-      slotsWithFoundMatches.push(matchedPair);
+      /* ===== IF RANDOM BEST MATCH FOUND, SET TO MATCH ===== */
+      if (randomBestMatch) {
+        sessionToMatch = randomBestMatch;
+      }
+
+      if (sessionToMatch) {
+        let matchedPair = {
+          sessionToMatch: sessionToMatch,
+          slotMatched: slot,
+        };
+        slotsWithFoundMatches.push(matchedPair);
+      } else {
+        slotsWithNoFoundMatches.push(slot);
+      }
     } else {
+      /* ===== IF NO FILTERED AVAILABLE SESSIONS, CANCEL FURTHER CHECKS AND PUSH SLOT TO NOT FOUND MATCHES ===== */
       slotsWithNoFoundMatches.push(slot);
     }
   });
@@ -340,7 +369,7 @@ const BookingDataController = {
     // filters include having selected a set of preferred matches in drag&drop list
 
     try {
-      let query = { queryDateTime: sessionData.queryDate };
+      let query = { queryDateTime: sessionData.queryDateTime };
 
       // Check for whether any sessions exist for the time
       let response = await BookingDataController.findSessionsForSlots(query);
@@ -478,22 +507,28 @@ const BookingDataController = {
     let username = requestData.username;
     let slotsToBookArray = requestData.slotsToBookArray;
     let slotsToBookTimesArray = requestData.slotsToBookTimesArray;
-    let returnData = {};
+
+    console.log("@bookManySessionSlots @1 Slots:", slotsToBookArray);
+    console.log("@bookManySessionSlots @1 Slot times:", slotsToBookTimesArray);
+
+    // Prepare data arrays
     let matchedBookedSessions = [];
     let unmatchedBookedSessions = [];
     let matchingResultLeftovers = [];
-    let errors = {};
-
     let slotsWithFoundMatches = [];
     let slotsWithNoFoundMatches = [];
-
     let finalUnmatchedSlots = [];
+
+    // Prepare return objects
+    let returnData = {};
+    let errors = {};
 
     try {
       let query = { queryDateTime: { $in: slotsToBookTimesArray } };
 
       // Check for whether any sessions exist for the time
       let response = await BookingDataController.findSessionsForSlots(query);
+      console.log("@findSessionsForSlots @2 Response:", response);
 
       // If there are sessions suiting times
       // then per session, do equivalent checks
@@ -557,6 +592,10 @@ const BookingDataController = {
         }
       } else {
         slotsWithNoFoundMatches = slotsToBookArray;
+        console.log(
+          "@findSessionsForSlots @2 No response data, setting slotsWithNoFoundMatches.",
+          slotsWithNoFoundMatches
+        );
       }
 
       if (
@@ -596,20 +635,18 @@ const BookingDataController = {
       throw { errors: errors };
     }
 
-    console.log("eeeee", returnData);
     /* ===== PREPARE FINAL RETURN DATA ===== */
     if (
-      unmatchedBookedSessions &&
       matchedBookedSessions &&
+      unmatchedBookedSessions &&
       matchedBookedSessions.length &&
       unmatchedBookedSessions.length &&
-      unmatchedBookedSessions.length > 0 &&
-      matchedBookedSessions.length > 0
+      matchedBookedSessions.length > 0 &&
+      unmatchedBookedSessions.length > 0
     ) {
       // Some sessions were matched, some sessions were not and just booked
       // Merge array sessions ES6 style: https://stackoverflow.com/a/51240518/8010396
       returnData = [...unmatchedBookedSessions, ...matchedBookedSessions];
-      console.log("returndata1", returnData);
     } else if (
       unmatchedBookedSessions &&
       unmatchedBookedSessions.length &&
@@ -617,7 +654,6 @@ const BookingDataController = {
     ) {
       // All sessions were unmatched but booked and none matched
       returnData = unmatchedBookedSessions;
-      console.log("returndata2", returnData);
     } else if (
       matchedBookedSessions &&
       matchedBookedSessions.length &&
@@ -625,7 +661,6 @@ const BookingDataController = {
     ) {
       // All sessions were matched and none unmatched
       returnData = matchedBookedSessions;
-      console.log("returndata3", returnData);
     }
 
     // Return array of booked sessions, whether matched or unmatched;
@@ -640,7 +675,8 @@ const BookingDataController = {
     let username = matchingData.username;
     let slotsWithFoundMatches = matchingData.slotsWithFoundMatches;
     let sessionsNoLongerFoundIds = [];
-    let sessionsNoLongerFound = [];
+    // let sessionsNoLongerFound = [];
+    let slotsWithNoLongerFoundSession = [];
     let matchedBookedSessions = [];
     try {
       let sessionIdsArray = [];
@@ -657,6 +693,7 @@ const BookingDataController = {
       if (
         response &&
         response.sessionsExist &&
+        response.existingSessionsArray.length &&
         response.existingSessionsArray.length > 0
       ) {
         let sessionsArray = response.existingSessionsArray;
@@ -665,13 +702,17 @@ const BookingDataController = {
         // if some missing, add to sessionsNoLongerFoundIds
         // which need creating new sessions for later
         for (let id of sessionIdsArray) {
-          if (!sessionsArray.some((session) => session._id == id)) {
+          /*NB!!! Mongoose ObjectId Comparison, not regular string ids */
+          if (!sessionsArray.some((session) => session._id.equals(id))) {
             sessionsNoLongerFoundIds.push(id);
+            // console.log("sessionsNoLongerFound IDS", sessionsNoLongerFoundIds);
             // sessionIdsArray = sessionIdsArray.filter((e) => e !== id);
           }
-
           for (let session of sessionsArray) {
-            if (session._id == id) {
+            // console.log("session BEFORE updating data", session);
+
+            // Compare mongoose object id's
+            if (session._id.equals(id)) {
               // set new partner id
               if (session.firstPartnerId) {
                 session.secondPartnerId = userId;
@@ -682,15 +723,14 @@ const BookingDataController = {
                 session.firstPartnerUsername = username;
                 session.sessionThroughMatching = true;
               }
+              await session.save();
+              matchedBookedSessions.push(session);
             }
-            await session.save();
-            matchedBookedSessions.push(session);
           }
         }
       } else {
         // None of the sessions exist anymore
         sessionsNoLongerFoundIds = sessionIdsArray;
-        1;
       }
     } catch (error) {
       errors = prepareErrors(error, errors);
@@ -701,13 +741,13 @@ const BookingDataController = {
       sessionsNoLongerFoundIds.forEach((sessionId) => {
         slotsWithFoundMatches.forEach((slotData) => {
           if (slotData.sessionToMatch._id == sessionId) {
-            sessionsNoLongerFound.push(slotData.slotMatched);
+            slotsWithNoLongerFoundSession.push(slotData.slotMatched);
             // sessionsNoLongerFound.push(slotData.sessionToMatch);
           }
         });
       });
 
-      returnData.matchingResultLeftovers = sessionsNoLongerFound;
+      returnData.matchingResultLeftovers = slotsWithNoLongerFoundSession;
     }
     returnData.matchedBookedSessions = matchedBookedSessions;
     return returnData;
@@ -731,7 +771,7 @@ const BookingDataController = {
         };
       }
 
-    //   console.log("returnData @matchWithExistingSession: ", returnSession);
+      //   console.log("returnData @matchWithExistingSession: ", returnSession);
       if (returnSession.firstPartnerId == partnerId) {
         // Set yourself as the other partner;
         returnSession.secondPartnerId = userId;
@@ -781,7 +821,7 @@ const BookingDataController = {
         scheduledDate: sessionData.date,
         scheduledStartTime: sessionData.startTime,
         scheduledEndTime: sessionData.endTime,
-        queryDateTime: sessionData.queryDate,
+        queryDateTime: sessionData.queryDateTime,
         rawDateTime: sessionData.rawDateTime,
       });
 
@@ -797,11 +837,11 @@ const BookingDataController = {
 
       session.eventroomId = eventroom._id;
 
-    //   console.log(
-    //     "Prepared Eventroom & Session for Cofocus",
-    //     eventroom,
-    //     session
-    //   );
+      //   console.log(
+      //     "Prepared Eventroom & Session for Cofocus",
+      //     eventroom,
+      //     session
+      //   );
       await eventroom.save();
       await session.save();
     } catch (error) {
@@ -822,7 +862,7 @@ const BookingDataController = {
           scheduledDate: slot.date,
           scheduledStartTime: slot.startTime,
           scheduledEndTime: slot.endTime,
-          queryDateTime: slot.queryDate,
+          queryDateTime: slot.queryDateTime,
           rawDateTime: slot.rawDateTime,
         });
 
@@ -858,7 +898,7 @@ const BookingDataController = {
   async checkIfAlreadyHaveSessionAtTime(sessionData) {
     // let query = { userId: userData.userId };
     let userId = sessionData.userId;
-    let date = sessionData.queryDate;
+    let date = sessionData.queryDateTime;
 
     let query = {
       $and: [
@@ -870,7 +910,7 @@ const BookingDataController = {
     let existingSessions = null;
     try {
       existingSessions = await SessionModel.find(query).exec();
-    //   console.log("existingSessions", existingSessions);
+      //   console.log("existingSessions", existingSessions);
       if (existingSessions && existingSessions.length) {
         errors.SessionAtTimeAlreadyExists = true;
         throw { errors: errors };

@@ -1,7 +1,7 @@
 const getDefaultState = () => {
   return {
     bookingData: {
-      queryDate: null,
+      queryDateTime: null,
       startTime: null,
       endTime: null,
       date: null,

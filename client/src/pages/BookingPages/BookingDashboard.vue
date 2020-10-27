@@ -36,6 +36,7 @@
           :weekdayNum="weekdayNum"
           @select-slot="selectSlot"
           @cancel-slot="cancelSlot"
+          @book-slot="bookSession"
         />
         <DayTable
           v-else-if="dates && start && end && !week"
@@ -103,7 +104,7 @@
             class="bookSession"
             :class="currentlyBookingSessions ? 'not-allowed' : ''"
             :disabled="currentlyBookingSessions == true"
-            @click="isBookMany ? bookManySessions() : bookSession()"
+            @click="isBookMany ? bookManySessions() : bookSession(true)"
           >
             {{ returnBookButtonText }}
           </button>
@@ -164,7 +165,7 @@ export default {
       interval: 60,
       minimumTime: "08:00",
       maximumTime: "23:00",
-      height: 70,
+      height: 100,
       calendarData: [],
 
       start: null,
@@ -324,38 +325,38 @@ export default {
             globalThis.calendarData.forEach((hourRow) => {
               let day = hourRow.timeRowDay;
               if (day.specificDateTime == session.queryDateTime) {
-                // if (session.sessionThroughMatching) {
-                //   // If through matching, need not update, only change
-                //   let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
-                //   let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+                if (session.sessionThroughMatching) {
+                  // If through matching, need not update, only change
+                  let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+                  let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
 
-                //   console.log("p1, p2", partnerOne, partnerTwo);
+                  console.log("p1, p2", partnerOne, partnerTwo);
 
-                //   // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
-                //   if (partnerOne && partnerTwo) {
-                //     // return if already matched
-                //     return;
-                //   } else if (
-                //     partnerOne &&
-                //     partnerOne == globalThis.user._id &&
-                //     !partnerTwo
-                //   ) {
-                //     // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-                //     day.bookedSessionsOnTime[0].secondPartnerId =
-                //       session.secondPartnerId;
-                //     day.bookedSessionsOnTime[0].secondPartnerUsername =
-                //       session.secondPartnerUsername;
-                //   } else if (
-                //     partnerTwo &&
-                //     partnerTwo == globalThis.user._id &&
-                //     !partnerOne
-                //   ) {
-                //     day.bookedSessionsOnTime[0].firstPartnerId =
-                //       session.firstPartnerId;
-                //     day.bookedSessionsOnTime[0].firstPartnerUsername =
-                //       session.firstPartnerUsername;
-                //   }
-                // }
+                  // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+                  if (partnerOne && partnerTwo) {
+                    // return if already matched
+                    return;
+                  } else if (
+                    partnerOne &&
+                    partnerOne == globalThis.user._id &&
+                    !partnerTwo
+                  ) {
+                    // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+                    day.bookedSessionsOnTime[0].secondPartnerId =
+                      session.secondPartnerId;
+                    day.bookedSessionsOnTime[0].secondPartnerUsername =
+                      session.secondPartnerUsername;
+                  } else if (
+                    partnerTwo &&
+                    partnerTwo == globalThis.user._id &&
+                    !partnerOne
+                  ) {
+                    day.bookedSessionsOnTime[0].firstPartnerId =
+                      session.firstPartnerId;
+                    day.bookedSessionsOnTime[0].firstPartnerUsername =
+                      session.firstPartnerUsername;
+                  }
+                }
                 if (
                   !session.sessionThroughMatching &&
                   (session.firstPartnerId == globalThis.user._id ||
@@ -570,8 +571,7 @@ export default {
         this.gettingBookedSessionsForOneDayError = true;
       }
     },
-    async bookSession() {
-      console.log("er");
+    async bookSession(fromSidebarButton = false) {
       let errors = {};
       if (this.currentlyBookingSessions) return;
       if (this.selectedToBook.length > 1) return;
@@ -580,7 +580,7 @@ export default {
         this.currentlyBookingSessions = true;
         const [year, month, date] = this.date.split("-");
         let sendData = {
-          queryDate: `${year}-${month}-${date}-${this.startTime}-${this.endTime}`,
+          queryDateTime: `${year}-${month}-${date}-${this.startTime}-${this.endTime}`,
           startTime: this.startTime,
           endTime: this.endTime,
           date: this.date,
@@ -630,7 +630,11 @@ export default {
               }
             });
           }
-          this.cancelBooking();
+
+          // only cancel if comes from button
+          if (fromSidebarButton) {
+            this.cancelBooking();
+          }
 
           // Prepare data for socket
           let sessions = [];
@@ -652,7 +656,6 @@ export default {
     },
 
     async bookManySessions() {
-      console.log("book many");
       let errors = {};
       let globalThis = this;
       if (this.currentlyBookingSessions) return;
@@ -667,7 +670,7 @@ export default {
         // Prepare selected to book data
         this.selectedToBook.forEach((toBook) => {
           let slotData = {
-            queryDate: toBook.specificDateTime,
+            queryDateTime: toBook.specificDateTime,
             startTime: toBook.startTime,
             endTime: toBook.endTime,
             date: `${toBook.year}-${toBook.month}-${toBook.date}`,
@@ -729,6 +732,7 @@ export default {
             });
           });
         }
+        this.cancelBooking();
 
         let sessionsInfo = {
           userId: this.user._id,
@@ -1157,7 +1161,7 @@ export default {
 .wrapper {
   display: flex;
   justify-content: space-between;
-  background-color: #f6f5f8;
+  /* background-color: #f6f5f8; */
 }
 
 .cofocus {
@@ -1187,7 +1191,7 @@ export default {
 }
 
 .calendar {
-  background-color: #f6f5f8;
+  /* background-color: #f6f5f8; */
 }
 
 .calendar table {
@@ -1237,6 +1241,13 @@ export default {
   color: #7d7d93;
   font-size: 14px;
   font-weight: bold;
+}
+
+tbody::before {
+  content: "@";
+  display: block;
+  line-height: 10px;
+  text-indent: -99999px;
 }
 
 .calendar table tbody tr td:first-of-type {
@@ -1350,23 +1361,6 @@ Switcher styles
   box-shadow: 1px 2px 1px 0px #efefef;
 }
 
-.calendar tbody td .add-highlight {
-  position: absolute;
-  display: none;
-  width: 95%;
-  height: 95%;
-  background: #59599e;
-  border-radius: 4px;
-  font-size: 20px;
-  color: #fff;
-  text-align: center;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  margin: auto;
-}
-
 /** BOOKING MODAL */
 .bookSession,
 .cancelBooking {
@@ -1375,7 +1369,7 @@ Switcher styles
   margin-left: 5px;
   margin-right: 5px;
   letter-spacing: 0.5px;
-  background-color: #e9eced;
+  background-color: #f7f7fb;
   padding: 6px 14px;
   font-weight: 700;
   border-radius: 360px;
@@ -1385,6 +1379,8 @@ Switcher styles
   outline: none;
   border-color: unset;
   border: none;
+  box-sizing: border-box;
+  width: 250px;
 }
 
 .bookSession {

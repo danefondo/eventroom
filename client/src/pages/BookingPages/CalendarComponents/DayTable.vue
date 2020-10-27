@@ -25,7 +25,7 @@
         :key="index"
         :data-rowhour="each.time"
       >
-        <td>{{ each.time }}</td>
+        <div class="hour">{{ each.time }}</div>
         <td
           v-for="(index, i) in rowNumberForWeekOrDay"
           :key="index"
@@ -37,21 +37,9 @@
             <div @mousemove="showIsPast" class="past-inner tooltip">
               <span id="tooltip-span"> This hour has passed. </span>
             </div>
-            <div
-              v-if="unmatchedBookedPeople(each)"
-              @click="$emit('select-slot', each.timeRowDay)"
-              class="booked-person event"
-            >
-              <span>person booked here</span>
-              <div>
-                <span>{{
-                  returnBestBookedToMatch(each, "bookedPeopleOnTime")
-                }}</span>
-              </div>
-            </div>
             <!-- all YOUR booked sessions, either matched or unmatched-->
             <div
-              v-else-if="returnBestBookedToMatch(each, 'bookedSessionsOnTime')"
+              v-if="returnBestBookedToMatch(each, 'bookedSessionsOnTime')"
               class="booked-session"
             >
               <span v-if="isMatched(each)">{{
@@ -65,37 +53,47 @@
           </div>
           <div v-else-if="!isPastDay(each)">
             <div
-              v-if="unmatchedBookedPeople(each)"
-              @click="$emit('select-slot', each.timeRowDay)"
-              class="booked-person event"
+              v-if="userHasSessionForSlot(each)"
+              :style="getSelectedHeights"
+              class="booked-container"
             >
-              <span>person booked here</span>
-              <div>
+              <div class="booked-info">
+                <span v-if="userIsMatchedForSlot(each)" class="booked-title">{{
+                  `Matched with ${matchedPartnerName(each)}`
+                }}</span>
+                <span v-else class="booked-title">Not yet matched...</span>
                 <span>{{
-                  returnBestBookedToMatch(each, "bookedPeopleOnTime")
+                  bookedSessionTime(each, "bookedSessionsOnTime")
                 }}</span>
               </div>
             </div>
-            <!-- all YOUR booked sessions, either matched or unmatched-->
+
             <div
-              v-else-if="returnBestBookedToMatch(each, 'bookedSessionsOnTime')"
-              class="booked-session"
+              v-else-if="unmatchedBookedPeopleExist(each)"
+              @click="$emit('select-slot', each.timeRowDay)"
+              class="booked-person event"
             >
-              <span v-if="isMatched(each)">{{
-                `Matched with ${isMatched(each, i)}`
-              }}</span>
-              <span v-else>Not yet matched...</span>
-              <span>{{
-                returnBestBookedToMatch(each, "bookedSessionsOnTime")
-              }}</span>
+              <div class="booked-unmatched-container">
+                <div class="booked-unmatched-info">
+                  <div class="calendar-profile-icon"></div>
+                  <span class="unmatched-title">{{
+                    returnUnmatchedBookedPeople(each)
+                  }}</span>
+                </div>
+              </div>
+              <div>
+                <span>{{ bookedPersonTime(each) }}</span>
+              </div>
             </div>
+            <!-- all YOUR booked sessions, either matched or unmatched-->
+
             <div
               v-else-if="!each.timeRowDay.isSelected"
               @click="$emit('select-slot', each.timeRowDay)"
-              :style="getHeights"
-              class="add-highlight"
+              :style="getSelectedHeights"
+              class="highlight-container"
             >
-              This one?
+              <div class="highlight-info">Select?</div>
             </div>
             <div
               v-if="each.timeRowDay.isSelected"
@@ -104,7 +102,12 @@
             >
               <div class="selected-info">
                 Selected?
-                <div class="selected-book">Book</div>
+                <div
+                  class="selected-book"
+                  @click="$emit('cancel-slot', each.timeRowDay)"
+                >
+                  Book
+                </div>
                 <div
                   class="selected-close"
                   @click="$emit('cancel-slot', each.timeRowDay)"
@@ -141,8 +144,8 @@ export default {
       interval: 60,
       minimumTime: "08:00",
       maximumTime: "16:00",
-      height: 70,
-      selectedHeight: 70,
+      height: 90,
+      selectedHeight: 90,
     };
   },
   computed: {
@@ -218,6 +221,70 @@ export default {
 
       return isPastDay;
     },
+
+    userHasSessionForSlot(each) {
+      // if (
+      //   each.timeRowDays &&
+      //   each.timeRowDays.length &&
+      //   each.timeRowDays[i] &&
+      //   each.timeRowDays[i][type] &&
+      //   each.timeRowDays[i][type].length
+      // ) {}
+      let userHasSessionForSlot = false;
+
+      let slot = each.timeRowDay["bookedSessionsOnTime"];
+      let session = slot[0];
+
+      if (session) {
+        userHasSessionForSlot = true;
+      }
+
+      return userHasSessionForSlot;
+    },
+    userIsMatchedForSlot(each) {
+      let session = null;
+      let matched = false;
+
+      session = each.timeRowDay["bookedSessionsOnTime"][0];
+
+      if (!session) return null;
+
+      if (session.firstPartnerId && session.secondPartnerId) {
+        matched = true;
+      }
+      return matched;
+    },
+    matchedPartnerName(each) {
+      let session = null;
+      let partnerUsername = null;
+
+      session = each.timeRowDay["bookedSessionsOnTime"][0];
+
+      if (!session) return null;
+
+      // If first is user itself, make the partner the other one
+      if (session.firstPartnerId == this.user._id) {
+        partnerUsername = session.secondPartnerUsername;
+      }
+      // If second is user itself, make the partner the other one
+      else if (session.secondPartnerId == this.user._id) {
+        partnerUsername = session.firstPartnerUsername;
+      }
+      return partnerUsername;
+    },
+    bookedSessionTime(each) {
+      let session = each.timeRowDay["bookedSessionsOnTime"][0];
+      let sessionTime = session.queryDateTime;
+
+      return sessionTime ? sessionTime : null;
+    },
+    bookedPersonTime(each) {
+      let session = each.timeRowDay["bookedPeopleOnTime"][0];
+      let sessionTime = session.queryDateTime;
+
+      return sessionTime ? sessionTime : null;
+    },
+
     isMatched(each) {
       let matchedSession = null;
       let partnerUsername = null;
@@ -252,22 +319,85 @@ export default {
       }
       return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
     },
-    unmatchedBookedPeople(each) {
+
+    unmatchedBookedPeopleExist(each) {
+      let unmatchedBookedPeople = false;
       if (
-        !this.isPastDay(each) &&
-        this.returnBestBookedToMatch(each, "bookedPeopleOnTime") &&
-        !this.isMatched(each)
+        each.timeRowDay &&
+        each.timeRowDay["bookedPeopleOnTime"] &&
+        each.timeRowDay["bookedPeopleOnTime"].length &&
+        each.timeRowDay["bookedPeopleOnTime"].length > 0
       ) {
-        return true;
-      } else {
-        return false;
+        let bookedPeople = each.timeRowDay["bookedPeopleOnTime"];
+
+        // Check that unmatched; if even one is found, good enough
+        bookedPeople.forEach((person) => {
+          if (
+            (person.firstPartnerId || person.secondPartnerId) &&
+            (!person.firstPartnerId || !person.secondPartnerId) &&
+            !unmatchedBookedPeople
+          ) {
+            unmatchedBookedPeople = true;
+          }
+        });
       }
+      return unmatchedBookedPeople;
+    },
+    returnUnmatchedBookedPeople(each) {
+      let unmatchedPerson = null;
+      let unmatchedPersonName = null;
+      if (
+        each.timeRowDay &&
+        each.timeRowDay["bookedPeopleOnTime"] &&
+        each.timeRowDay["bookedPeopleOnTime"].length
+      ) {
+        // perform all sorts of check later
+        // right now just return the first one
+        let bookedPeople = each.timeRowDay["bookedPeopleOnTime"];
+
+        bookedPeople.forEach((person) => {
+          if (
+            (person.firstPartnerId || person.secondPartnerId) &&
+            (!person.firstPartnerId || !person.secondPartnerId) &&
+            !unmatchedPerson
+          ) {
+            unmatchedPerson = person;
+          }
+        });
+        // go over and pick first that is not matched
+
+        // WHEN ADDING TO LIST, DO NOT EVEN ADD THEM IF
+      }
+      if (unmatchedPerson) {
+        unmatchedPersonName =
+          unmatchedPerson.firstPartnerUsername ||
+          unmatchedPerson.secondPartnerUsername;
+      }
+
+      return unmatchedPersonName;
+    },
+    getPersonBookedHere(each) {
+      let unmatchedSession = null;
+      let partnerUsername = null;
+
+      unmatchedSession = each.timeRowDay["bookedPeopleOnTime"][0];
+
+      if (!unmatchedSession) return;
+      console.log("@getPersonBookedHere, session: ", unmatchedSession);
+
+      if (unmatchedSession.firstPartnerId || unmatchedSession.secondPartnerId) {
+        partnerUsername =
+          unmatchedSession.firstPartnerUsername ||
+          unmatchedSession.secondPartnerUsername;
+      }
+      console.log("partnerUsername", partnerUsername);
+      return partnerUsername;
     },
   },
 };
 </script>
 <style scoped>
-.each-day:hover .add-highlight {
+.each-day:hover .highlight-container {
   display: flex;
 }
 
@@ -275,13 +405,46 @@ export default {
   background-color: #fbfbfb;
 }
 
-.selected-container {
+.each-day {
+  background-color: white !important;
+  border: 1px solid #f1f1f3 !important;
+}
+
+/* .calendar tbody td .highlight-container {
+  position: absolute;
+  display: none;
+  width: 95%;
+  height: 95%;
+  background: #59599e;
+  border-radius: 4px;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+} */
+
+.booked-unmatched-container,
+.selected-container,
+.booked-container {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: absolute;
+  width: 100%;
 }
 
-.selected-info {
+.booked-unmatched-container {
+  height: 35px;
+  margin-top: 1px;
+}
+
+.booked-unmatched-info,
+.selected-info,
+.booked-info {
   background-color: #eef1f3;
   border-radius: 4px;
   height: 95%;
@@ -290,6 +453,51 @@ export default {
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+.calendar-profile-icon {
+  width: 25px !important;
+  height: 25px !important;
+  background-color: blue;
+  border-radius: 360px;
+  position: absolute;
+  left: 7px;
+}
+
+.booked-info {
+  flex-direction: column;
+  justify-content: space-around;
+}
+
+.booked-title {
+  color: #343556;
+}
+
+.highlight-container {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+  cursor: default;
+}
+
+.highlight-info {
+  background-color: #eef1f3;
+  border-radius: 4px;
+  height: 95%;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.unmatched-title {
+  position: absolute;
+  left: 40px;
+  font-size: 18px;
+  color: #343556;
 }
 
 .selected-close {
@@ -365,5 +573,13 @@ export default {
   display: block;
   position: fixed;
   overflow: hidden;
+}
+
+.hour {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
 }
 </style>

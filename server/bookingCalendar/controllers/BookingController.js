@@ -40,7 +40,7 @@ const BookingController = {
 
   async bookSessionSlot(req, res) {
     const options = {
-      validate: ["userId", "queryDate", "username"],
+      validate: ["userId", "queryDateTime", "username"],
       funcToRun: "bookSessionSlot",
       dataToPass: req.body,
       selfComplete: true,

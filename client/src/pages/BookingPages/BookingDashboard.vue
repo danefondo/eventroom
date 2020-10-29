@@ -35,7 +35,7 @@
           :week="week"
           @select-slot="selectSlot"
           @cancel-slot="cancelSlot"
-          @book-slot="bookSession"
+          @book-slot="setSelectAndBook"
         />
         <!-- <DayTable
           v-else-if="weekDates && weekStartDay && weekEndDay && !week"
@@ -831,6 +831,14 @@ export default {
         isCanceling: false,
       };
       return dayObject;
+    },
+    setSelectAndBook(slotData) {
+      this.selectedSlotDateTime = slotData.dateTime;
+      this.selectedSlotStartTime = slotData.slotStartTime;
+      this.selectedSlotDateString = `${slotData.yearNum}-${slotData.monthNum}-${slotData.dateNum}`;
+
+      this.bookSession();
+      this.cancelSlot(slotData);
     },
     selectSlot(slotData) {
       // console.log("slotData", slotData);

@@ -37,11 +37,12 @@ const routes = [
   {
     path: "/session/:sessionName",
     component: () => import("./pages/RoomPages/Room"),
-    name: "RoomPage",
+    name: "CofocusPage",
     meta: { hideNavigation: true },
     beforeEnter(to, from, next) {
       let eventroomName = to.params.sessionName;
       console.log("Session name:", eventroomName);
+      console.log("Session type:", typeof eventroomName);
       let routeData = {
         eventroomName: eventroomName,
       };
@@ -51,7 +52,8 @@ const routes = [
         .then((response) => {
           console.log("responssss", response);
           if (!response.data.result.alreadyExists) {
-            router.push("/");
+            // router.push("/");
+            console.log("ehh")
             // Room Not Found Page
           } else {
             next();

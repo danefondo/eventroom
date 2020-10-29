@@ -1,6 +1,5 @@
 const SessionModel = require("../models/SessionModel");
 const EventroomModel = require("../../eventroom/models/EventroomModel");
-const moment = require("moment");
 
 function prepareErrors(error, errors) {
   if (error.errors) {
@@ -54,7 +53,7 @@ function removeOwnSessionsFromArray(sessionsArray, userId) {
       // already has been booked for that time
 
       //   let alreadyMatchedForTimeSession = {
-      //     sessionTime: eachSession.queryDateTime,
+      //     sessionTime: eachSession.dateTime,
       //     sessionId: eachSession._id,
       //   };
       //   alreadyMatchedForTime.push(alreadyMatchedForTimeSession);
@@ -189,7 +188,7 @@ function getBestRandomMatch(
 function filterAvailableSessionsForSlot(availableSessions, slot) {
   let filteredAvailableSessions = [];
   availableSessions.forEach((session) => {
-    if (session.queryDateTime == slot.queryDateTime) {
+    if (session.dateTime.valueOf() == slot.dateTime.valueOf()) {
       filteredAvailableSessions.push(session);
     }
   });
@@ -290,13 +289,15 @@ const BookingDataController = {
   async getBookedSessionsForOneDay(dayData) {
     let endOfDay = dayData.endOfDay;
     let currentMoment = new Date();
+    console.log("ENDOFDAY", endOfDay);
 
-    let query = { rawDateTime: { $gt: currentMoment, $lt: endOfDay } };
+    let query = { dateTime: { $gt: currentMoment, $lt: endOfDay } };
 
     let errors = {};
     let allBookedSessions;
     try {
       allBookedSessions = await SessionModel.find(query).exec();
+      console.log("allBooked", allBookedSessions);
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
@@ -326,7 +327,7 @@ const BookingDataController = {
     let endOfWeekDate = weekData.endOfWeekDate;
     let currentMoment = new Date();
 
-    let query = { rawDateTime: { $gt: currentMoment, $lt: endOfWeekDate } };
+    let query = { dateTime: { $gt: currentMoment, $lt: endOfWeekDate } };
 
     let errors = {};
     let allBookedSessions;
@@ -369,7 +370,7 @@ const BookingDataController = {
     // filters include having selected a set of preferred matches in drag&drop list
 
     try {
-      let query = { queryDateTime: sessionData.queryDateTime };
+      let query = { dateTime: sessionData.dateTime };
 
       // Check for whether any sessions exist for the time
       let response = await BookingDataController.findSessionsForSlots(query);
@@ -524,7 +525,7 @@ const BookingDataController = {
     let errors = {};
 
     try {
-      let query = { queryDateTime: { $in: slotsToBookTimesArray } };
+      let query = { dateTime: { $in: slotsToBookTimesArray } };
 
       // Check for whether any sessions exist for the time
       let response = await BookingDataController.findSessionsForSlots(query);
@@ -803,7 +804,7 @@ const BookingDataController = {
     // let query = {
     //   $and: [
     //     { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
-    //     { queryDateTime: sessionData.date },
+    //     { dateTime: sessionData.date },
     //   ],
     // };
     // // Check if already exists
@@ -818,11 +819,8 @@ const BookingDataController = {
       session = new SessionModel({
         firstPartnerId: sessionData.userId,
         firstPartnerUsername: sessionData.username,
-        scheduledDate: sessionData.date,
-        scheduledStartTime: sessionData.startTime,
-        scheduledEndTime: sessionData.endTime,
-        queryDateTime: sessionData.queryDateTime,
-        rawDateTime: sessionData.rawDateTime,
+        sessionInterval: sessionData.sessionInterval,
+        dateTime: sessionData.dateTime,
       });
 
       // create eventroom for session
@@ -832,7 +830,7 @@ const BookingDataController = {
         dateCreated: new Date(),
         hostId: "cofocus",
         creatorId: "cofocus",
-        expireAt: null,
+        // expireAt: null,
       });
 
       session.eventroomId = eventroom._id;
@@ -859,11 +857,8 @@ const BookingDataController = {
         session = new SessionModel({
           firstPartnerId: userId,
           firstPartnerUsername: username,
-          scheduledDate: slot.date,
-          scheduledStartTime: slot.startTime,
-          scheduledEndTime: slot.endTime,
-          queryDateTime: slot.queryDateTime,
-          rawDateTime: slot.rawDateTime,
+          sessionInterval: slot.sessionInterval,
+          dateTime: slot.dateTime,
         });
 
         // create eventroom for session
@@ -873,7 +868,7 @@ const BookingDataController = {
           dateCreated: new Date(),
           hostId: "cofocus",
           creatorId: "cofocus",
-          expireAt: null,
+          // expireAt: null,
         });
 
         session.eventroomId = eventroom._id;
@@ -896,14 +891,12 @@ const BookingDataController = {
   },
 
   async checkIfAlreadyHaveSessionAtTime(sessionData) {
-    // let query = { userId: userData.userId };
     let userId = sessionData.userId;
-    let date = sessionData.queryDateTime;
 
     let query = {
       $and: [
         { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
-        { queryDateTime: date },
+        { dateTime: sessionData.dateTime },
       ],
     };
     let errors = {};
@@ -934,7 +927,6 @@ const BookingDataController = {
         responseData.sessionsExist = true;
         responseData.existingSessionsArray = response;
       }
-      console.log("WOW", response);
     } catch (error) {
       errors.FailedToCheckSessionsExist = true;
       errors.error = error;

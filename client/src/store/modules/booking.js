@@ -1,15 +1,11 @@
+// import { isEqual, parseISO } from "date-fns";
+
 const getDefaultState = () => {
   return {
     bookingData: {
-      queryDateTime: null,
-      startTime: null,
-      endTime: null,
-      date: null,
-      month: null,
-      year: null,
       selectedPerson: null,
       specificUserPreferenceId: null,
-      rawDateTime: null,
+      dateTime: null,
     },
     selectedToBook: [],
   };
@@ -37,7 +33,7 @@ const mutations = {
 
   cancelSlot(state, slotData) {
     let index = state.selectedToBook.findIndex(
-      (slot) => slot.specificDateTime === slotData.specificDateTime
+      (slot) => slot.dateTime.valueOf() === slotData.dateTime.valueOf()
     );
 
     state.selectedToBook.splice(index, 1);

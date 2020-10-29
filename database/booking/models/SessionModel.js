@@ -11,19 +11,11 @@ const SessionSchema = new Schema({
   // Session configurations
   sessionLength: Number,
 
-  // Scheduling
-  scheduledDate: Date,
-  scheduledStartTime: String,
-  scheduledEndTime: String,
+  // Scheduled time
+  dateTime: Date,
 
-
-  // This is to quickly query everyone else's sessions
-  rawDateTime: Date,
-
-  // String to speed up database lookup + easy calendar display
-  // in the format of 'yearNumber-monthNumber-dayNumber-startTime-endTime'
-  // e.g. '2020-10-25-08:15-23:45'
-  queryDateTime: String,
+  // Chosen length of session, which determines end of session time
+  sessionInterval: Number,
 
   firstPartnerId: String,
   firstPartnerUsername: String,

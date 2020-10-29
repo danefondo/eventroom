@@ -8,9 +8,9 @@ import VueRouter from "vue-router";
 import Vuex from "vuex";
 import VueCookies from "vue-cookies";
 import VueYoutube from "vue-youtube";
-import moment from "moment";
+import { format } from "date-fns";
 import VueHotkey from "v-hotkey";
-import autolinker, { AUTOLINKER_NAME } from 'vue-autolinker'
+import autolinker, { AUTOLINKER_NAME } from "vue-autolinker";
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
@@ -26,9 +26,7 @@ Vue.use(VueYoutube);
 Vue.use(VueCookies);
 Vue.use(VueHotkey);
 
-Vue.directive(AUTOLINKER_NAME, autolinker)
-
-
+Vue.directive(AUTOLINKER_NAME, autolinker);
 
 const i18n = new VueI18n(i18nConfig);
 
@@ -45,7 +43,7 @@ Vue.use(
 
 Vue.filter("formatDate", function(value) {
   if (!value) return "";
-  return moment(value.toString()).format("MM/DD/YYYY hh:mm");
+  return format(value, "MM/DD/YYYY hh:mm");
 });
 
 new Vue({

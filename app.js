@@ -1,6 +1,5 @@
 /* ====== IMPORT MODULES ====== */
 
-
 const SessionModel = require("./database/booking/models/SessionModel");
 
 const Express = require("express");
@@ -47,13 +46,6 @@ DB.on("error", function (err) {
 
 const app = Express();
 
-//- Prepare HTTP server for Socket.io
-let HTTP = require("http").createServer(app);
-let io = require("socket.io")(HTTP);
-
-//- Use MomentJS
-app.locals.moment = require("moment");
-
 //- Force all routes to HTTPS
 if (process.env.NODE_ENV === "production") {
   app.use(Enforce.HTTPS({ trustProtoHeader: true }));
@@ -81,7 +73,58 @@ app.use(Express.static(Path.join(__dirname, "client/dist/")));
 app.use(Passport.initialize());
 initialiseAuthentication(app);
 
+let twilio = require("twilio")(
+  process.env.TWILIO_ACCOUNT_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
+
+/* ====== ROUTES SETUP ====== */
+const AccountRoutes = require("./routes/API/AccountRoutes");
+const AccountSettings = require("./routes/API/AccountSettingsRoutes");
+const ProfileRoutes = require("./routes/API/ProfileRoutes");
+const EventRoutes = require("./routes/API/EventRoutes");
+const UserActionRoutes = require("./routes/API/UserActionRoutes");
+const EventroomRoutes = require("./routes/API/EventroomRoutes");
+const BookingRoutes = require("./routes/API/BookingRoutes");
+app.use("/api/accounts", AccountRoutes);
+app.use("/api/settings", AccountSettings);
+app.use("/api/profiles", ProfileRoutes);
+app.use("/api/events", EventRoutes);
+app.use("/api/userActions", UserActionRoutes);
+app.use("/api/eventroom", EventroomRoutes);
+app.use("/api/booking", BookingRoutes);
+
+/* ====== REQUESTS HANDLING ====== */
+
+app.get("*", function (req, res) {
+  res.sendFile(Path.join(__dirname, "client/dist/index.html"));
+});
+
+// SessionModel.deleteMany({}).exec();
+
+
+
+/* ====== SERVER SETUP ====== */
+
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+
+/* ====== START SERVER SETUP ====== */
+let server = app.listen(port, function () {
+  console.log("Server started on port " + port);
+});
+
+
+
+
+
 /* ====== SOCKET.IO SETUP ====== */
+var io = require('socket.io').listen(server);
+
+
+/* ====== SOCKET.IO FUNCTIONS ====== */
 
 io.on("connection", function (socket) {
   console.log("this user is connected");
@@ -290,47 +333,4 @@ io.on("connection", function (socket) {
     socket.to(data.roomType).emit("receivePushedSessions", data.sessions);
     // io.removeAllListeners();
   });
-});
-
-let twilio = require("twilio")(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-/* ====== ROUTES SETUP ====== */
-const AccountRoutes = require("./routes/API/AccountRoutes");
-const AccountSettings = require("./routes/API/AccountSettingsRoutes");
-const ProfileRoutes = require("./routes/API/ProfileRoutes");
-const EventRoutes = require("./routes/API/EventRoutes");
-const UserActionRoutes = require("./routes/API/UserActionRoutes");
-const EventroomRoutes = require("./routes/API/EventroomRoutes");
-const BookingRoutes = require("./routes/API/BookingRoutes");
-app.use("/api/accounts", AccountRoutes);
-app.use("/api/settings", AccountSettings);
-app.use("/api/profiles", ProfileRoutes);
-app.use("/api/events", EventRoutes);
-app.use("/api/userActions", UserActionRoutes);
-app.use("/api/eventroom", EventroomRoutes);
-app.use("/api/booking", BookingRoutes);
-
-/* ====== REQUESTS HANDLING ====== */
-
-app.get("*", function (req, res) {
-  res.sendFile(Path.join(__dirname, "client/dist/index.html"));
-});
-
-// SessionModel.deleteMany({}).exec();
-
-
-
-/* ====== SERVER SETUP ====== */
-
-let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 3000;
-}
-
-/* ====== START SETUP ====== */
-HTTP.listen(port, function () {
-  console.log("Server started on port " + port);
 });

@@ -17,7 +17,6 @@
     "detectrtc": "^1.4.1",
     "jwt-decode": "^2.2.0",
     "maxlength-contenteditable": "^1.0.1",
-    "moment": "^2.29.1",
     "socket.io-client": "^2.3.0",
     "twilio-video": "^2.7.2",
     "v-hotkey": "^0.8.0",

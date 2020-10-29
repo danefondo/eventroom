@@ -522,6 +522,7 @@ export default {
 
       try {
         const eventroomName = this.$route.params.eventroomName;
+        console.log("eventroomNAME", eventroomName);
         const queryData = { eventroomName, participant, isAnon };
         const axiosPostQuery = `/api/eventroom/addUserToRoomData`;
         const response = await axios.post(axiosPostQuery, queryData);

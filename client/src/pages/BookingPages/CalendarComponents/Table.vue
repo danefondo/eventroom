@@ -5,83 +5,90 @@
         <th class="empty"></th>
         <!-- renderHTMLDateRow -->
         <th
-          v-for="(eachDate, index) in dates"
+          v-for="(eachDate, index) in weekDates"
           :key="index"
           :data-index="index + 1"
-          :data-date="eachDate.date"
-          :data-year="eachDate.year"
-          :data-month="eachDate.monthInNum"
+          :data-date="eachDate.dateNum"
+          :data-year="eachDate.yearNum"
+          :data-month="eachDate.monthNum"
         >
-          <span class="day"> {{ eachDate.day }}</span
-          ><br /><span class="date">{{ eachDate.date }}</span>
+          <span class="day"> {{ eachDate.dayNameShort }}</span
+          ><br /><span class="date">{{ eachDate.dateNum }}</span>
         </th>
       </tr>
     </thead>
     <tbody>
       <!-- renderGrid -->
-      <!-- <tr v-for="(each, index) in getTimes" :key="index"> -->
       <tr
-        v-for="(each, index) in calendarData"
+        v-for="(eachHourRow, index) in calendarData"
         :key="index"
-        :data-rowhour="each.time"
+        :data-rowhour="eachHourRow.slotStartTime"
         :style="getSelectedHeights"
       >
         <td>
-          <div class="hour">{{ each.time }}</div>
+          <div class="hour">{{ eachHourRow.slotStartTime }}</div>
         </td>
         <td
           v-for="(index, i) in rowNumberForWeekOrDay"
           :key="index"
           class="each-day"
-          :class="isPastDay(each, i) ? 'past-day' : ''"
+          :class="isPastDay(eachHourRow, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
           <div
             :style="getSelectedHeights"
             class="past-container"
-            v-if="isPastDay(each, i)"
+            v-if="isPastDay(eachHourRow, i)"
           >
             <div @mousemove="showIsPast" class="past-inner tooltip">
               <span id="tooltip-span"> This hour has passed. </span>
             </div>
             <!-- all YOUR booked sessions, either matched or unmatched-->
             <div
-              v-if="returnBestBookedToMatch(each, i, 'bookedSessionsOnTime')"
+              v-if="
+                returnBestBookedToMatch(eachHourRow, i, 'bookedSessionsOnTime')
+              "
               class="booked-session"
             >
-              <span v-if="isMatched(each, i)">{{
-                `Matched with ${isMatched(each, i)}`
+              <span v-if="isMatched(eachHourRow, i)">{{
+                `Matched with ${isMatched(eachHourRow, i)}`
               }}</span>
               <span v-else>Not yet matched...</span>
               <span>{{
-                returnBestBookedToMatch(each, i, "bookedSessionsOnTime")
+                returnBestBookedToMatch(eachHourRow, i, "bookedSessionsOnTime")
               }}</span>
             </div>
           </div>
-          <div v-else-if="!isPastDay(each, i)">
+          <div v-else-if="!isPastDay(eachHourRow, i)">
             <!--     
               1. If not past day
               2. If user has booked session at time, show that and nothing else
               3. If user has no booked session at time && others that are UNMATCHED are booked for the time, show first in list or best preferences (if many, show faces icons in row)
             -->
             <div
-              v-if="userHasSessionForSlot(each, i)"
+              v-if="userHasSessionForSlot(eachHourRow, i)"
               :style="getSelectedHeights"
               class="booked-container"
             >
               <div class="booked-info">
                 <span class="booked-time">{{
-                  bookedSessionTime(each, i, "bookedSessionsOnTime")
+                  bookedSessionTime(eachHourRow, i, "bookedSessionsOnTime")
                 }}</span>
-                <div v-if="userIsMatchedForSlot(each, i)">
+                <div v-if="userIsMatchedForSlot(eachHourRow, i)">
                   <span class="booked-title">{{
-                    `${matchedPartnerName(each, i)}`
+                    `${matchedPartnerName(eachHourRow, i)}`
                   }}</span>
-                  <div
+                  <router-link
+                    :to="joinSessionLink(eachHourRow, i)"
                     class="join-session"
-                    @click="$emit('cancel-slot', each.timeRowDays[i])"
                   >
                     Join
+                  </router-link>
+                  <div
+                    class="selected-close"
+                    @click="$emit('cancel-', eachHourRow.hourRowDays[i])"
+                  >
+                    x
                   </div>
                 </div>
                 <span v-else class="booked-title-unmatched"
@@ -90,14 +97,14 @@
               </div>
             </div>
             <div
-              v-else-if="unmatchedBookedPeopleExist(each, i)"
-              @click="$emit('select-slot', each.timeRowDays[i])"
+              v-else-if="unmatchedBookedPeopleExist(eachHourRow, i)"
+              @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
             >
               <div class="booked-unmatched-container">
                 <div class="booked-unmatched-info">
                   <div class="calendar-profile-icon"></div>
                   <span class="unmatched-title">{{
-                    returnUnmatchedBookedPeople(each, i)
+                    returnUnmatchedBookedPeople(eachHourRow, i)
                   }}</span>
                 </div>
               </div>
@@ -105,15 +112,15 @@
             <!-- all YOUR booked sessions, either matched or unmatched-->
 
             <div
-              v-else-if="!each.timeRowDays[i].isSelected"
-              @click="$emit('select-slot', each.timeRowDays[i])"
+              v-else-if="!eachHourRow.hourRowDays[i].isSelected"
+              @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
               :style="getSelectedHeights"
               class="highlight-container"
             >
               <div class="highlight-info">Select?</div>
             </div>
             <div
-              v-if="each.timeRowDays[i].isSelected"
+              v-if="eachHourRow.hourRowDays[i].isSelected"
               :style="getSelectedHeights"
               class="selected-container"
             >
@@ -121,13 +128,13 @@
                 Selected
                 <div
                   class="selected-book"
-                  @click="$emit('cancel-slot', each.timeRowDays[i])"
+                  @click="$emit('book-slot', eachHourRow.hourRowDays[i])"
                 >
                   Book
                 </div>
                 <div
                   class="selected-close"
-                  @click="$emit('cancel-slot', each.timeRowDays[i])"
+                  @click="$emit('cancel-slot', eachHourRow.hourRowDays[i])"
                 >
                   x
                 </div>
@@ -141,21 +148,13 @@
 </template>
 
 <script>
-import moment from "moment";
 import { mapState } from "vuex";
 
-import { isBefore } from "date-fns";
+import { isBefore, format, addMinutes } from "date-fns";
 
 export default {
   name: "Table",
-  props: [
-    "dates",
-    "start",
-    "end",
-    "calendarData",
-    "rowNumberForWeekOrDay",
-    "weekdayNum",
-  ],
+  props: ["weekDates", "calendarData", "rowNumberForWeekOrDay"],
   data() {
     return {
       interval: 60,
@@ -169,28 +168,6 @@ export default {
     ...mapState({
       user: (state) => state.auth.user,
     }),
-    calendarCaption() {
-      let caption = `${this.start.month}, ${this.start.date} - `;
-      if (this.start.month == this.end.month) {
-        caption += this.end.date;
-      } else {
-        caption += `${this.end.month}, ${this.end.date}`;
-      }
-      return caption;
-    },
-    getTimes() {
-      let min = this.minimumTime;
-      let max = this.maximumTime;
-      const time = moment(min, "HH:mm");
-      const maxTime = moment(max, "HH:mm");
-      const times = [];
-      do {
-        times.push(time.format("HH:mm"));
-        time.add(this.interval, "minutes");
-      } while (time.isSameOrBefore(maxTime));
-      console.log("times", times);
-      return times;
-    },
     getHeights() {
       let height = this.height - 20;
       let heights = `line-height:${this.height}px; height:${height}px;`;
@@ -201,11 +178,14 @@ export default {
       height = `height:${height}px;`;
       return height;
     },
-    // isPastDay() {
-    //   return (each, i) => this.checkIfPastDay(each, i);
-    // },
   },
   methods: {
+    joinSessionLink(eachHourRow, i) {
+      let sessionId =
+        eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0]["_id"];
+      let sessionLink = "/session/" + sessionId;
+      return sessionLink;
+    },
     showIsPast(e) {
       // if (!document.hidden) {
       let tooltip = e.target.children[0];
@@ -217,17 +197,16 @@ export default {
       }
       // }
     },
-    // checkIfPastDay(each, i) {
-    isPastDay(each, i) {
-      // is day box time before current moment
+    isPastDay(eachHourRow, i) {
+      // is day box time before current time
       let isPastDay = false;
-      each.timeRowDays[i].startTime;
-      let startHour = each.timeRowDays[i].startTime.split(":")[0];
+      let hourRowDays = eachHourRow.hourRowDays[i];
+      let slotStartTime = hourRowDays.slotStartTime.split(":")[0];
       let dayBoxDate = new Date(
-        each.timeRowDays[i].year,
-        each.timeRowDays[i].month - 1,
-        each.timeRowDays[i].date,
-        startHour
+        hourRowDays.yearNum,
+        hourRowDays.monthNum - 1,
+        hourRowDays.dateNum,
+        slotStartTime
       );
 
       let now = new Date();
@@ -235,30 +214,30 @@ export default {
 
       return isPastDay;
     },
-    userHasSessionForSlot(each, i) {
-      // if (
-      //   each.timeRowDays &&
-      //   each.timeRowDays.length &&
-      //   each.timeRowDays[i] &&
-      //   each.timeRowDays[i][type] &&
-      //   each.timeRowDays[i][type].length
-      // ) {}
+    userHasSessionForSlot(eachHourRow, i) {
       let userHasSessionForSlot = false;
+      if (
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i] &&
+        eachHourRow.hourRowDays[i]["bookedSessionsOnTime"] &&
+        eachHourRow.hourRowDays[i]["bookedSessionsOnTime"].length
+      ) {
+        let slot = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"];
+        let session = slot[0];
 
-      let slot = each.timeRowDays[i]["bookedSessionsOnTime"];
-      let session = slot[0];
-
-      if (session) {
-        userHasSessionForSlot = true;
+        if (session) {
+          userHasSessionForSlot = true;
+        }
       }
 
       return userHasSessionForSlot;
     },
-    userIsMatchedForSlot(each, i) {
+    userIsMatchedForSlot(eachHourRow, i) {
       let session = null;
       let matched = false;
 
-      session = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+      session = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
 
       if (!session) return null;
 
@@ -267,11 +246,11 @@ export default {
       }
       return matched;
     },
-    matchedPartnerName(each, i) {
+    matchedPartnerName(eachHourRow, i) {
       let session = null;
       let partnerUsername = null;
 
-      session = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+      session = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
 
       if (!session) return null;
 
@@ -285,27 +264,34 @@ export default {
       }
       return partnerUsername;
     },
-    bookedSessionTime(each, i) {
-      let session = each.timeRowDays[i]["bookedSessionsOnTime"][0];
-      let sessionTime = session.queryDateTime;
+    bookedSessionTime(eachHourRow, i) {
+      let session = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
+      let sessionTime = new Date(session.dateTime);
       if (sessionTime) {
-        let datesArray = sessionTime.split("-");
-        sessionTime = datesArray[3] + "-" + datesArray[4];
+        let sessionEndTime = addMinutes(sessionTime, this.interval);
+        sessionTime = format(sessionTime, "HH:mm");
+        sessionEndTime = format(sessionEndTime, "HH:mm");
+        sessionTime = sessionTime + "-" + sessionEndTime;
       }
 
       return sessionTime ? sessionTime : null;
     },
-    bookedPersonTime(each, i) {
-      let session = each.timeRowDays[i]["bookedPeopleOnTime"][0];
-      let sessionTime = session.queryDateTime;
-
+    bookedPersonTime(eachHourRow, i) {
+      let session = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"][0];
+      let sessionTime = new Date(session.dateTime);
+      if (sessionTime) {
+        let sessionEndTime = addMinutes(sessionTime, this.interval);
+        sessionTime = format(sessionTime, "HH:mm");
+        sessionEndTime = format(sessionEndTime, "HH:mm");
+        sessionTime = sessionTime + "-" + sessionEndTime;
+      }
       return sessionTime ? sessionTime : null;
     },
-    isMatched(each, i) {
+    isMatched(eachHourRow, i) {
       let matchedSession = null;
       let partnerUsername = null;
 
-      matchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+      matchedSession = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
 
       if (!matchedSession) return;
       console.log("@isMatched, session: ", matchedSession);
@@ -325,36 +311,36 @@ export default {
       return partnerUsername;
     },
 
-    returnBestBookedToMatch(each, i, type) {
+    returnBestBookedToMatch(eachHourRow, i, type) {
       let bestBookedToMatch;
       if (
-        each.timeRowDays &&
-        each.timeRowDays.length &&
-        each.timeRowDays[i] &&
-        each.timeRowDays[i][type] &&
-        each.timeRowDays[i][type].length
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i] &&
+        eachHourRow.hourRowDays[i][type] &&
+        eachHourRow.hourRowDays[i][type].length
       ) {
         // perform all sorts of check later
         // right now just return the first one
-        bestBookedToMatch = each.timeRowDays[i][type][0];
+        bestBookedToMatch = eachHourRow.hourRowDays[i][type][0];
       }
 
-      return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
+      return bestBookedToMatch ? bestBookedToMatch.dateTime : null;
 
       // The one person chosen from the list should be best match, or then
       // the first one, or a random one
     },
-    unmatchedBookedPeopleExist(each, i) {
+    unmatchedBookedPeopleExist(eachHourRow, i) {
       let unmatchedBookedPeople = false;
       if (
-        each.timeRowDays &&
-        each.timeRowDays.length &&
-        each.timeRowDays[i] &&
-        each.timeRowDays[i]["bookedPeopleOnTime"] &&
-        each.timeRowDays[i]["bookedPeopleOnTime"].length &&
-        each.timeRowDays[i]["bookedPeopleOnTime"].length > 0
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i] &&
+        eachHourRow.hourRowDays[i]["bookedPeopleOnTime"] &&
+        eachHourRow.hourRowDays[i]["bookedPeopleOnTime"].length &&
+        eachHourRow.hourRowDays[i]["bookedPeopleOnTime"].length > 0
       ) {
-        let bookedPeople = each.timeRowDays[i]["bookedPeopleOnTime"];
+        let bookedPeople = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"];
 
         // Check that unmatched; if even one is found, good enough
         bookedPeople.forEach((person) => {
@@ -369,19 +355,19 @@ export default {
       }
       return unmatchedBookedPeople;
     },
-    returnUnmatchedBookedPeople(each, i) {
+    returnUnmatchedBookedPeople(eachHourRow, i) {
       let unmatchedPerson = null;
       let unmatchedPersonName = null;
       if (
-        each.timeRowDays &&
-        each.timeRowDays.length &&
-        each.timeRowDays[i] &&
-        each.timeRowDays[i]["bookedPeopleOnTime"] &&
-        each.timeRowDays[i]["bookedPeopleOnTime"].length
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i] &&
+        eachHourRow.hourRowDays[i]["bookedPeopleOnTime"] &&
+        eachHourRow.hourRowDays[i]["bookedPeopleOnTime"].length
       ) {
         // perform all sorts of check later
         // right now just return the first one
-        let bookedPeople = each.timeRowDays[i]["bookedPeopleOnTime"];
+        let bookedPeople = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"];
 
         bookedPeople.forEach((person) => {
           if (
@@ -404,11 +390,11 @@ export default {
 
       return unmatchedPersonName;
     },
-    getPersonBookedHere(each, i) {
+    getPersonBookedHere(eachHourRow, i) {
       let unmatchedSession = null;
       let partnerUsername = null;
 
-      unmatchedSession = each.timeRowDays[i]["bookedPeopleOnTime"][0];
+      unmatchedSession = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"][0];
 
       if (!unmatchedSession) return;
       console.log("@getPersonBookedHere, session: ", unmatchedSession);
@@ -421,8 +407,8 @@ export default {
       console.log("partnerUsername", partnerUsername);
       return partnerUsername;
     },
-    // getPersonBookedHereString(each, i) {
-    //   unmatchedSession = each.timeRowDays[i]["bookedSessionsOnTime"][0];
+    // getPersonBookedHereString(eachHourRow, i) {
+    //   unmatchedSession = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
     // },
   },
 };
@@ -626,6 +612,8 @@ export default {
   background-color: #ebecfb;
   color: #5600ff;
   font-size: 17px;
+  outline: none;
+  border: none;
 }
 
 .join-session:hover,

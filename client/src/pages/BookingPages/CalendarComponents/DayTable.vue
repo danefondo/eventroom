@@ -19,7 +19,6 @@
     </thead>
     <tbody>
       <!-- renderGrid -->
-      <!-- <tr v-for="(each, index) in getTimes" :key="index"> -->
       <tr
         v-for="(each, index) in calendarData"
         :key="index"
@@ -124,21 +123,13 @@
 </template>
 
 <script>
-import moment from "moment";
 import { mapState } from "vuex";
 
 import { isBefore } from "date-fns";
 
 export default {
   name: "Table",
-  props: [
-    "dates",
-    "start",
-    "end",
-    "calendarData",
-    "rowNumberForWeekOrDay",
-    "weekdayNum",
-  ],
+  props: ["dates", "calendarData", "rowNumberForWeekOrDay"],
   data() {
     return {
       interval: 60,
@@ -152,28 +143,6 @@ export default {
     ...mapState({
       user: (state) => state.auth.user,
     }),
-    calendarCaption() {
-      let caption = `${this.start.month}, ${this.start.date} - `;
-      if (this.start.month == this.end.month) {
-        caption += this.end.date;
-      } else {
-        caption += `${this.end.month}, ${this.end.date}`;
-      }
-      return caption;
-    },
-    getTimes() {
-      let min = this.minimumTime;
-      let max = this.maximumTime;
-      const time = moment(min, "HH:mm");
-      const maxTime = moment(max, "HH:mm");
-      const times = [];
-      do {
-        times.push(time.format("HH:mm"));
-        time.add(this.interval, "minutes");
-      } while (time.isSameOrBefore(maxTime));
-      console.log("times", times);
-      return times;
-    },
     getHeights() {
       let height = this.height - 20;
       let heights = `line-height:${this.height}px; height:${height}px;`;
@@ -205,15 +174,15 @@ export default {
     },
     // checkIfPastDay(each, i) {
     isPastDay(each) {
-      // is day box time before current moment
+      // is day box time before current time
       let isPastDay = false;
 
-      each.timeRowDay.startTime;
-      let startHour = each.timeRowDay.startTime.split(":")[0];
+      each.timeRowDays[0].startHour;
+      let startHour = each.timeRowDays[0].startHour.split(":")[0];
       let dayBoxDate = new Date(
-        each.timeRowDay.year,
-        each.timeRowDay.month - 1,
-        each.timeRowDay.date,
+        each.timeRowDays[0].year,
+        each.timeRowDays[0].month - 1,
+        each.timeRowDays[0].date,
         startHour
       );
       let now = new Date();
@@ -274,13 +243,13 @@ export default {
     },
     bookedSessionTime(each) {
       let session = each.timeRowDay["bookedSessionsOnTime"][0];
-      let sessionTime = session.queryDateTime;
+      let sessionTime = session.dateTime;
 
       return sessionTime ? sessionTime : null;
     },
     bookedPersonTime(each) {
       let session = each.timeRowDay["bookedPeopleOnTime"][0];
-      let sessionTime = session.queryDateTime;
+      let sessionTime = session.dateTime;
 
       return sessionTime ? sessionTime : null;
     },
@@ -317,7 +286,7 @@ export default {
         // right now just return the first one
         bestBookedToMatch = each.timeRowDay[type][0];
       }
-      return bestBookedToMatch ? bestBookedToMatch.queryDateTime : null;
+      return bestBookedToMatch ? bestBookedToMatch.dateTime : null;
     },
 
     unmatchedBookedPeopleExist(each) {

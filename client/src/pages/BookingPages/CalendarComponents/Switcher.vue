@@ -32,20 +32,35 @@
 </template>
 
 <script>
-import { getDate, format, addDays, subDays } from "date-fns";
+import {
+  getDate,
+  format,
+  addDays,
+  subDays,
+  addWeeks,
+  subWeeks,
+} from "date-fns";
 
 export default {
   name: "Switcher",
-  props: ["currentStart", "currentSelectedDay", "start", "end", "week"],
+  props: [
+    "currentWeekStart",
+    "currentSelectedDay",
+    "weekStartDay",
+    "weekEndDay",
+    "week",
+  ],
   computed: {
     calendarCaption() {
       let caption;
       if (this.week) {
-        caption = `${this.start.month}, ${this.start.date} - `;
-        if (this.start.month == this.end.month) {
-          caption += this.end.date;
+        caption = `${this.weekStartDay.monthNameShort}, ${this.weekStartDay.dateNum} - `;
+        if (
+          this.weekStartDay.monthNameShort == this.weekEndDay.monthNameShort
+        ) {
+          caption += this.weekEndDay.dateNum;
         } else {
-          caption += `${this.end.month}, ${this.end.date}`;
+          caption += `${this.weekEndDay.monthNameShort}, ${this.weekEndDay.dateNum}`;
         }
       } else {
         let captionDateNum = getDate(this.currentSelectedDay);
@@ -69,22 +84,26 @@ export default {
       }
     },
     switchWeek(prevNext) {
-      let start = this.currentStart;
+      let week = this.currentWeekStart;
+      console.log("switchWeekBEFORE", week);
       if (prevNext === "forward") {
-        start.add("1", "week");
+        week = addWeeks(week, 1);
       } else {
-        start.subtract("1", "week");
+        week = subWeeks(week, 1);
       }
-      this.$emit("switchWeek", start);
+      console.log("switchWeekAFTERE", week);
+      this.$emit("switchWeek", week);
     },
     switchDay(prevNext) {
       let selectedDay = this.currentSelectedDay;
+      console.log("switchDayBEFORE", selectedDay);
 
       if (prevNext === "forward") {
         selectedDay = addDays(selectedDay, 1);
       } else {
         selectedDay = subDays(selectedDay, 1);
       }
+      console.log("switchDayAFTER", selectedDay);
       this.$emit("switchDay", selectedDay);
     },
     setToToday() {

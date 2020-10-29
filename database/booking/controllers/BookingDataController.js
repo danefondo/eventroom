@@ -10,21 +10,21 @@ function prepareErrors(error, errors) {
   return errors;
 }
 
-function mergeArrays(array1, array2) {
-  let mergedArray = [];
+// function mergeArrays(array1, array2) {
+//   let mergedArray = [];
 
-  [...array1, ...array2];
+//   [...array1, ...array2];
 
-  array1.forEach(function (object) {
-    mergedArray.push(object);
-  });
+//   array1.forEach(function (object) {
+//     mergedArray.push(object);
+//   });
 
-  array2.forEach(function (object) {
-    mergedArray.push(object);
-  });
+//   array2.forEach(function (object) {
+//     mergedArray.push(object);
+//   });
 
-  return mergedArray;
-}
+//   return mergedArray;
+// }
 
 function removeOwnSessionsFromArray(sessionsArray, userId) {
   /* ===== 
@@ -188,7 +188,9 @@ function getBestRandomMatch(
 function filterAvailableSessionsForSlot(availableSessions, slot) {
   let filteredAvailableSessions = [];
   availableSessions.forEach((session) => {
-    if (session.dateTime.valueOf() == slot.dateTime.valueOf()) {
+    let sessionDateTime = new Date(session.dateTime);
+    let slotDateTime = new Date(slot.dateTime);
+    if (sessionDateTime.valueOf() == slotDateTime.valueOf()) {
       filteredAvailableSessions.push(session);
     }
   });
@@ -339,6 +341,71 @@ const BookingDataController = {
       throw { errors: errors };
     }
     return allBookedSessions;
+  },
+
+  async cancelSession(sessionData) {
+    // find session
+    // remove user id
+    // delete eventroom?
+    // update for everyone (other match if exists and that it becomes available for others)
+    // if no one left, DELETE
+    let sessionId = sessionData.sessionId;
+    let userId = sessionData.userId;
+    let errors = {};
+    let canceledSession = null;
+    let sessionHasMatch = false;
+    let noAccess = false;
+
+    try {
+      // sessionId = mongoose.Types.ObjectId(sessionId);
+      canceledSession = await SessionModel.findById(sessionId).exec();
+      console.log("found session to cancel", canceledSession);
+
+      // Check if is a matched session
+      if (canceledSession.firstPartnerId && canceledSession.secondPartnerId) {
+        // Ensure user is one of the matched partners
+        if (
+          canceledSession.firstPartnerId == userId ||
+          canceledSession.secondPartnerId == userId
+        ) {
+          sessionHasMatch = true;
+        } else {
+          noAccess = true;
+        }
+      }
+
+      // If no match, just delete the session & eventroom
+      if (!sessionHasMatch && !noAccess) {
+        let eventroomId = canceledSession.eventroomId;
+        await EventroomModel.findOneAndDelete({ _id: eventroomId }).exec();
+        await canceledSession.deleteOne();
+        // set to null to differentiate on front-end
+        canceledSession = 1;
+      } else if (sessionHasMatch && !noAccess) {
+        if (canceledSession.firstPartnerId == userId) {
+          canceledSession.firstPartnerId = undefined;
+          canceledSession.firstPartnerUsername = undefined;
+          canceledSession.sessionThroughMatching = undefined;
+          // canceledSession.firstPartnerFirstName = undefined;
+          // canceledSession.firstPartnerLastName = undefined;
+          // canceledSession.firstPartnerDisplayName = undefined;
+          // canceledSession.firstPartnerProfileImageUrl = undefined;
+        } else if (canceledSession.secondPartnerId == userId) {
+          canceledSession.secondPartnerId = undefined;
+          canceledSession.secondPartnerUsername = undefined;
+          canceledSession.sessionThroughMatching = undefined;
+          // canceledSession.secondPartnerFirstName = undefined;
+          // canceledSession.secondPartnerLastName = undefined;
+          // canceledSession.secondPartnerDisplayName = undefined;
+          // canceledSession.secondPartnerProfileImageUrl = undefined;
+        }
+        await canceledSession.save();
+      }
+    } catch (error) {
+      errors = prepareErrors(error, errors);
+      throw { errors: errors };
+    }
+    return canceledSession;
   },
 
   // Rather than updating each user individually

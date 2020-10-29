@@ -70,5 +70,16 @@ const BookingController = {
     await processPostRequest(req, res, controller, options);
     return;
   },
+
+  async cancelSession(req, res) {
+    const options = {
+      validate: ["userId", "sessionId"],
+      funcToRun: "cancelSession",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
 };
 module.exports = BookingController;

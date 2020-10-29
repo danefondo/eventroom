@@ -8,6 +8,7 @@ const getDefaultState = () => {
       dateTime: null,
     },
     selectedToBook: [],
+    isCancelingSlots: [],
   };
 };
 
@@ -39,6 +40,22 @@ const mutations = {
     state.selectedToBook.splice(index, 1);
   },
 
+  setIsCanceling(state, slotData) {
+    state.isCancelingSlots.push(slotData);
+  },
+
+  exitIsCanceling(state, slotData) {
+    let index = state.isCancelingSlots.findIndex(
+      (slot) => slot.dateTime.valueOf() === slotData.dateTime.valueOf()
+    );
+
+    state.isCancelingSlots.splice(index, 1);
+  },
+
+  clearAllCanceling(state) {
+    state.isCancelingSlots = [];
+  },
+
   clearAllSelections(state) {
     state.selectedToBook = [];
   },
@@ -62,8 +79,20 @@ const actions = {
     state.commit("cancelSlot", slotData);
   },
 
+  setIsCanceling(state, slotData) {
+    state.commit("setIsCanceling", slotData);
+  },
+
+  exitIsCanceling(state, slotData) {
+    state.commit("exitIsCanceling", slotData);
+  },
+
   clearAllSelections(state) {
     state.commit("clearAllSelections");
+  },
+
+  clearAllCanceling(state) {
+    state.commit("clearAllCanceling");
   },
 };
 

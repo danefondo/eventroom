@@ -71,6 +71,13 @@
               class="booked-container"
             >
               <div class="booked-info">
+                <div
+                  class="selected-close"
+                  v-if="!userIsMatchedForSlot(eachHourRow, i)"
+                  @click="$emit('cancel-session', eachHourRow.hourRowDays[i])"
+                >
+                  x
+                </div>
                 <span class="booked-time">{{
                   bookedSessionTime(eachHourRow, i, "bookedSessionsOnTime")
                 }}</span>
@@ -86,14 +93,14 @@
                   </router-link>
                   <div
                     class="selected-close"
-                    @click="$emit('cancel-', eachHourRow.hourRowDays[i])"
+                    @click="$emit('set-canceling', eachHourRow.hourRowDays[i])"
                   >
                     x
                   </div>
                 </div>
                 <span v-else class="booked-title-unmatched"
-                  >Not yet matched...</span
-                >
+                  >Not yet matched...
+                </span>
               </div>
             </div>
             <div
@@ -140,6 +147,32 @@
                 </div>
               </div>
             </div>
+            <div
+              v-if="eachHourRow.hourRowDays[i].isCanceling"
+              :style="getSelectedHeights"
+              class="cancel-container"
+            >
+              <div class="cancel-info">
+                <span class="cancel-time">{{
+                  bookedSessionTime(eachHourRow, i, "bookedSessionsOnTime")
+                }}</span>
+                <div>
+                  <span class="cancel-title">Cancel session?</span>
+                  <div
+                    @click="$emit('exit-canceling', eachHourRow.hourRowDays[i])"
+                    class="cancel-buttons"
+                  >
+                    No
+                  </div>
+                  <div
+                    @click="$emit('cancel-session', eachHourRow.hourRowDays[i])"
+                    class="cancel-buttons cancel-button"
+                  >
+                    Yes
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </td>
       </tr>
@@ -158,7 +191,7 @@ export default {
   data() {
     return {
       interval: 60,
-      minimumTime: "08:00",
+      minimumTime: "00:00",
       maximumTime: "23:00",
       height: 100,
       selectedHeight: 100,
@@ -269,6 +302,7 @@ export default {
       let sessionTime = new Date(session.dateTime);
       if (sessionTime) {
         let sessionEndTime = addMinutes(sessionTime, this.interval);
+        console.log("sestime", sessionTime);
         sessionTime = format(sessionTime, "HH:mm");
         sessionEndTime = format(sessionEndTime, "HH:mm");
         sessionTime = sessionTime + "-" + sessionEndTime;
@@ -621,6 +655,154 @@ export default {
   background-color: #b4b8b9;
 }
 
+.cancel-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  width: 100%;
+}
+
+.cancel-session {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  padding: 2px 12px;
+  border-radius: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #bfc0d0;
+  background-color: #fbeaee;
+  color: #5600ff;
+  font-size: 17px;
+  outline: none;
+  border: none;
+}
+
+.cancel-session {
+  bottom: 6px;
+  top: unset;
+  background-color: #fbeaef;
+  font-size: 16px;
+  padding: 6px 12px;
+  left: 7px;
+  right: 7px;
+}
+
+.cancel-info {
+  background-color: #fafafc;
+  flex-direction: column;
+  justify-content: space-around;
+  height: 88%;
+  border: 1px solid #d8d8d833;
+  width: 95%;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  position: relative;
+}
+
+.cancel-time {
+  color: #c0c0d0;
+  /* background-color: #dcdfe0; */
+  padding: 1px 6px;
+  border-radius: 360px;
+  font-size: 12px !important;
+  font-weight: bold;
+  color: #b7b7ca;
+  margin-right: auto;
+  left: 0;
+  font-weight: 800;
+  position: absolute;
+  top: 11px;
+  left: 6px;
+  font-weight: 800;
+  left: 8px;
+}
+
+.cancel-title {
+  font-weight: 700;
+  text-transform: capitalize;
+  position: absolute;
+  color: #5600ffe0;
+  left: 0;
+  right: 0;
+  top: 29px;
+  font-size: 18px;
+}
+
+.cancel-buttons {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  padding: 2px 12px;
+  border-radius: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #bfc0d0;
+  background-color: #fbeaee;
+  color: #5600ff;
+  font-size: 17px;
+  outline: none;
+  border: none;
+  bottom: 9px;
+  top: unset;
+  background-color: #eaedfb;
+  font-size: 16px;
+  padding: 4px 12px;
+  left: 7px;
+  width: 46px;
+}
+
+.cancel-button {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 5px;
+  padding: 2px 12px;
+  border-radius: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #bfc0d0;
+  background-color: #fbeaee;
+  color: #5600ff;
+  font-size: 17px;
+  outline: none;
+  border: none;
+  bottom: 9px;
+  top: unset;
+  background-color: #eaedfb;
+  font-size: 16px;
+  padding: 4px 12px;
+  left: 7px;
+  width: 46px;
+  right: 7px;
+  left: unset;
+  background-color: #fbeaef;
+  color: #5600ff;
+}
+
+.cancel-buttons:hover {
+  background-color: #b4b8b9;
+}
+
+/* .cancel-title {
+  color: #6c7592;
+  color: #5c6992; 
+  color: #53568a; 
+  color: #4b4f8c; 
+} */
+
+/* #eaeaef */
+
 .past-container {
   display: flex;
   align-items: center;
@@ -664,5 +846,9 @@ export default {
   justify-content: center;
   position: absolute;
   width: 100%;
+}
+
+.cancelSelectContainer {
+  position: relative;
 }
 </style>

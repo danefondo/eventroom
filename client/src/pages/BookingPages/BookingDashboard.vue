@@ -35,19 +35,11 @@
           :week="week"
           @select-slot="selectSlot"
           @cancel-slot="cancelSlot"
+          @cancel-session="cancelSession"
+          @set-canceling="setIsCanceling"
+          @exit-canceling="exitIsCanceling"
           @book-slot="setSelectAndBook"
         />
-        <!-- <DayTable
-          v-else-if="weekDates && weekStartDay && weekEndDay && !week"
-          :weekDates="weekDates"
-          :weekStartDay="weekStartDay"
-          :weekEndDay="weekEndDay"
-          :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
-          :currentWeekStart="currentWeekStart"
-          :calendarData="calendarData"
-          @select-slot="selectSlot"
-          @cancel-slot="cancelSlot"
-        /> -->
       </div>
       <!-- <div class="sidebar">Random things</div> -->
       <div class="modal">
@@ -171,7 +163,7 @@ export default {
       bookedSessions: [],
       bookedPeopleOnTime: [],
       interval: 60,
-      minimumTime: "08:00",
+      minimumTime: "00:00",
       maximumTime: "23:00",
       height: 100,
       calendarData: [],
@@ -237,6 +229,7 @@ export default {
 
     this.$socket.emit("joinCofocusCalendar", "cofocus");
     this.startReceivingPushedSessions();
+    this.startReceivingCanceledSessions();
 
     let globalThis = this;
     window.onbeforeunload = () => {
@@ -317,6 +310,85 @@ export default {
         });
       });
     },
+
+    startReceivingCanceledSessions() {
+      // someone else cancels
+      // for the receiver
+      // it is either a session with them in bookedSessionsOnTime
+      // OR it is a standalone session of someone else
+
+      // therefore, first check is if it affects me
+      // then if not, just remove it from the list
+
+      // for everyone else
+      // is is going to be someone in bookedPeople who is going to lose one of the matches
+      // making ONE person somewhere available
+      this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
+        sessions.forEach((session) => {
+          this.calendarData.forEach((hourRow) => {
+            hourRow.hourRowDays.forEach((day) => {
+              let sessionDateTime = new Date(session.sessionDateTime);
+              if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
+                if (!session.noMatchSession) {
+                  // If one of user's sessions (e.g. matched), update with new
+                  day.bookedSessionsOnTime.forEach((calendarSession) => {
+                    if (calendarSession._id == session.sessionId) {
+                      if (
+                        calendarSession.firstPartnerId &&
+                        calendarSession.secondPartnerId
+                      ) {
+                        if (
+                          calendarSession.firstPartnerId == this.user._id ||
+                          calendarSession.secondPartnerId == this.user._id
+                        ) {
+                          this.removeOnePartnerFromSession(
+                            calendarSession,
+                            this.user._id
+                          );
+                        } else if (
+                          calendarSession.firstPartnerId !== this.user._id ||
+                          (calendarSession.secondPartnerId !== this.user._id &&
+                            (calendarSession.firstPartnerId ==
+                              session.cancelerId ||
+                              calendarSession.secondPartnerId ==
+                                session.cancelerId))
+                        ) {
+                          console.log("YOOOOOO", session.cancelerId);
+                          this.removeOnePartnerFromSession(
+                            calendarSession,
+                            session.cancelerId
+                          );
+                        }
+                      }
+                    }
+                  });
+                } else {
+                  // if was empty, then remove it from bookedPeople
+                  day.bookedPeopleOnTime.forEach((personSession, index) => {
+                    if (personSession._id == session.sessionId) {
+                      day.bookedPeopleOnTime.splice(index, 1);
+                    }
+                  });
+                }
+              }
+            });
+          });
+        });
+      });
+    },
+
+    removeOnePartnerFromSession(calendarSession, userId) {
+      if (calendarSession.firstPartnerId == userId) {
+        this.$set(calendarSession, "sessionThroughMatching", false);
+        this.$set(calendarSession, "secondPartnerId", null);
+        this.$set(calendarSession, "secondPartnerUsername", null);
+      } else if (calendarSession.secondPartnerId == userId) {
+        this.$set(calendarSession, "sessionThroughMatching", false);
+        this.$set(calendarSession, "firstPartnerId", null);
+        this.$set(calendarSession, "firstPartnerUsername", null);
+      }
+    },
+
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       this.sockets.unsubscribe("receivePushedSessions");
 
@@ -448,10 +520,73 @@ export default {
         this.gettingBookedSessionsForOneDayError = true;
       }
     },
+
+    async cancelSession(slotData) {
+      let errors = {};
+      let slot = slotData["bookedSessionsOnTime"][0];
+      let sessionId = slot._id;
+      try {
+        let sendData = {
+          userId: this.user._id,
+          sessionId: sessionId,
+        };
+        console.log("CANCEL STUFF??", sendData);
+        const response = await requestWithAuthentication(
+          `post`,
+          `api/booking/cancelSession`,
+          sendData
+        );
+        console.log("response from canceled", response);
+        let session = response.data.result;
+        if (!session) {
+          errors.FailedToCancelSession = true;
+          throw { errors: errors };
+        }
+
+        if (response.data.success) {
+          // For cancel receiver to quickly filter to the right session
+          this.exitIsCanceling(slotData);
+          let noMatchSession = false;
+          let sessions = [];
+          let sessionDateTime = slot.dateTime;
+          if (
+            response.data.result._id &&
+            response.data.result._id == sessionId
+          ) {
+            this.updateCalendarAfterCancel(
+              sessionId,
+              sessionDateTime,
+              response.data.result
+            );
+          } else if (response.data.result == 1) {
+            noMatchSession = true;
+            this.updateCalendarAfterCancel(sessionId, sessionDateTime);
+          }
+          let deletedSession = {
+            sessionId: sessionId,
+            sessionDateTime: sessionDateTime,
+            cancelerId: this.user._id,
+          };
+          if (noMatchSession) {
+            deletedSession.noMatchSession = noMatchSession;
+          }
+          sessions.push(deletedSession);
+          let sessionInfo = {
+            userId: this.user._id,
+            sessions: sessions,
+            roomType: "cofocus",
+          };
+          this.$socket.emit("pushCanceledSessionsToOthers", sessionInfo);
+        }
+      } catch (error) {
+        console.log("errorCanceling", error);
+      }
+    },
+
     async bookSession(fromSidebarButton = false) {
       let errors = {};
       if (this.currentlyBookingSessions) return;
-      if (this.selectedToBook.length > 1) return;
+      // if (this.selectedToBook.length > 1) return;
       if (this.selectedToBook.length < 1) return;
       try {
         this.currentlyBookingSessions = true;
@@ -566,17 +701,54 @@ export default {
         hourRow.hourRowDays.forEach((day) => {
           let sessionDateTime = new Date(session.dateTime);
           if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
-            console.log("updatingCalendar3");
             if (
               session.firstPartnerId == this.user._id ||
               session.secondPartnerId == this.user._id
             ) {
               day.bookedSessionsOnTime.push(session);
-              this.bookedSessions.push(session); // ???
+              this.bookedSessions.push(session);
             } else {
               day.bookedPeopleOnTime.push(session);
               this.bookedPeopleOnTime.push(session);
             }
+          }
+        });
+      });
+    },
+
+    // scenario 1: I book an empty session, updates calendar succ
+    // scen 2: book existing session in bookedpeople, then must move session
+    // but problem is somewhere else, because else refresh would work
+
+    updateCalendarAfterCancel(sessionId, sessionDateTime, session = null) {
+      this.calendarData.forEach((hourRow) => {
+        hourRow.hourRowDays.forEach((day) => {
+          sessionDateTime = new Date(sessionDateTime);
+          if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
+            day.bookedSessionsOnTime.forEach((calendarSession, index) => {
+              if (calendarSession._id == sessionId) {
+                if (
+                  calendarSession.firstPartnerId &&
+                  calendarSession.secondPartnerId
+                ) {
+                  if (
+                    calendarSession.firstPartnerId == this.user._id ||
+                    calendarSession.secondPartnerId == this.user._id
+                  ) {
+                    // remove from one
+                    // push to the other
+                    day.bookedSessionsOnTime.splice(index, 1);
+                    if (session) {
+                      day.bookedPeopleOnTime.push(session);
+                    }
+                  }
+                } else {
+                  // just remove
+                  day.bookedSessionsOnTime.splice(index, 1);
+                }
+              }
+            });
+            // this.bookedSessions.push(session);
           }
         });
       });
@@ -849,26 +1021,54 @@ export default {
 
       slotData.isSelected = true;
 
-      this.updateCalendarSelectedSlots(slotData, slotData.isSelected);
+      this.updateCalendarSelectedSlots(slotData, slotData.isSelected, false, 0);
 
       slotData = JSON.parse(JSON.stringify(slotData));
       this.$store.dispatch("booking/selectSlot", slotData);
       // later add to array of SELECTED SLOTS
     },
+    setIsCanceling(slotData) {
+      slotData.isCanceling = true;
+
+      this.updateCalendarSelectedSlots(slotData, slotData.isCanceling, false, 1);
+
+      slotData = JSON.parse(JSON.stringify(slotData));
+      this.$store.dispatch("booking/setIsCanceling", slotData);
+      // later add to array of SELECTED SLOTS
+    },
+    exitIsCanceling(slotData) {
+      console.log("slotData", slotData);
+
+      slotData.isCanceling = false;
+      this.updateCalendarSelectedSlots(slotData, slotData.isCanceling, false, 1);
+
+      slotData = JSON.parse(JSON.stringify(slotData));
+      this.$store.dispatch("booking/exitIsCanceling", slotData);
+    },
+    
     cancelSlot(slotData) {
       console.log("slotData", slotData);
 
       slotData.isSelected = false;
-      this.updateCalendarSelectedSlots(slotData, slotData.isSelected);
+      this.updateCalendarSelectedSlots(slotData, slotData.isSelected, false, 0);
 
       slotData = JSON.parse(JSON.stringify(slotData));
       this.$store.dispatch("booking/cancelSlot", slotData);
     },
+
+    // exitAllCanceling() {
+    //    this.selectedToBook.forEach((slotData) => {
+    //     this.updateCalendarSelectedSlots(slotData, false, true, 0);
+    //   });
+
+    //   this.$store.dispatch("booking/clearAllCanceling");
+    // },
+
     cancelBooking() {
       console.log("canceling");
 
       this.selectedToBook.forEach((slotData) => {
-        this.updateCalendarSelectedSlots(slotData, false, true);
+        this.updateCalendarSelectedSlots(slotData, false, true, 0);
       });
 
       this.$store.dispatch("booking/clearAllSelections");
@@ -876,18 +1076,23 @@ export default {
     renderSavedSelectionsIfAny() {
       if (this.selectedToBook.length) {
         this.selectedToBook.forEach((slotData) => {
-          this.updateCalendarSelectedSlots(slotData);
+          this.updateCalendarSelectedSlots(slotData, true, false, 0);
         });
       }
     },
-    updateCalendarSelectedSlots(slotData, newSlotState, all = false) {
+    updateCalendarSelectedSlots(slotData, newSlotState, all = false, field) {
+      if (field == 0) {
+        field = "isSelected";
+      } else if (field == 1) {
+        field = "isCanceling"
+      }
       this.calendarData.forEach((hourRow) => {
         if (hourRow.slotStartTime == slotData.slotStartTime) {
           hourRow.hourRowDays.forEach((day) => {
             if (all) {
-              this.$set(day, "isSelected", newSlotState);
+              this.$set(day, field, newSlotState);
             } else if (day.dateTime.valueOf() == slotData.dateTime.valueOf()) {
-              this.$set(day, "isSelected", newSlotState);
+              this.$set(day, field, newSlotState);
             }
           });
         }

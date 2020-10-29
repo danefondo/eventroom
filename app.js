@@ -333,4 +333,14 @@ io.on("connection", function (socket) {
     socket.to(data.roomType).emit("receivePushedSessions", data.sessions);
     // io.removeAllListeners();
   });
+
+  socket.on("pushCanceledSessionsToOthers", function(data) {
+    if (!data || ! data.userId || !data.roomType || !data.sessions) {
+      // let response = "Session data missing";
+      return;
+      // return socket.emit("messageSendFailed", response);
+    }
+    socket.to(data.roomType).emit("receiveCanceledSessions", data.sessions);
+
+  })
 });

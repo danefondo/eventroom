@@ -12,8 +12,10 @@ router.post("/bookSessionSlot", BookingController.bookSessionSlot);
 
 router.post("/bookManySessionSlots", BookingController.bookManySessionSlots);
 
-/* Cancel a booked session */
 router.post("/cancelCalendarSlot", BookingController.cancelCalendarSlot);
+
+/* Cancel a booked session */
+router.post("/cancelSession", BookingController.cancelSession);
 
 /* Get all user's booked sessions */
 router.post(

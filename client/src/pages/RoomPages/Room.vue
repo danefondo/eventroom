@@ -126,6 +126,7 @@ export default {
       userId: (state) => state.auth.userId,
       ready: (state) => state.eventroom.ready,
       passwordNeedsMatching: (state) => state.eventroom.passwordNeedsMatching,
+      chat: (state) => state.toolbar.toolbarConfig.chat,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
     }),
@@ -332,6 +333,10 @@ export default {
         console.log("Received message", message);
         //- Wait for Vue to render element
         globalThis.$store.dispatch("chat/addMessage", message);
+        // if chat not open, set indicator
+        if (!this.chat) {
+          globalThis.$store.dispatch("toolbar/toggleChatIndicator", true);
+        }
       });
 
       // Failed sockets

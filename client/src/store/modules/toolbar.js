@@ -5,6 +5,7 @@ const getDefaultState = () => {
       info: false,
       participants: false,
       chat: false,
+      chatIndicator: false,
     },
 
     containersConfig: {
@@ -51,6 +52,10 @@ const mutations = {
       state.toolbarConfig[data.toolbarTool] = true;
     }
   },
+
+  toggleChatIndicator(state, newState) {
+    state.toolbarConfig.chatIndicator = newState;
+  }
 };
 
 // Asynchronous
@@ -66,6 +71,10 @@ const actions = {
   toggleToolbar(state, data) {
     state.commit("toggleToolbar", data);
   },
+
+  toggleChatIndicator(state, newState) {
+    state.commit("toggleChatIndicator", newState);
+  }
 };
 
 const toolbar = {

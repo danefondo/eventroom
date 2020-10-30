@@ -338,4 +338,9 @@ THIS MUST BE GLOBAL STYLE TO WORK WITH AUTO-LINKER TO PRODUCE LINKS
   bottom: 0px;
   right: 14px;
 }
+
+.dateTimeDisplay {
+  left: 14px;
+  right: unset;
+}
 </style>

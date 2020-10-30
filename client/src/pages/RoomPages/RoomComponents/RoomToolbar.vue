@@ -43,7 +43,7 @@
                   height="25"
                   ><IconChat
                 /></IconBase>
-                <div class="chat-indicator"></div>
+                <div v-if="chatIndicator" class="chat-indicator"></div>
               </div>
               <div class="tooltip tooltip--top tooltip--middle">
                 <span class="tooltip_tip">{{
@@ -161,6 +161,7 @@ export default {
       settings: (state) => state.toolbar.toolbarConfig.settings,
       info: (state) => state.toolbar.toolbarConfig.info,
       chat: (state) => state.toolbar.toolbarConfig.chat,
+      chatIndicator: (state) => state.toolbar.toolbarConfig.chatIndicator,
       participants: (state) => state.toolbar.toolbarConfig.participants,
       // connectionID: (state) => state.session.thisConnectionId,
       // sessionID: (state) => state.session.thisSessionId,
@@ -184,6 +185,9 @@ export default {
       console.log("thisAccess", this[toolbarTool]);
 
       if (toolbarTool) {
+        if (toolbarTool == "chat" && !this.chat) {
+          this.$store.dispatch("toolbar/toggleChatIndicator", false);
+        }
         data.boolean = !this[toolbarTool];
         this.$store.dispatch("toolbar/toggleToolbar", data);
       }

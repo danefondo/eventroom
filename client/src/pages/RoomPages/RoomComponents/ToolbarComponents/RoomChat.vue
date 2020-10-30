@@ -34,7 +34,7 @@ export default {
       awaitingTyping: false,
       nameExists: false,
       copiedState: false,
-      themeLogoColor: "#111158",
+      themeCoreColor: "#323b50",
     };
   },
   computed: {
@@ -45,7 +45,7 @@ export default {
       userId: (state) => state.auth.userId,
     }),
     styleSidebarTitle() {
-      return `color: ${this.themeLogoColor};`;
+      return `color: ${this.themeCoreColor};`;
     },
   },
   components: {
@@ -80,7 +80,8 @@ export default {
   text-transform: capitalize;
   width: calc(100% - 34px);
   margin-left: 1px;
-  color: #1e2f58;
+  /* color: #1e2f58; */
+  color: #323b50;
 }
 
 .sidebar-container {

@@ -46,7 +46,7 @@ export default {
       participantsList: (state) => state.participants.participantsData,
     }),
     styleSidebarTitle() {
-      return `color: ${this.themeLogoColor};`;
+      return `color: ${this.themeCoreColor};`;
     },
   },
   components: {
@@ -92,7 +92,8 @@ export default {
   text-transform: capitalize;
   width: calc(100% - 34px);
   margin-left: 1px;
-  color: #1e2f58;
+  /* color: #1e2f58; */
+  color: #323b50;
 }
 
 .sidebar-container {

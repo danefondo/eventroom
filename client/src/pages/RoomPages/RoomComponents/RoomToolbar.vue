@@ -140,7 +140,9 @@ export default {
       chatIcon: chatIcon,
       groupIcon: groupIcon,
       themeBorderColor: "#e8e8e9",
-      themeLogoColor: "#111158",
+      // themeLogoColor: "#111158",
+      themeCoreColor: "#323b50",
+      themeLogoColor: "#323b50",
       //   toolbarConfiguration: [],
       //   toolOpened: false,
       //   openedComponent: "",
@@ -167,7 +169,7 @@ export default {
       // sessionID: (state) => state.session.thisSessionId,
     }),
     getCoreColor() {
-      return "#111158";
+      return this.themeCoreColor;
     },
     getThemeBorderColor() {
       return `color: ${this.themeBorderColor};`;

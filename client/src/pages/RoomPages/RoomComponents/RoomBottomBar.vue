@@ -230,10 +230,10 @@ export default {
       return "#1F3058";
     },
     getCoreColor() {
-      return "#07213A";
+      return "#323b50";
     },
     getMicSecondColor() {
-      return "#07213A";
+      return "#323b50";
     },
     getLeaveConfig() {
       let config = this.leaveConfig;
@@ -298,7 +298,8 @@ export default {
     },
     getSecondColor(icon) {
       console.log("icon", icon);
-      return "#111158";
+      // return "#111158";
+      return "#323b50";
       // let color;
       // if (this.userDesignPreferences[icon]["color"]) {
       //   color = this.userDesignPreferences[icon]["color"];

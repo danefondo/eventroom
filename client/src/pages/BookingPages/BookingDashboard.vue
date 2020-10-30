@@ -148,6 +148,7 @@ export default {
   name: "BookingDashboard",
   data() {
     return {
+      timer: "",
       selectedSlotName: "",
       selectedSlotDateTime: null,
       selectedSlotDateString: null,
@@ -228,169 +229,171 @@ export default {
     this.renderSavedSelectionsIfAny();
 
     this.$socket.emit("joinCofocusCalendar", "cofocus");
-    this.startReceivingPushedSessions();
-    this.startReceivingCanceledSessions();
+    // this.startReceivingPushedSessions();
+    // this.startReceivingCanceledSessions();
 
     let globalThis = this;
     window.onbeforeunload = () => {
       globalThis.cleanBeforeLeave();
     };
+
+    this.timer = setInterval(this.updateWeekViewData, 2000);
   },
   methods: {
-    startReceivingPushedSessions() {
-      this.sockets.subscribe("receivePushedSessions", (sessions) => {
-        sessions.forEach((session) => {
-          this.calendarData.forEach((hourRow) => {
-            hourRow.hourRowDays.forEach((day) => {
-              let sessionDateTime = new Date(session.dateTime);
-              if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
-                // later also check if all partners contains userId
-                if (session.sessionThroughMatching) {
-                  // If through matching, need not update, only change
-                  let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
-                  let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
+    // startReceivingPushedSessions() {
+    //   this.sockets.subscribe("receivePushedSessions", (sessions) => {
+    //     sessions.forEach((session) => {
+    //       this.calendarData.forEach((hourRow) => {
+    //         hourRow.hourRowDays.forEach((day) => {
+    //           let sessionDateTime = new Date(session.dateTime);
+    //           if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
+    //             // later also check if all partners contains userId
+    //             if (session.sessionThroughMatching) {
+    //               // If through matching, need not update, only change
+    //               let partnerOne = day.bookedSessionsOnTime[0].firstPartnerId;
+    //               let partnerTwo = day.bookedSessionsOnTime[0].secondPartnerId;
 
-                  // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
-                  if (partnerOne && partnerTwo) {
-                    // return if already matched
-                    return;
-                  } else if (
-                    partnerOne &&
-                    partnerOne == this.user._id &&
-                    !partnerTwo
-                  ) {
-                    // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
-                    let daySession = day.bookedSessionsOnTime[0];
+    //               // must check both in case it's a case where someone had canceled who was first partner, though could in backend set any single second partner as first partner
+    //               if (partnerOne && partnerTwo) {
+    //                 // return if already matched
+    //                 return;
+    //               } else if (
+    //                 partnerOne &&
+    //                 partnerOne == this.user._id &&
+    //                 !partnerTwo
+    //               ) {
+    //                 // can set direct without further comparison since rest is handled in server (e.g. making sure second partner is second partner if first is you)
+    //                 let daySession = day.bookedSessionsOnTime[0];
 
-                    this.$set(
-                      daySession,
-                      "secondPartnerId",
-                      session.secondPartnerId
-                    );
+    //                 this.$set(
+    //                   daySession,
+    //                   "secondPartnerId",
+    //                   session.secondPartnerId
+    //                 );
 
-                    this.$set(
-                      daySession,
-                      "secondPartnerUsername",
-                      session.secondPartnerUsername
-                    );
-                  } else if (
-                    partnerTwo &&
-                    partnerTwo == this.user._id &&
-                    !partnerOne
-                  ) {
-                    let daySession = day.bookedSessionsOnTime[0];
+    //                 this.$set(
+    //                   daySession,
+    //                   "secondPartnerUsername",
+    //                   session.secondPartnerUsername
+    //                 );
+    //               } else if (
+    //                 partnerTwo &&
+    //                 partnerTwo == this.user._id &&
+    //                 !partnerOne
+    //               ) {
+    //                 let daySession = day.bookedSessionsOnTime[0];
 
-                    this.$set(
-                      daySession,
-                      "firstPartnerId",
-                      session.firstPartnerId
-                    );
+    //                 this.$set(
+    //                   daySession,
+    //                   "firstPartnerId",
+    //                   session.firstPartnerId
+    //                 );
 
-                    this.$set(
-                      daySession,
-                      "firstPartnerUsername",
-                      session.firstPartnerUsername
-                    );
-                  }
-                }
-                if (
-                  !session.sessionThroughMatching &&
-                  (session.firstPartnerId == this.user._id ||
-                    session.secondPartnerId == this.user._id)
-                ) {
-                  day.bookedSessionsOnTime.push(session);
-                  this.bookedSessions.push(session);
-                } else if (!session.sessionThroughMatching) {
-                  day.bookedPeopleOnTime.push(session);
-                  this.bookedPeopleOnTime.push(session);
-                }
-              }
-            });
-          });
-        });
-      });
-    },
+    //                 this.$set(
+    //                   daySession,
+    //                   "firstPartnerUsername",
+    //                   session.firstPartnerUsername
+    //                 );
+    //               }
+    //             }
+    //             if (
+    //               !session.sessionThroughMatching &&
+    //               (session.firstPartnerId == this.user._id ||
+    //                 session.secondPartnerId == this.user._id)
+    //             ) {
+    //               day.bookedSessionsOnTime.push(session);
+    //               this.bookedSessions.push(session);
+    //             } else if (!session.sessionThroughMatching) {
+    //               day.bookedPeopleOnTime.push(session);
+    //               this.bookedPeopleOnTime.push(session);
+    //             }
+    //           }
+    //         });
+    //       });
+    //     });
+    //   });
+    // },
 
-    startReceivingCanceledSessions() {
-      // someone else cancels
-      // for the receiver
-      // it is either a session with them in bookedSessionsOnTime
-      // OR it is a standalone session of someone else
+    // startReceivingCanceledSessions() {
+    //   // someone else cancels
+    //   // for the receiver
+    //   // it is either a session with them in bookedSessionsOnTime
+    //   // OR it is a standalone session of someone else
 
-      // therefore, first check is if it affects me
-      // then if not, just remove it from the list
+    //   // therefore, first check is if it affects me
+    //   // then if not, just remove it from the list
 
-      // for everyone else
-      // is is going to be someone in bookedPeople who is going to lose one of the matches
-      // making ONE person somewhere available
-      this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
-        sessions.forEach((session) => {
-          this.calendarData.forEach((hourRow) => {
-            hourRow.hourRowDays.forEach((day) => {
-              let sessionDateTime = new Date(session.sessionDateTime);
-              if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
-                if (!session.noMatchSession) {
-                  // If one of user's sessions (e.g. matched), update with new
-                  day.bookedSessionsOnTime.forEach((calendarSession) => {
-                    if (calendarSession._id == session.sessionId) {
-                      if (
-                        calendarSession.firstPartnerId &&
-                        calendarSession.secondPartnerId
-                      ) {
-                        if (
-                          calendarSession.firstPartnerId == this.user._id ||
-                          calendarSession.secondPartnerId == this.user._id
-                        ) {
-                          this.removeOnePartnerFromSession(
-                            calendarSession,
-                            this.user._id
-                          );
-                        } else if (
-                          calendarSession.firstPartnerId !== this.user._id ||
-                          (calendarSession.secondPartnerId !== this.user._id &&
-                            (calendarSession.firstPartnerId ==
-                              session.cancelerId ||
-                              calendarSession.secondPartnerId ==
-                                session.cancelerId))
-                        ) {
-                          console.log("YOOOOOO", session.cancelerId);
-                          this.removeOnePartnerFromSession(
-                            calendarSession,
-                            session.cancelerId
-                          );
-                        }
-                      }
-                    }
-                  });
-                } else {
-                  // if was empty, then remove it from bookedPeople
-                  day.bookedPeopleOnTime.forEach((personSession, index) => {
-                    if (personSession._id == session.sessionId) {
-                      day.bookedPeopleOnTime.splice(index, 1);
-                    }
-                  });
-                }
-              }
-            });
-          });
-        });
-      });
-    },
+    //   // for everyone else
+    //   // is is going to be someone in bookedPeople who is going to lose one of the matches
+    //   // making ONE person somewhere available
+    //   this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
+    //     sessions.forEach((session) => {
+    //       this.calendarData.forEach((hourRow) => {
+    //         hourRow.hourRowDays.forEach((day) => {
+    //           let sessionDateTime = new Date(session.sessionDateTime);
+    //           if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
+    //             if (!session.noMatchSession) {
+    //               // If one of user's sessions (e.g. matched), update with new
+    //               day.bookedSessionsOnTime.forEach((calendarSession) => {
+    //                 if (calendarSession._id == session.sessionId) {
+    //                   if (
+    //                     calendarSession.firstPartnerId &&
+    //                     calendarSession.secondPartnerId
+    //                   ) {
+    //                     if (
+    //                       calendarSession.firstPartnerId == this.user._id ||
+    //                       calendarSession.secondPartnerId == this.user._id
+    //                     ) {
+    //                       this.removeOnePartnerFromSession(
+    //                         calendarSession,
+    //                         this.user._id
+    //                       );
+    //                     } else if (
+    //                       calendarSession.firstPartnerId !== this.user._id ||
+    //                       (calendarSession.secondPartnerId !== this.user._id &&
+    //                         (calendarSession.firstPartnerId ==
+    //                           session.cancelerId ||
+    //                           calendarSession.secondPartnerId ==
+    //                             session.cancelerId))
+    //                     ) {
+    //                       console.log("YOOOOOO", session.cancelerId);
+    //                       this.removeOnePartnerFromSession(
+    //                         calendarSession,
+    //                         session.cancelerId
+    //                       );
+    //                     }
+    //                   }
+    //                 }
+    //               });
+    //             } else {
+    //               // if was empty, then remove it from bookedPeople
+    //               day.bookedPeopleOnTime.forEach((personSession, index) => {
+    //                 if (personSession._id == session.sessionId) {
+    //                   day.bookedPeopleOnTime.splice(index, 1);
+    //                 }
+    //               });
+    //             }
+    //           }
+    //         });
+    //       });
+    //     });
+    //   });
+    // },
 
-    removeOnePartnerFromSession(calendarSession, userId) {
-      if (calendarSession.firstPartnerId == userId) {
-        this.$set(calendarSession, "sessionThroughMatching", false);
-        this.$set(calendarSession, "secondPartnerId", null);
-        this.$set(calendarSession, "secondPartnerUsername", null);
-      } else if (calendarSession.secondPartnerId == userId) {
-        this.$set(calendarSession, "sessionThroughMatching", false);
-        this.$set(calendarSession, "firstPartnerId", null);
-        this.$set(calendarSession, "firstPartnerUsername", null);
-      }
-    },
+    // removeOnePartnerFromSession(calendarSession, userId) {
+    //   if (calendarSession.firstPartnerId == userId) {
+    //     this.$set(calendarSession, "sessionThroughMatching", false);
+    //     this.$set(calendarSession, "secondPartnerId", null);
+    //     this.$set(calendarSession, "secondPartnerUsername", null);
+    //   } else if (calendarSession.secondPartnerId == userId) {
+    //     this.$set(calendarSession, "sessionThroughMatching", false);
+    //     this.$set(calendarSession, "firstPartnerId", null);
+    //     this.$set(calendarSession, "firstPartnerUsername", null);
+    //   }
+    // },
 
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
-      this.sockets.unsubscribe("receivePushedSessions");
+      // this.sockets.unsubscribe("receivePushedSessions");
 
       // this.resetData();
       if (fromBeforeLeave && next !== null) {
@@ -435,7 +438,7 @@ export default {
         this.gettingBookedSessionsError = true;
       }
     },
-    async getAllBookedUsersForSpecificWeek() {
+    async getAllBookedUsersForSpecificWeek(refresh = false) {
       // Get everyone's booked sessions for this week from this time forward (no past sessions)
       try {
         if (!this.user || !this.user._id) {
@@ -465,9 +468,15 @@ export default {
         if (response.data.success) {
           this.gettingAllBookedSessions = false;
 
-          allBookedSessions.forEach((session) => {
-            this.updateCalendarSessions(session);
-          });
+          if (refresh) {
+            allBookedSessions.forEach((session) => {
+              this.refreshCalendarSessions(session);
+            });
+          } else {
+            allBookedSessions.forEach((session) => {
+              this.updateCalendarSessions(session);
+            });
+          }
 
           // add rooms to vuex or local storage to display them in order of creation or in the order of chosen preference;
           // then display the rooms
@@ -547,7 +556,7 @@ export default {
           // For cancel receiver to quickly filter to the right session
           this.exitIsCanceling(slotData);
           let noMatchSession = false;
-          let sessions = [];
+          // let sessions = [];
           let sessionDateTime = slot.dateTime;
           if (
             response.data.result._id &&
@@ -570,13 +579,13 @@ export default {
           if (noMatchSession) {
             deletedSession.noMatchSession = noMatchSession;
           }
-          sessions.push(deletedSession);
-          let sessionInfo = {
-            userId: this.user._id,
-            sessions: sessions,
-            roomType: "cofocus",
-          };
-          this.$socket.emit("pushCanceledSessionsToOthers", sessionInfo);
+          // sessions.push(deletedSession);
+          // let sessionInfo = {
+          //   userId: this.user._id,
+          //   sessions: sessions,
+          //   roomType: "cofocus",
+          // };
+          // this.$socket.emit("pushCanceledSessionsToOthers", sessionInfo);
         }
       } catch (error) {
         console.log("errorCanceling", error);
@@ -618,15 +627,15 @@ export default {
           }
 
           // Prepare data for socket
-          let sessions = [];
-          sessions.push(session);
+          // let sessions = [];
+          // sessions.push(session);
 
-          let sessionInfo = {
-            userId: this.user._id,
-            sessions: sessions,
-            roomType: "cofocus",
-          };
-          this.$socket.emit("pushSessionsToOthers", sessionInfo);
+          // let sessionInfo = {
+          //   userId: this.user._id,
+          //   sessions: sessions,
+          //   roomType: "cofocus",
+          // };
+          // this.$socket.emit("pushSessionsToOthers", sessionInfo);
 
           this.currentlyBookingSessions = false;
         }
@@ -682,12 +691,12 @@ export default {
 
         this.cancelBooking();
 
-        let sessionsInfo = {
-          userId: this.user._id,
-          sessions: sessions,
-          roomType: "cofocus",
-        };
-        this.$socket.emit("pushSessionsToOthers", sessionsInfo);
+        // let sessionsInfo = {
+        //   userId: this.user._id,
+        //   sessions: sessions,
+        //   roomType: "cofocus",
+        // };
+        // this.$socket.emit("pushSessionsToOthers", sessionsInfo);
 
         this.currentlyBookingSessions = false;
       } catch (error) {
@@ -712,6 +721,37 @@ export default {
               this.bookedPeopleOnTime.push(session);
             }
           }
+        });
+      });
+    },
+
+    refreshCalendarSessions(session) {
+      this.calendarData.forEach((hourRow) => {
+        hourRow.hourRowDays.forEach((day) => {
+          let array1 = day.bookedSessionsOnTime;
+          let array2 = day.bookedPeopleOnTime;
+          while (array1.length > 0) {
+            array1.pop();
+          }
+
+          while (array2.length > 0) {
+            array2.pop();
+          }
+          this.$nextTick(function () {
+            let sessionDateTime = new Date(session.dateTime);
+            if (day.dateTime.valueOf() == sessionDateTime.valueOf()) {
+              if (
+                session.firstPartnerId == this.user._id ||
+                session.secondPartnerId == this.user._id
+              ) {
+                day.bookedSessionsOnTime.push(session);
+                this.bookedSessions.push(session);
+              } else {
+                day.bookedPeopleOnTime.push(session);
+                this.bookedPeopleOnTime.push(session);
+              }
+            }
+          });
         });
       });
     },
@@ -811,6 +851,16 @@ export default {
       this.renderSavedSelectionsIfAny();
       // this.initCalendar();
       // this.getCalendarTimes();
+    },
+    async updateWeekViewData() {
+      // this.getCalendarTimes();
+      await this.getAllBookedUsersForSpecificWeek(true);
+      this.renderSavedSelectionsIfAny();
+    },
+    async updateDayViewData() {
+      this.getCalendarTimes();
+      await this.getBookedSessionsForOneDay();
+      this.renderSavedSelectionsIfAny();
     },
     async setToToday() {
       this.currentWeekStart = startOfISOWeek(new Date());
@@ -1030,7 +1080,12 @@ export default {
     setIsCanceling(slotData) {
       slotData.isCanceling = true;
 
-      this.updateCalendarSelectedSlots(slotData, slotData.isCanceling, false, 1);
+      this.updateCalendarSelectedSlots(
+        slotData,
+        slotData.isCanceling,
+        false,
+        1
+      );
 
       slotData = JSON.parse(JSON.stringify(slotData));
       this.$store.dispatch("booking/setIsCanceling", slotData);
@@ -1040,12 +1095,17 @@ export default {
       console.log("slotData", slotData);
 
       slotData.isCanceling = false;
-      this.updateCalendarSelectedSlots(slotData, slotData.isCanceling, false, 1);
+      this.updateCalendarSelectedSlots(
+        slotData,
+        slotData.isCanceling,
+        false,
+        1
+      );
 
       slotData = JSON.parse(JSON.stringify(slotData));
       this.$store.dispatch("booking/exitIsCanceling", slotData);
     },
-    
+
     cancelSlot(slotData) {
       console.log("slotData", slotData);
 
@@ -1084,7 +1144,7 @@ export default {
       if (field == 0) {
         field = "isSelected";
       } else if (field == 1) {
-        field = "isCanceling"
+        field = "isCanceling";
       }
       this.calendarData.forEach((hourRow) => {
         if (hourRow.slotStartTime == slotData.slotStartTime) {

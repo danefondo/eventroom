@@ -298,17 +298,20 @@ export default {
       return partnerUsername;
     },
     bookedSessionTime(eachHourRow, i) {
+      let sessionTime = null;
       let session = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
-      let sessionTime = new Date(session.dateTime);
-      if (sessionTime) {
-        let sessionEndTime = addMinutes(sessionTime, this.interval);
-        console.log("sestime", sessionTime);
-        sessionTime = format(sessionTime, "HH:mm");
-        sessionEndTime = format(sessionEndTime, "HH:mm");
-        sessionTime = sessionTime + "-" + sessionEndTime;
+      if (session) {
+        sessionTime = new Date(session.dateTime);
+        if (sessionTime) {
+          let sessionEndTime = addMinutes(sessionTime, this.interval);
+          console.log("sestime", sessionTime);
+          sessionTime = format(sessionTime, "HH:mm");
+          sessionEndTime = format(sessionEndTime, "HH:mm");
+          sessionTime = sessionTime + "-" + sessionEndTime;
+        }
       }
 
-      return sessionTime ? sessionTime : null;
+      return sessionTime;
     },
     bookedPersonTime(eachHourRow, i) {
       let session = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"][0];

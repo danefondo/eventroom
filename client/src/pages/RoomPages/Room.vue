@@ -1,5 +1,5 @@
 <template>
-  <div
+  <div id="container"
     class="room-pass-verif"
     v-if="ready && passwordNeedsMatching === true && !passwordMatched"
   >

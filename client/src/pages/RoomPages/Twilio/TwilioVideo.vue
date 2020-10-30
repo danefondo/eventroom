@@ -1053,18 +1053,21 @@ When RemoteParticipant disconnects from the Room
 
 .no-remote-video {
   background-color: #eceff4;
+  background-color: #fbfbfb;
   border: 1px solid #e0e4f0;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 32px;
   color: #1e2f58;
+  color: #323c4f;
   font-weight: bold;
 }
 
 .side {
   width: 50%;
   padding: 25px 0px;
+  padding-top: 30px;
   display: flex;
   justify-content: center;
 }

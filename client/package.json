@@ -15,6 +15,7 @@
     "core-js": "^3.6.4",
     "date-fns": "^2.16.1",
     "detectrtc": "^1.4.1",
+    "gsap": "^3.5.1",
     "jwt-decode": "^2.2.0",
     "maxlength-contenteditable": "^1.0.1",
     "socket.io-client": "^2.3.0",

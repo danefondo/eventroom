@@ -124,7 +124,8 @@ export default {
       claiming: false,
       checkingNameError: "",
       checkingNameFailed: false,
-      themeCoreColor: "#111158",
+      // themeCoreColor: "#111158",
+      themeCoreColor: "#323b50",
     };
   },
   computed: {
@@ -136,7 +137,7 @@ export default {
       eventroom: (state) => state.eventroom.eventroomData,
     }),
     styleSidebarTitle() {
-      return `color: ${this.themeLogoColor};`;
+      return `color: ${this.themeCoreColor};`;
     },
     checkIfOwner() {
       let returnValue;
@@ -345,7 +346,8 @@ export default {
   text-transform: capitalize;
   width: calc(100% - 34px);
   margin-left: 1px;
-  color: #1e2f58;
+  /* color: #1e2f58; */
+  color: #323b50;
 }
 
 .sidebar-container {

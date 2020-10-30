@@ -25,7 +25,8 @@ export default {
   data() {
     return {
       cancelIcon: cancelIcon,
-      themeCoreColor: "#111158",
+      // themeCoreColor: "#111158",
+      themeCoreColor: "#323b50",
     };
   },
   // props: [""],
@@ -35,7 +36,7 @@ export default {
       settings: (state) => state.toolbar.toolbarConfig.settings,
     }),
     styleSidebarTitle() {
-      return `color: ${this.themeLogoColor};`;
+      return `color: ${this.themeCoreColor};`;
     },
     // eventroomSettingsLink
   },
@@ -71,7 +72,8 @@ export default {
   text-transform: capitalize;
   width: calc(100% - 34px);
   margin-left: 1px;
-  color: #1e2f58;
+  /* color: #1e2f58; */
+  color: #323b50;
 }
 
 .sidebar-container {

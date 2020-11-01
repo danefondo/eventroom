@@ -349,6 +349,7 @@ io.on("connection", function (socket) {
       // let response = "Session data missing";
       return;
     }
+    console.log("YO PAUSE DUDE");
     socket.to(roomId).emit("receivePauseTimer");
   });
 

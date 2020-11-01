@@ -40,7 +40,7 @@
       <div
         class="timer-icon"
         v-if="timerStarted && !timerPaused"
-        @click="pauseTimer"
+        @click="pauseTimer(false)"
       >
         <IconBase
           icon-name="pause"
@@ -54,7 +54,7 @@
       <div
         class="timer-icon"
         v-if="timerStarted && timerPaused"
-        @click="resumeTimer"
+        @click="resumeTimer(false)"
       >
         <IconBase
           icon-name="play"
@@ -74,25 +74,27 @@
       >
         Start
       </div>
-      <div class="timer-control-button reset" @click="resetTimer">Reset</div>
+      <div class="timer-control-button reset" @click="resetTimer(false)">
+        Reset
+      </div>
       <div
         v-if="timerContainerExpanded"
         class="timer-control-button quick-time"
-        @click="setAndStartTimerCustom(30)"
+        @click="setAndStartTimerCustom(30, false)"
       >
         30s
       </div>
       <div
         v-if="timerContainerExpanded"
         class="timer-control-button quick-time"
-        @click="setAndStartTimerCustom(60)"
+        @click="setAndStartTimerCustom(60, false)"
       >
         1m
       </div>
       <div
         v-if="timerContainerExpanded"
         class="timer-control-button quick-time"
-        @click="setAndStartTimerCustom(300)"
+        @click="setAndStartTimerCustom(300, false)"
       >
         5m
       </div>
@@ -231,7 +233,9 @@ export default {
       return "#323b50";
     },
     resetTimer(received = false) {
-      clearInterval(this.timerInterval);
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+      }
       this.countdownTime = 0;
       this.timerMinutes = 0;
       this.timerSeconds = 0;
@@ -245,9 +249,15 @@ export default {
     },
     pauseTimer(received = false) {
       // this.pausedTimerTime = this.countdownTime;
-      clearInterval(this.timerInterval);
+      if (this.timerInterval) {
+        console.log("YO CLEAR SHIT");
+        clearInterval(this.timerInterval);
+      }
+      console.log("YO PAUSE SHIT");
       this.timerPaused = true;
+      console.log("received", received);
       if (!received) {
+        console.log("YO SEND  SHIT");
         this.$socket.emit("pauseTimer", this.eventroom.eventroomId);
       }
     },
@@ -263,11 +273,13 @@ export default {
       }
     },
     setAndStartTimerCustom(seconds, received = false) {
-      this.resetTimer();
       this.timerMinutes = 0;
       this.timerSeconds = 0;
       this.timePassed = 0;
       this.countdownTime = seconds;
+      if (this.timerInterval) {
+        clearInterval(this.timerInterval);
+      }
       this.timerInterval = setInterval(() => (this.timePassed += 1), 1000);
       //   this.timerEndsTime = Date.now() + this.countdownTime;
       //   this.timerInterval = setInterval(
@@ -279,6 +291,7 @@ export default {
       this.timerContainerExpanded = false;
 
       if (!received) {
+        console.log("SENDING!!!!!!!!!!!", seconds);
         let data = {
           roomId: this.eventroom.eventroomId,
           time: seconds,
@@ -310,7 +323,7 @@ export default {
       // Have indicator that time is up or something
       // Also indicators and other sounds for
       // When time is soon to be up
-      this.resetTimer();
+      this.resetTimer(false);
     },
 
     // updateTimerForOthers() {
@@ -323,7 +336,7 @@ export default {
   watch: {
     timeLeft(newValue) {
       if (newValue === 0) {
-        this.resetTimer();
+        this.resetTimer(false);
       }
     },
     "$store.state.toolbar.timerConfig.resetTimer": function () {

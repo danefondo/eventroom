@@ -357,6 +357,7 @@ export default {
       });
 
       this.sockets.subscribe("receivePauseTimer", () => {
+        console.log("OK DUDE I WILL PAUSE");
         globalThis.$store.dispatch("toolbar/pauseTimer");
       });
 

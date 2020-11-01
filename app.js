@@ -102,8 +102,6 @@ app.get("*", function (req, res) {
 
 // SessionModel.deleteMany({}).exec();
 
-
-
 /* ====== SERVER SETUP ====== */
 
 let port = process.env.PORT;
@@ -116,13 +114,8 @@ let server = app.listen(port, function () {
   console.log("Server started on port " + port);
 });
 
-
-
-
-
 /* ====== SOCKET.IO SETUP ====== */
-var io = require('socket.io').listen(server);
-
+var io = require("socket.io").listen(server);
 
 /* ====== SOCKET.IO FUNCTIONS ====== */
 
@@ -324,7 +317,7 @@ io.on("connection", function (socket) {
   });
 
   socket.on("pushSessionsToOthers", function (data) {
-    if (!data || ! data.userId || !data.roomType || !data.sessions) {
+    if (!data || !data.userId || !data.roomType || !data.sessions) {
       // let response = "Session data missing";
       return;
       // return socket.emit("messageSendFailed", response);
@@ -334,13 +327,45 @@ io.on("connection", function (socket) {
     // io.removeAllListeners();
   });
 
-  socket.on("pushCanceledSessionsToOthers", function(data) {
-    if (!data || ! data.userId || !data.roomType || !data.sessions) {
+  socket.on("pushCanceledSessionsToOthers", function (data) {
+    if (!data || !data.userId || !data.roomType || !data.sessions) {
       // let response = "Session data missing";
       return;
       // return socket.emit("messageSendFailed", response);
     }
     socket.to(data.roomType).emit("receiveCanceledSessions", data.sessions);
+  });
 
-  })
+  socket.on("resetTimer", function (roomId) {
+    if (!roomId) {
+      // let response = "Session data missing";
+      return;
+    }
+    socket.to(roomId).emit("receiveResetTimer");
+  });
+
+  socket.on("pauseTimer", function (roomId) {
+    if (!roomId) {
+      // let response = "Session data missing";
+      return;
+    }
+    socket.to(roomId).emit("receivePauseTimer");
+  });
+
+  socket.on("resumeTimer", function (roomId) {
+    if (!roomId) {
+      // let response = "Session data missing";
+      return;
+    }
+    socket.to(roomId).emit("receiveResumeTimer");
+  });
+
+  socket.on("setAndStartTimerCustom", function (data) {
+    if (!data.roomId || !data.time) {
+      // let response = "Session data missing";
+      return;
+    }
+    console.log("TIME", data.time);
+    socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data.time);
+  });
 });

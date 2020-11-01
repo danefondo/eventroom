@@ -1,6 +1,7 @@
 <template>
   <div class="cofocus">
     <div class="wrapper">
+      <CalendarTimer />
       <div class="calendar">
         <Switcher
           v-if="weekStartDay && weekEndDay && currentWeekStart"
@@ -216,7 +217,7 @@ export default {
   components: {
     Switcher,
     Table,
-    // DayTable: () => import("./CalendarComponents/DayTable"),
+    CalendarTimer: () => import("./CalendarComponents/CalendarTimer"),
   },
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
@@ -237,7 +238,8 @@ export default {
       globalThis.cleanBeforeLeave();
     };
 
-    this.timer = setInterval(this.updateWeekViewData, 2000);
+    this.timer = setInterval(this.updateWeekViewData, 5000);
+
   },
   methods: {
     // startReceivingPushedSessions() {
@@ -469,6 +471,8 @@ export default {
           this.gettingAllBookedSessions = false;
 
           if (refresh) {
+            this.bookedSessions = [];
+            this.bookedPeopleOnTime = [];
             allBookedSessions.forEach((session) => {
               this.refreshCalendarSessions(session);
             });
@@ -793,6 +797,112 @@ export default {
         });
       });
     },
+
+    /*
+      options for setting timer
+
+      1. get all booked sessions
+      2. get earliest
+
+      If sessions
+      and every 15 minutes
+
+      what if new sessions come in?
+      yes data updates
+
+      if any sessions where date is
+
+      what am i trying to do?
+      start timer
+      when a session is 10m your time
+
+      every 5 minutes to accommodate for 25m sessions
+      ONLY if interval view is set to 25 or if you have 25m sessions
+
+      i have sessions list
+      they each have a date attached
+
+      - check if sessions
+        - account for next week first day
+        - on app mount, get all user sessions with start time of -1h from now until end of week + 1 day
+        - if those have sessions, get earliest
+        - set countdown
+
+      - cases for rechecking sessions
+
+    
+    */
+
+    // So quick rethink again of all of this
+    // 1. Check if user has sessions /
+    // 2. Most efficient way to get earliest date session
+
+    // getNextSession() {
+    //   // Get earliest date from array
+    //   let nextSession = null;
+
+    //   if (this.bookedSessions.length) {
+    //     let bookedSessions = [];
+    //     let bookedSessionTimes = [];
+    //     this.bookedSessions.forEach((session) => {
+    //       let sessionTimeInNumbers = new Date(session.dateTime).valueOf();
+    //       let sessionData = {
+    //         sessionTimeInNumbers: sessionTimeInNumbers,
+    //         sessionId: session._id,
+    //       };
+    //       bookedSessions.push(sessionData);
+    //       bookedSessionTimes.push(sessionTimeInNumbers);
+    //     });
+
+    //     let earliestSessionTimeInNumbers = Math.min(...bookedSessionTimes);
+    //     let nextSession = bookedSessions.find(
+    //       (s) => s.sessionTimeInNumbers.valueOf() === earliestSessionTimeInNumbers
+    //     );
+    //   }
+
+    //   return nextSession;
+    // },
+
+    // getTimeUntilNextSession() {
+    //   let nextSession = getNextSession();
+    //   if (!nextSession) {
+    //     return console.log("User has no sessions.");
+    //   }
+
+    //   let sessionAlreadyStarted = false;
+    //   let sessionAlreadyEnded = false;
+    //   let sessionIsTenMinutesToStart = false;
+    //   let sessionStartedLessThanFiveMinutesAgo = false;
+
+    //   if (sessionAlreadyStarted) {
+
+    //   }
+
+    //   // per re-check, must check if session still exists;
+
+    //   // once in 10 minute window
+    //   // continuously recheck / if any changes to sessions
+    //   // continuously check if time still correct / in sync?
+    //   // then check by the minute? or just watch for changes?
+
+    //   // check if session still exists
+
+    //   // resync timers
+
+    //   // start timer with value left until start time;
+
+    //   // calculate time until end of session (leave room for all intervals)
+    // },
+
+    // startCountDownUntilNextSession() {
+
+    // },
+
+    // checkIfUserStillInSession() {
+    //   // Get back in the session!
+    // },
+
+    // checkIfNextSessionStillExists() {},
 
     async toggleDayWeekView() {
       this.week = !this.week;
@@ -1166,6 +1276,7 @@ export default {
 .wrapper {
   display: flex;
   justify-content: space-between;
+  flex-direction: column;
   /* background-color: #f6f5f8; */
 }
 

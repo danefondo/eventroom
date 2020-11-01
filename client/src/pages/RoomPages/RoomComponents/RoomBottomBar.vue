@@ -6,6 +6,7 @@
           <i id="mic-icon" class="fas fa-microphone fa-xs">+ Invite</i>
         </button>
       </div> -->
+      <RoomBottomLeftBar />
       <div class="media-buttons" v-if="localStream || twilioLocalVideoTrack">
         <div
           class="tooltip_container"
@@ -191,6 +192,8 @@ import IconScreenshare from "../../../components/SVG/IconScreenshare";
 import IconPhone from "../../../components/SVG/IconPhone";
 // import { requestWithAuthentication } from "../../../config/api";
 
+import RoomBottomLeftBar from "./RoomBottomLeftBar";
+
 export default {
   name: "RoomBottomBar",
   data() {
@@ -254,6 +257,7 @@ export default {
     IconMicrophone,
     IconScreenshare,
     IconPhone,
+    RoomBottomLeftBar,
   },
   props: ["moreThanOneAndLessThanThreeInSession"],
   methods: {

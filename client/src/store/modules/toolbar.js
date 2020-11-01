@@ -8,6 +8,16 @@ const getDefaultState = () => {
       chatIndicator: false,
     },
 
+    timerConfig: {
+      timerOpen: false,
+      timerExpanded: false,
+
+      resetTimer: false,
+      pauseTimer: false,
+      resumeTimer: false,
+      setNewValue: 0,
+    },
+
     containersConfig: {
       leftSidebar: false,
     },
@@ -55,6 +65,30 @@ const mutations = {
 
   toggleChatIndicator(state, newState) {
     state.toolbarConfig.chatIndicator = newState;
+  },
+
+  toggleTimer(state) {
+    state.timerConfig.timerOpen = !state.timerConfig.timerOpen;
+  },
+
+  resetTimer(state) {
+    state.timerConfig.resetTimer = !state.timerConfig.resetTimer;
+  },
+
+  pauseTimer(state) {
+    state.timerConfig.pauseTimer = !state.timerConfig.pauseTimer;
+  },
+
+  resumeTimer(state) {
+    state.timerConfig.resumeTimer = !state.timerConfig.resumeTimer;
+  },
+
+  receiveSetAndStartTimerCustom(state, seconds) {
+    state.timerConfig.setNewValue = seconds;
+  },
+
+  resetTimerValue(state) {
+    state.timerConfig.setNewValue = 0;
   }
 };
 
@@ -74,6 +108,30 @@ const actions = {
 
   toggleChatIndicator(state, newState) {
     state.commit("toggleChatIndicator", newState);
+  },
+
+  toggleTimer(state) {
+    state.commit("toggleTimer");
+  },
+
+  resetTimer(state) {
+    state.commit("resetTimer");
+  },
+
+  pauseTimer(state) {
+    state.commit("pauseTimer");
+  },
+
+  resumeTimer(state) {
+    state.commit("resumeTimer");
+  },
+
+  receiveSetAndStartTimerCustom(state, seconds) {
+    state.commit("receiveSetAndStartTimerCustom", seconds);
+  },
+
+  resetTimerValue(state) {
+    state.commit("resetTimerValue");
   }
 };
 

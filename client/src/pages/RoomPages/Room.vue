@@ -1,5 +1,6 @@
 <template>
-  <div id="container"
+  <div
+    id="container"
     class="room-pass-verif"
     v-if="ready && passwordNeedsMatching === true && !passwordMatched"
   >
@@ -349,6 +350,26 @@ export default {
       this.sockets.subscribe("joinChatFail", (response) => {
         console.log("Massive fail", response);
       });
+
+
+      this.sockets.subscribe("receiveResetTimer", () => {
+        globalThis.$store.dispatch("toolbar/resetTimer");
+      });
+
+      this.sockets.subscribe("receivePauseTimer", () => {
+        globalThis.$store.dispatch("toolbar/pauseTimer");
+      });
+
+      this.sockets.subscribe("receiveResumeTimer", () => {
+        globalThis.$store.dispatch("toolbar/resumeTimer");
+      });
+
+      this.sockets.subscribe("receiveSetAndStartTimerCustom", (seconds) => {
+        globalThis.$store.dispatch("toolbar/setAndStartTimerCustom", seconds);
+      });
+
+
+
     },
     joinUserToChat() {
       let eventroomData = {

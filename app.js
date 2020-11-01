@@ -363,9 +363,9 @@ io.on("connection", function (socket) {
   socket.on("setAndStartTimerCustom", function (data) {
     if (!data.roomId || !data.time) {
       // let response = "Session data missing";
-      return;
+      return console.log("FUCKER", data);
     }
     console.log("TIME", data.time);
-    socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data.time);
+    socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data);
   });
 });

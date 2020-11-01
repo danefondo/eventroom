@@ -247,7 +247,6 @@ export default {
       // this.pausedTimerTime = this.countdownTime;
       clearInterval(this.timerInterval);
       this.timerPaused = true;
-      this.$socket.emit("pauseTimer", this.eventroom.eventroomId);
       if (!received) {
         this.$socket.emit("pauseTimer", this.eventroom.eventroomId);
       }
@@ -278,11 +277,12 @@ export default {
       this.timerStarted = true;
       this.timerPaused = false;
       this.timerContainerExpanded = false;
-      let data = {
-        roomId: this.eventroom.eventroomId,
-        time: seconds,
-      };
+
       if (!received) {
+        let data = {
+          roomId: this.eventroom.eventroomId,
+          time: seconds,
+        };
         this.$socket.emit("setAndStartTimerCustom", data);
       }
     },
@@ -299,10 +299,11 @@ export default {
       this.timerStarted = true;
       this.timerPaused = false;
       this.timerContainerExpanded = false;
-      this.$socket.emit("setAndStartTimerCustom", {
-        roomId: this.roomId,
+      let data = {
+        roomId: this.eventroom.eventroomId,
         time: this.countdownTime,
-      });
+      };
+      this.$socket.emit("setAndStartTimerCustom", data);
     },
 
     onTimesUp() {
@@ -338,6 +339,7 @@ export default {
     },
 
     "$store.state.toolbar.timerConfig.setNewValue": function () {
+      console.log("GOT THE CHANGE", this.timerNewValue);
       this.setAndStartTimerCustom(this.timerNewValue, true);
     },
   },

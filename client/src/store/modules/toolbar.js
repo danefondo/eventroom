@@ -83,8 +83,8 @@ const mutations = {
     state.timerConfig.resumeTimer = !state.timerConfig.resumeTimer;
   },
 
-  receiveSetAndStartTimerCustom(state, seconds) {
-    state.timerConfig.setNewValue = seconds;
+  setAndStartTimerCustom(state, data) {
+    state.timerConfig.setNewValue = data.time;
   },
 
   resetTimerValue(state) {
@@ -126,8 +126,8 @@ const actions = {
     state.commit("resumeTimer");
   },
 
-  receiveSetAndStartTimerCustom(state, seconds) {
-    state.commit("receiveSetAndStartTimerCustom", seconds);
+  setAndStartTimerCustom(state, data) {
+    state.commit("setAndStartTimerCustom", data);
   },
 
   resetTimerValue(state) {

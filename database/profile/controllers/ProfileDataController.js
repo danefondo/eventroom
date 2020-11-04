@@ -1,4 +1,4 @@
-const Profile = require("../models/ProfileModel");
+const User = require("../../user/models/UserModel");
 const TempUser = require("../../room/models/TempUserModel");
 const AccountSettings = require("../../settings/models/AccountSettingsModel");
 const mongoose = require("mongoose");
@@ -7,8 +7,7 @@ const ProfileDataController = {
   async updateProfileByUserId() {},
 
   async getProfileByUserId(userId) {
-    // By userId, not Profile._id
-    return Profile.findOne({ userId: userId }).exec();
+    return User.findById(userId).exec();
   },
 
   async getManyProfilesByUserIds(participantIds) {
@@ -16,7 +15,7 @@ const ProfileDataController = {
     let tempUsers = await TempUser.find({ _id: { $in: participantIds } });
     console.log("TEMP USERS LIST", tempUsers);
 
-    let users = await Profile.find({ userId: { $in: participantIds } });
+    let users = await User.find({ _id: { $in: participantIds } });
     console.log("USERS LIST", users);
 
     if (tempUsers) {
@@ -41,7 +40,7 @@ const ProfileDataController = {
       "profileImage.fileName": imageData.fileName,
       "profileImage.fileUrl": imageData.fileUrl,
     };
-    let query = { userId: imageData.userId };
+    let query = { _id: imageData.userId };
     let options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
     // $set used to update multiple fields
@@ -51,20 +50,8 @@ const ProfileDataController = {
 
     await AccountSettings.findOneAndUpdate(query, update, options).exec();
 
-    let profile = await Profile.findOneAndUpdate(query, update, options).exec();
+    let profile = await User.findOneAndUpdate(query, update, options).exec();
     return profile;
-  },
-
-  async createProfile(profileData) {
-    const newProfile = new Profile({
-      userId: profileData.userId,
-      displayName: profileData.displayName,
-      email: profileData.email,
-      username: profileData.username,
-      firstName: profileData.firstName,
-      lastName: profileData.firstName,
-    });
-    return newProfile.save();
   },
 
   /**

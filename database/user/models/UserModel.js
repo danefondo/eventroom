@@ -32,6 +32,17 @@ const UserSchema = new Schema({
   // Reset
   resetToken: String,
   resetTokenExpires: Number,
+
+  // User details
+  bio: String,
+  location: String,
+  profileImage: {
+    fileName: String,
+    fileUrl: String,
+  },
+  eventrooms: [String],
+  claimedEventrooms: [String],
+  sessionsCount: Number,
 });
 
 const User = (module.exports = mongoose.model("User", UserSchema));

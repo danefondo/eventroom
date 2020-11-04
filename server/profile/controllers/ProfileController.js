@@ -25,8 +25,6 @@ const ProfileController = {
 
   async updateProfileByUserId(req, res) {},
 
-  async createProfile(req, res) {},
-
   async saveProfileImageReference(req, res) {
     const options = {
       validate: ["userId", "fileName", "fileUrl"],

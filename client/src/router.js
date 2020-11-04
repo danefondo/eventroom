@@ -35,25 +35,21 @@ const routes = [
   /* ====== COFOCUS SESSION ROUTES ====== */
 
   {
-    path: "/session/:sessionName",
+    path: "/session/:eventroomName",
     component: () => import("./pages/RoomPages/Room"),
     name: "CofocusPage",
     meta: { hideNavigation: true },
     beforeEnter(to, from, next) {
-      let eventroomName = to.params.sessionName;
-      console.log("Session name:", eventroomName);
-      console.log("Session type:", typeof eventroomName);
+      let eventroomName = to.params.eventroomName;
       let routeData = {
         eventroomName: eventroomName,
       };
-      console.log("routeDATA", routeData);
       http
         .post(`/api/eventroom/checkIfEventroomExistsByName`, routeData)
         .then((response) => {
           console.log("responssss", response);
           if (!response.data.result.alreadyExists) {
-            // router.push("/");
-            console.log("ehh")
+            router.push("/");
             // Room Not Found Page
           } else {
             next();

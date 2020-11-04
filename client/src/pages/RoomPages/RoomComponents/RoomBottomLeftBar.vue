@@ -1,5 +1,5 @@
 <template>
-  <div class="media-buttons timer">
+  <div :style="getTimerConfig" class="media-buttons timer">
     <div class="tooltip_container">
       <div class="timer-button" @click="toggleTimer">
         <IconBase
@@ -28,6 +28,13 @@
         type="number"
         class="timer-input"
         maxlength="4"
+        min="0"
+        oninput="
+          this.value =
+            !!this.value && Math.abs(this.value) >= 0
+              ? Math.abs(this.value)
+              : null
+        "
         v-model.number="timerMinutes"
       />
       <input
@@ -35,6 +42,13 @@
         type="number"
         class="timer-input"
         maxlength="2"
+        min="0"
+        oninput="
+          this.value =
+            !!this.value && Math.abs(this.value) >= 0
+              ? Math.abs(this.value)
+              : null
+        "
         v-model.number="timerSeconds"
       />
       <div
@@ -69,6 +83,7 @@
       <div class="timer-control-button">Start</div> -->
       <div
         v-if="!timerStarted"
+        id="start-timer"
         class="timer-control-button start"
         @click="startTimer"
       >
@@ -118,37 +133,26 @@
 
 <script>
 import { mapState } from "vuex";
-
 import IconBase from "../../../components/IconBase";
 import IconTimer from "../../../components/SVG/IconTimer";
-
 import IconPause from "../../../components/SVG/IconPause";
 import IconPlay from "../../../components/SVG/IconPlay";
 import IconRightArrowDouble from "../../../components/SVG/IconRightArrowDouble";
-
 // import { addSeconds } from "date-fns";
-
 export default {
   name: "RoomBottomLeftBar",
   data() {
     return {
       errors: false,
       timerContainerExpanded: false,
-
       timerMinutes: 0,
       timerSeconds: 0,
-
       timerStarted: false,
-
       timerPaused: false,
-
       timerInterval: null,
       timePassed: 0,
-
       countdownTime: 30,
-
       //   timerEndsTime: 0,
-
       pausedTimerTime: 0,
       //   toolbarConfiguration: [],
       //   toolOpened: false,
@@ -160,6 +164,8 @@ export default {
       timerOpen: (state) => state.toolbar.timerConfig.timerOpen,
       timerNewValue: (state) => state.toolbar.timerConfig.setNewValue,
       eventroom: (state) => state.eventroom.eventroomData,
+      generalLayoutConfig: (state) =>
+        state.preferences.layoutConfig.generalLayoutConfig,
     }),
     getMicColor() {
       return "#1F3058";
@@ -170,32 +176,40 @@ export default {
     getMicSecondColor() {
       return "#323b50";
     },
-
     getTimeLeft() {
       const timeLeft = this.timeLeft;
       const minutes = Math.floor(timeLeft / 60);
       let seconds = timeLeft % 60;
-
       if (seconds < 10) {
         seconds = `0${seconds}`;
       }
-
       return `${minutes}:${seconds}`;
     },
-
     timeLeft() {
       return this.countdownTime - this.timePassed;
-
       // date based setup is, when does current time reach 'Goal time'
       //   return this.timerEndsTime - this.timePassed;
     },
+    getTimerConfig() {
+      let config = this.generalLayoutConfig;
+      let style = "";
+      if (config == 0) {
+        style = "";
+      } else if (config == 1) {
+        style = "left: unset; right: 70px;";
+      } else if (config == 2) {
+        style = "right:unset; left:60px;";
+      } else if (config == 3) {
+        style = "left: unset; right: 70px;";
+      }
+      return style;
+    },
+
     // TIME LEFT MUST BE seconds left UNTIL 0
     // right now, you set to 30, and remove time passed actively
-
     // the alternative is
     // time left is
     // timePassedInSeconds - new Date().valueOf();
-
     // WTF NEEDS TO BE IN FUCKING DATE TIME AND WTF NEEDS TO BE SOLID
     // WTF IS TIMER TIMER,
     // WHY DOES IT SAY TIME LEFT IF THERE IS ALSO A GET TIME LEFT WTF????????
@@ -289,7 +303,6 @@ export default {
       this.timerStarted = true;
       this.timerPaused = false;
       this.timerContainerExpanded = false;
-
       if (!received) {
         console.log("SENDING!!!!!!!!!!!", seconds);
         let data = {
@@ -308,7 +321,6 @@ export default {
       //     () => (this.timePassed = Date.now()),
       //     1000
       //   );
-
       this.timerStarted = true;
       this.timerPaused = false;
       this.timerContainerExpanded = false;
@@ -318,19 +330,16 @@ export default {
       };
       this.$socket.emit("setAndStartTimerCustom", data);
     },
-
     onTimesUp() {
       // Have indicator that time is up or something
       // Also indicators and other sounds for
       // When time is soon to be up
       this.resetTimer(false);
     },
-
     // updateTimerForOthers() {
     //     let timeToPass = 0;
     // },
     // computeTimeToRun() {
-
     // },
   },
   watch: {
@@ -342,15 +351,12 @@ export default {
     "$store.state.toolbar.timerConfig.resetTimer": function () {
       this.resetTimer(true);
     },
-
     "$store.state.toolbar.timerConfig.pauseTimer": function () {
       this.pauseTimer(true);
     },
-
     "$store.state.toolbar.timerConfig.resumeTimer": function () {
       this.resumeTimer(true);
     },
-
     "$store.state.toolbar.timerConfig.setNewValue": function () {
       console.log("GOT THE CHANGE", this.timerNewValue);
       this.setAndStartTimerCustom(this.timerNewValue, true);
@@ -358,21 +364,15 @@ export default {
   },
   // 1. Check if any existing timers
   // 2. At beginning, check if any timers running, if expired, nullify, if not, set it
-
   // 3. local time zone time, convert to utc, socket and return and convert to local
   // 4. then e.g. 50m until x time, and then it might be 49.59-58 once arrives on other side
-
   // if timer is paused, then calculate a new timezone time when played again
-
   // so I must send to the other person new Date().valueOf(),
-
   // let timerToPass(new Date(), countdownTime)
   // timerToPass = timerToPass.valueOf();
-
   // on receive => countdownTime = passedTime - newTime().valueOf();
   // passedTime is just certain amount of seconds from now (unless already passed)
   // and if you subtract current time from it, then you get seconds to countdown
-
   // the countdown must always happen, basically currentTime + added seconds
   // I must countdown to addedSeconds + now
   // e.g.
@@ -383,17 +383,14 @@ export default {
 * {
   box-sizing: border-box;
 }
-
 .rotate180 {
   -webkit-transform: rotate(180deg);
   transform: rotate(180deg);
 }
-
 .timer {
   position: absolute;
   left: 5px;
 }
-
 .timer-icon {
   height: 32px;
   display: flex;
@@ -403,11 +400,9 @@ export default {
   border-radius: 4px;
   cursor: pointer;
 }
-
 .timer-icon:hover {
   background-color: #f3f2f2;
 }
-
 .timer-expand {
   height: 32px;
   display: flex;
@@ -419,17 +414,14 @@ export default {
   margin-left: 14px;
   margin-right: 0px;
 }
-
 .timer-expand:hover {
   background-color: #f3f2f2;
 }
-
 .media-buttons {
   display: flex;
   flex-direction: row;
   align-items: center;
 }
-
 .timer-button {
   border: 1px solid #ececec;
   border-radius: 4px;
@@ -442,11 +434,9 @@ export default {
   position: relative;
   box-sizing: border-box;
 }
-
 .timer-button:hover {
   background-color: #f3f2f2;
 }
-
 .timer-container {
   display: flex;
   border: 1px solid #ececec;
@@ -457,7 +447,6 @@ export default {
   box-sizing: border-box;
   color: #323b50;
 }
-
 .timer-clock {
   font-size: 22px;
   padding: 0px 7px;
@@ -466,7 +455,6 @@ export default {
   display: flex;
   align-items: center;
 }
-
 .timer-input {
   font-size: 22px;
   padding: 0px 2px;
@@ -474,19 +462,22 @@ export default {
   height: 32px;
   display: flex;
   align-items: center;
-  width: 38px;
+  width: 50px;
   border: 1px solid #efefef;
+  border: 1px solid #efefefcc;
   text-align: center;
   border-radius: 2px;
   outline: none;
   color: #323c4f;
 }
-
+.timer-input:hover,
+.timer-input:focus {
+  border-color: #efefef;
+}
 .timer-control-button {
   padding: 0px 7px;
   margin: 0px 1px;
 }
-
 .reset,
 .start,
 .quick-time {
@@ -495,13 +486,11 @@ export default {
   padding: 8px 7px;
   border-radius: 4px;
 }
-
 .reset:hover,
 .start:hover,
 .quick-time {
   background-color: #f7f7f7;
 }
-
 /*! CSS Used from: Embedded */
 .tooltip {
   background: #040d1e;

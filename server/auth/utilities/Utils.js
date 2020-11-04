@@ -29,11 +29,18 @@ const setup = () => {
 /*====== Data in JWT  ======*/
 
 const userInJWT = function(user) {
+    let profileImage = null;
+    if (user.profileImage && user.profileImage.fileUrl) {
+        profileImage = user.profileImage.fileUrl;
+    }
     const returnUser = {
         username: user.username,
         _id: user._id,
         isVerified: user.verifiedStatus,
         displayName: user.displayName,
+        firstName: user.firstName || "NamelessFirst",
+        lastName: user.lastName || "NamelessLast",
+        profileImageUrl: profileImage || '',
     };
 
     return returnUser;

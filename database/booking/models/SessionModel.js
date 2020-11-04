@@ -2,18 +2,14 @@ const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
 
 const SessionSchema = new Schema({
-
   // General data
-  title: String,
   assignedTasks: [String],
   assignedProjectIds: [String],
-
-  // Session configurations
-  sessionLength: Number,
 
   // Scheduled time
   dateTime: Date,
 
+  // Session configurations
   // Chosen length of session, which determines end of session time
   sessionInterval: Number,
 
@@ -22,12 +18,18 @@ const SessionSchema = new Schema({
   firstPartnerFirstName: String,
   firstPartnerLastName: String,
   firstPartnerDisplayName: String,
+  firstPartnerProfileImageUrl: String,
+  firstPartnerProfileImageUrlSmall: String,
+  firstPartnerSessionCustomTitle: String,
 
   secondPartnerId: String,
   secondPartnerUsername: String,
   secondPartnerFirstName: String,
   secondPartnerLastName: String,
   secondPartnerDisplayName: String,
+  secondPartnerProfileImageUrl: String,
+  secondPartnerProfileImageUrlSmall: String,
+  secondPartnerSessionCustomTitle: String,
 
   sessionIsMatched: Boolean,
 
@@ -48,7 +50,6 @@ const SessionSchema = new Schema({
   sessionRoomInitiated: Boolean,
 
   sessionURL: String,
-  sessionCustomName: String,
 
   eventroomId: String,
 

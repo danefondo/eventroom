@@ -18,27 +18,47 @@
       </tr>
     </thead>
     <tbody>
-      <!-- renderGrid -->
+      <!-- renderGrid
+      
+      somehow
+      must add some sort of class
+      or disable selecting
+      if there is a session in 'interval' distance
+
+      likewise in the backend
+      there must be a check
+
+      to prevent any overlapping sessions ever being booked
+
+      must somehow calculate that no sessions before slot by interval
+      and no sessions after slot by interval
+
+
+
+      
+       -->
       <tr
-        v-for="(eachHourRow, index) in calendarData"
-        :key="index"
+        v-for="(eachHourRow, rowIndex) in calendarData"
+        :key="rowIndex"
         :data-rowhour="eachHourRow.slotStartTime"
         :style="getSelectedHeights"
       >
         <td>
-          <div class="hour">{{ eachHourRow.slotStartTime }}</div>
+          <div v-if="isFullHour(eachHourRow.slotStartTime)" class="hour">
+            {{ eachHourRow.slotStartTime }}
+          </div>
         </td>
         <td
           v-for="(index, i) in rowNumberForWeekOrDay"
           :key="index"
           class="each-day"
-          :class="isPastDay(eachHourRow, i) ? 'past-day' : ''"
+          :class="isPastHour(eachHourRow, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
           <div
             :style="getSelectedHeights"
             class="past-container"
-            v-if="isPastDay(eachHourRow, i)"
+            v-if="isPastHour(eachHourRow, i)"
           >
             <div @mousemove="showIsPast" class="past-inner tooltip">
               <span id="tooltip-span"> This hour has passed. </span>
@@ -59,15 +79,30 @@
               }}</span>
             </div>
           </div>
-          <div v-else-if="!isPastDay(eachHourRow, i)">
+          <div class="general-container" v-else-if="!isPastHour(eachHourRow, i)">
+            <div
+              v-if="
+                !eachHourRow.hourRowDays[i].isSelected &&
+                eachHourRow.hourRowDays[i].isAvailableForBooking &&
+                nearByIsNotSelected(eachHourRow, i)
+              "
+              @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
+              :style="getBoxHeights"
+              class="highlight-container"
+            >
+              <div class="highlight-info">Select?</div>
+            </div>
             <!--     
               1. If not past day
               2. If user has booked session at time, show that and nothing else
               3. If user has no booked session at time && others that are UNMATCHED are booked for the time, show first in list or best preferences (if many, show faces icons in row)
             -->
             <div
-              v-if="userHasSessionForSlot(eachHourRow, i)"
-              :style="getSelectedHeights"
+              v-if="
+                userHasSessionForSlot(eachHourRow, i) &&
+                !eachHourRow.hourRowDays[i].isCanceling
+              "
+              :style="getBoxHeights"
               class="booked-container"
             >
               <div class="booked-info">
@@ -104,31 +139,53 @@
               </div>
             </div>
             <div
-              v-else-if="unmatchedBookedPeopleExist(eachHourRow, i)"
+              v-else-if="
+                unmatchedBookedPeopleExist(eachHourRow, i) &&
+                nearByIsNotSelected(eachHourRow, i, true) &&
+                eachHourRow.hourRowDays[i].isAvailableForBooking
+              "
               @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
             >
               <div class="booked-unmatched-container">
                 <div class="booked-unmatched-info">
-                  <div class="calendar-profile-icon"></div>
+                  <img
+                    loading="lazy"
+                    v-if="returnUnmatchedBookedPeople(eachHourRow, i, 'image')"
+                    :src="returnUnmatchedBookedPeople(eachHourRow, i, 'image')"
+                    class="calendar-profile-icon"
+                  />
+                  <div v-else class="calendar-profile-icon borderless">
+                    <IconBase
+                      icon-name="profile"
+                      iconColor="#aeaeae"
+                      viewBox="0 0 311.541 311.541"
+                      width="27"
+                      height="27"
+                      ><IconProfile
+                    /></IconBase>
+                  </div>
                   <span class="unmatched-title">{{
-                    returnUnmatchedBookedPeople(eachHourRow, i)
+                    returnUnmatchedBookedPeople(eachHourRow, i, "name")
                   }}</span>
                 </div>
               </div>
             </div>
             <!-- all YOUR booked sessions, either matched or unmatched-->
 
-            <div
-              v-else-if="!eachHourRow.hourRowDays[i].isSelected"
+            <!-- <div
+              v-if="!eachHourRow.hourRowDays[i].isSelected"
               @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
-              :style="getSelectedHeights"
+              :style="getBoxHeights"
               class="highlight-container"
             >
               <div class="highlight-info">Select?</div>
-            </div>
+            </div> -->
             <div
-              v-if="eachHourRow.hourRowDays[i].isSelected"
-              :style="getSelectedHeights"
+              v-if="
+                eachHourRow.hourRowDays[i].isSelected &&
+                !unmatchedBookedPeopleExist(eachHourRow, i)
+              "
+              :style="getBoxHeights"
               class="selected-container"
             >
               <div class="selected-info">
@@ -148,8 +205,35 @@
               </div>
             </div>
             <div
+              v-else-if="
+                eachHourRow.hourRowDays[i].isSelected &&
+                unmatchedBookedPeopleExist(eachHourRow, i)
+              "
+              :style="getBoxHeights"
+              class="selected-container"
+            >
+              <div class="selected-info">
+                Selected
+                <span class="unmatched-title book-person">{{
+                  returnUnmatchedBookedPeople(eachHourRow, i, "name")
+                }}</span>
+                <div
+                  class="selected-book"
+                  @click="$emit('book-slot', eachHourRow.hourRowDays[i])"
+                >
+                  Book
+                </div>
+                <div
+                  class="selected-close"
+                  @click="$emit('cancel-slot', eachHourRow.hourRowDays[i])"
+                >
+                  x
+                </div>
+              </div>
+            </div>
+            <div
               v-if="eachHourRow.hourRowDays[i].isCanceling"
-              :style="getSelectedHeights"
+              :style="getBoxHeights"
               class="cancel-container"
             >
               <div class="cancel-info">
@@ -185,21 +269,26 @@ import { mapState } from "vuex";
 
 import { isBefore, format, addMinutes } from "date-fns";
 
+import IconBase from "../../../components/IconBase";
+import IconProfile from "../../../components/SVG/IconProfile";
+
 export default {
   name: "Table",
-  props: ["weekDates", "calendarData", "rowNumberForWeekOrDay"],
+  props: ["weekDates", "calendarData", "rowNumberForWeekOrDay", "allSessions"],
   data() {
     return {
       interval: 60,
       minimumTime: "00:00",
       maximumTime: "23:00",
-      height: 100,
-      selectedHeight: 100,
+      height: 105 / 4,
+      selectedHeight: 105,
+      boxHeight: 105,
     };
   },
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
+      selectedToBook: (state) => state.booking.selectedToBook,
     }),
     getHeights() {
       let height = this.height - 20;
@@ -211,8 +300,86 @@ export default {
       height = `height:${height}px;`;
       return height;
     },
+    getBoxHeights() {
+      let height = this.boxHeight;
+      height = `height:${height}px;`;
+      return height;
+    },
+  },
+  components: {
+    IconBase,
+    IconProfile,
   },
   methods: {
+    isFullHour(time) {
+      let minutes = time.split(":")[1];
+      // console.log("minutes", minutes);
+      if (minutes == "00") {
+        return true;
+      } else {
+        return false;
+      }
+    },
+    nearByIsNotSelected(eachHourRow, i, exceptSelf = false) {
+      let FIFTEEN_MINUTES = 900000; // milliseconds
+      let hourRowDay = eachHourRow.hourRowDays[i];
+      if (hourRowDay) {
+        const slotStartTime = hourRowDay.dateTime;
+        const slotStartInMS = slotStartTime.valueOf();
+
+        let fifteenBefore = slotStartInMS - FIFTEEN_MINUTES;
+        let thirtyBefore = slotStartInMS - FIFTEEN_MINUTES * 2;
+        let fortyFiveBefore = slotStartInMS - FIFTEEN_MINUTES * 3;
+
+        let fifteenAfter = slotStartInMS + FIFTEEN_MINUTES;
+        let thirtyAfter = slotStartInMS + FIFTEEN_MINUTES * 2;
+        let fortyFiveAfter = slotStartInMS + FIFTEEN_MINUTES * 3;
+
+        for (let i = 0; i < this.selectedToBook.length; i++) {
+          let selectedStartTime = new Date(this.selectedToBook[i].dateTime);
+          let selectedStartTimeInMS = selectedStartTime.valueOf();
+
+          if (exceptSelf) {
+            if (
+              selectedStartTimeInMS == fifteenBefore ||
+              selectedStartTimeInMS == thirtyBefore ||
+              selectedStartTimeInMS == fortyFiveBefore
+            ) {
+              return false;
+            }
+          } else {
+            if (
+              selectedStartTimeInMS == fifteenBefore ||
+              selectedStartTimeInMS == thirtyBefore ||
+              selectedStartTimeInMS == fortyFiveBefore ||
+              selectedStartTimeInMS == fifteenAfter ||
+              selectedStartTimeInMS == thirtyAfter ||
+              selectedStartTimeInMS == fortyFiveAfter ||
+              selectedStartTimeInMS == slotStartInMS
+            ) {
+              return false;
+            }
+          }
+        }
+      }
+      return true;
+    },
+
+    // if (
+    //   (isBefore(slotStartTime, sessionStartTime) &&
+    //     isBefore(sessionStartTime, slotEndTime)) ||
+    //   isEqual(slotStartTime, sessionStartTime) ||
+    //   isEqual(slotEndTime, sessionEndTime) ||
+    //   isBefore(slotStartTime, sessionEndTime)
+    // ) {
+    //   return false;
+    // }
+
+    // const slotEndTime = addMinutes(slotStartTime, this.interval);
+
+    // let sessionInterval = this.allSessions[i].sessionInterval;
+    // let sessionEndTime = addMinutes(sessionStartTime, sessionInterval);
+
     joinSessionLink(eachHourRow, i) {
       let sessionId =
         eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0]["_id"];
@@ -230,22 +397,17 @@ export default {
       }
       // }
     },
-    isPastDay(eachHourRow, i) {
-      // is day box time before current time
-      let isPastDay = false;
-      let hourRowDays = eachHourRow.hourRowDays[i];
-      let slotStartTime = hourRowDays.slotStartTime.split(":")[0];
-      let dayBoxDate = new Date(
-        hourRowDays.yearNum,
-        hourRowDays.monthNum - 1,
-        hourRowDays.dateNum,
-        slotStartTime
-      );
+    isPastHour(eachHourRow, i) {
+      let slot = eachHourRow.hourRowDays[i];
 
       let now = new Date();
-      isPastDay = isBefore(dayBoxDate, now);
+      let isPastHour = isBefore(slot.dateTime, now);
 
-      return isPastDay;
+      // slot start is before this moment
+      // need to check if session currently happening in slot / sessions nearby?
+      // then show
+
+      return isPastHour;
     },
     userHasSessionForSlot(eachHourRow, i) {
       let userHasSessionForSlot = false;
@@ -304,7 +466,6 @@ export default {
         sessionTime = new Date(session.dateTime);
         if (sessionTime) {
           let sessionEndTime = addMinutes(sessionTime, this.interval);
-          console.log("sestime", sessionTime);
           sessionTime = format(sessionTime, "HH:mm");
           sessionEndTime = format(sessionEndTime, "HH:mm");
           sessionTime = sessionTime + "-" + sessionEndTime;
@@ -331,7 +492,7 @@ export default {
       matchedSession = eachHourRow.hourRowDays[i]["bookedSessionsOnTime"][0];
 
       if (!matchedSession) return;
-      console.log("@isMatched, session: ", matchedSession);
+      // console.log("@isMatched, session: ", matchedSession);
 
       // Both must have value for there to be a possibility of match
       if (matchedSession.firstPartnerId && matchedSession.secondPartnerId) {
@@ -344,7 +505,7 @@ export default {
           partnerUsername = matchedSession.firstPartnerUsername;
         }
       }
-      console.log("partnerUsername", partnerUsername);
+      // console.log("partnerUsername", partnerUsername);
       return partnerUsername;
     },
 
@@ -392,9 +553,12 @@ export default {
       }
       return unmatchedBookedPeople;
     },
-    returnUnmatchedBookedPeople(eachHourRow, i) {
+    returnUnmatchedBookedPeople(eachHourRow, i, isNameOrImage) {
       let unmatchedPerson = null;
       let unmatchedPersonName = null;
+      let unmatchedPersonImageUrl = null;
+      let unmatchedPersonObject = null;
+      let unmatchedPersonData = null;
       if (
         eachHourRow.hourRowDays &&
         eachHourRow.hourRowDays.length &&
@@ -423,9 +587,22 @@ export default {
         unmatchedPersonName =
           unmatchedPerson.firstPartnerUsername ||
           unmatchedPerson.secondPartnerUsername;
+        unmatchedPersonImageUrl =
+          unmatchedPerson.firstPartnerProfileImageUrl ||
+          unmatchedPerson.secondPartnerProfileImageUrl;
+
+        unmatchedPersonObject = {
+          name: unmatchedPersonName,
+          image: unmatchedPersonImageUrl,
+        };
+      }
+      if (isNameOrImage == "name") {
+        unmatchedPersonData = unmatchedPersonObject.name;
+      } else if (isNameOrImage == "image") {
+        unmatchedPersonData = unmatchedPersonObject.image;
       }
 
-      return unmatchedPersonName;
+      return unmatchedPersonData;
     },
     getPersonBookedHere(eachHourRow, i) {
       let unmatchedSession = null;
@@ -434,14 +611,14 @@ export default {
       unmatchedSession = eachHourRow.hourRowDays[i]["bookedPeopleOnTime"][0];
 
       if (!unmatchedSession) return;
-      console.log("@getPersonBookedHere, session: ", unmatchedSession);
+      // console.log("@getPersonBookedHere, session: ", unmatchedSession);
 
       if (unmatchedSession.firstPartnerId || unmatchedSession.secondPartnerId) {
         partnerUsername =
           unmatchedSession.firstPartnerUsername ||
           unmatchedSession.secondPartnerUsername;
       }
-      console.log("partnerUsername", partnerUsername);
+      // console.log("partnerUsername", partnerUsername);
       return partnerUsername;
     },
     // getPersonBookedHereString(eachHourRow, i) {
@@ -453,6 +630,11 @@ export default {
 <style scoped>
 .each-day:hover .highlight-container {
   display: flex;
+  /* z-index: 999; */
+}
+
+.each-day {
+  background-color: transparent;
 }
 
 .past-day {
@@ -484,11 +666,15 @@ export default {
   justify-content: center;
   position: absolute;
   width: 100%;
+
+  z-index: 999;
 }
 
 .booked-unmatched-container {
-  height: 35px;
+  height: calc(105px / 4);
   margin-top: 5px;
+
+  z-index: unset;
 }
 
 .booked-unmatched-info,
@@ -511,12 +697,16 @@ export default {
 }
 
 .calendar-profile-icon {
-  width: 25px !important;
-  height: 25px !important;
-  background-color: blue;
+  /* width: 25px !important;
+  height: 25px !important; */
+  width: 27px !important;
+  height: 27px !important;
   border-radius: 360px;
   position: absolute;
   left: 7px;
+  border: 1px solid #a1a4ae;
+
+  z-index: 999;
 }
 
 .booked-info {
@@ -525,6 +715,7 @@ export default {
   height: 88%;
   /* background-color: #f7f7fb; */
   background-color: #f7f7fbad;
+  background-color: #fafafc;
   /* border: 1px solid #a3a3ff33; */
   border: 1px solid #d8d8d833;
 }
@@ -570,6 +761,10 @@ export default {
   /* background-color: #ebecfb; */
 }
 
+/* .general-container {
+  pointer-events: auto;
+} */
+
 .highlight-container {
   display: none;
   align-items: center;
@@ -577,6 +772,9 @@ export default {
   position: absolute;
   width: 100%;
   cursor: default;
+  pointer-events: none;
+
+  /* z-index: 999; */
 }
 
 .highlight-info {
@@ -588,13 +786,17 @@ export default {
   align-items: center;
   justify-content: center;
   position: relative;
+  pointer-events: auto;
 }
 
 .unmatched-title {
   position: absolute;
-  left: 40px;
+  /* left: 40px; */
+  left: 45px;
   font-size: 18px;
   color: #343556;
+
+  z-index: 999;
 }
 
 .selected-close {
@@ -664,6 +866,7 @@ export default {
   justify-content: center;
   position: absolute;
   width: 100%;
+  z-index: 999;
 }
 
 .cancel-session {
@@ -760,7 +963,7 @@ export default {
   font-size: 16px;
   padding: 4px 12px;
   left: 7px;
-  width: 46px;
+  width: 27.5%;
 }
 
 .cancel-button {
@@ -786,7 +989,6 @@ export default {
   font-size: 16px;
   padding: 4px 12px;
   left: 7px;
-  width: 46px;
   right: 7px;
   left: unset;
   background-color: #fbeaef;
@@ -854,4 +1056,47 @@ export default {
 .cancelSelectContainer {
   position: relative;
 }
+
+.book-person {
+  top: 30px;
+  left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+  width: 100px;
+  text-align: left;
+}
+
+/* Per 4, the 1st */
+table tr:nth-child(4n+1) td {
+  /* background-color: blue; */
+  /* border-bottom-color: #f7f7f7; */
+  /* border-bottom-style: dashed; */
+}
+
+/* Per 4, the 2nd */
+table tr:nth-child(4n+2) td {
+  /* background-color: red; */
+  /* border-bottom-color: #f7f7f7; */
+  border-top-color: #f7f7f7;
+  /* border-bottom-style: dashed; */
+}
+
+/* Per 4, the 3rd */
+table tr:nth-child(4n+3) td {
+  /* background-color: yellow; */
+  /* border-bottom-color: #f7f7f7; */
+  border-top-color: #f7f7f7;
+  /* border-bottom-style: dashed; */
+}
+
+/* Per 4, the 4th */
+table tr:nth-child(4n+4) td {
+  /* background-color: yellow; */
+  /* border-bottom-color: #f7f7f7; */
+  border-top-color: #f7f7f7;
+  /* border-bottom-style: dashed; */
+}
+
 </style>

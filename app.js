@@ -86,6 +86,7 @@ const EventRoutes = require("./routes/API/EventRoutes");
 const UserActionRoutes = require("./routes/API/UserActionRoutes");
 const EventroomRoutes = require("./routes/API/EventroomRoutes");
 const BookingRoutes = require("./routes/API/BookingRoutes");
+const ProfileModel = require("./database/profile/models/ProfileModel");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/settings", AccountSettings);
 app.use("/api/profiles", ProfileRoutes);
@@ -101,6 +102,7 @@ app.get("*", function (req, res) {
 });
 
 // SessionModel.deleteMany({}).exec();
+
 
 /* ====== SERVER SETUP ====== */
 

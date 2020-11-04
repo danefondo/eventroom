@@ -1,5 +1,5 @@
 const EventroomModel = require("../models/EventroomModel");
-const ProfileModel = require("../../profile/models/ProfileModel");
+const UserModel = require("../../user/models/UserModel");
 
 const EventroomDataController = {
   async checkIfEventroomNameExistsAndIsNotSame(eventroomData) {
@@ -40,7 +40,7 @@ const EventroomDataController = {
   async checkIfEventroomExistsByName(eventroomName) {
     console.log("eventroomName", eventroomName);
     // let name = eventroomName.replace(/[^0-9a-z]/gi, "");
-    name = eventroomName.replace(/[^0-9a-z_-]/gi, "");
+    let name = eventroomName.replace(/[^0-9a-z_-]/gi, "");
     console.log("eventroomName2", name);
     let returnData = {};
     let errors = {};
@@ -240,12 +240,12 @@ const EventroomDataController = {
       await eventroom.save();
 
       let userQuery = { userId: eventroomData.userId };
-      let user = await ProfileModel.findOne(userQuery).exec();
+      let user = await UserModel.findOne(userQuery).exec();
       if (!user) {
         errors.FailedToFindUser = true;
         throw { errors: errors };
       }
-      user.eventrooms.push(eventroom._id);
+      user.claimedEventrooms.push(eventroom._id);
       await user.save();
     } catch (error) {
       if (error.errors) {

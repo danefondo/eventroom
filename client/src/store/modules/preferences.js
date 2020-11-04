@@ -5,6 +5,7 @@ const getDefaultState = () => {
     theme: String,
     mode: String,
     layoutConfig: {
+      generalLayoutConfig: 0,
       leaveConfig: 0,
       localVideoConfig: 0,
       remoteVideoConfig: 0,

@@ -182,6 +182,7 @@ export default {
       // by some savvy folk; though this is primarily for UX goals
       // someone should look into covering this
       globalThis.isCofocusSession = true;
+      console.log("cofocus", firstPath);
     }
 
     console.log("@2 Check if user exists...");
@@ -220,7 +221,10 @@ export default {
         console.log("welp here I am");
         await this.createTempUser();
       }
-    } else {
+    } else if (
+      (this.isCofocusSession && !this.user) ||
+      (this.userDisabledAnon && !this.user)
+    ) {
       // Ideally show screen that you need to make an account to use Cofocus
       // also, can create two separate components
       window.location.href = "/account/login";
@@ -351,7 +355,6 @@ export default {
         console.log("Massive fail", response);
       });
 
-
       this.sockets.subscribe("receiveResetTimer", () => {
         globalThis.$store.dispatch("toolbar/resetTimer");
       });
@@ -368,9 +371,6 @@ export default {
       this.sockets.subscribe("receiveSetAndStartTimerCustom", (seconds) => {
         globalThis.$store.dispatch("toolbar/setAndStartTimerCustom", seconds);
       });
-
-
-
     },
     joinUserToChat() {
       let eventroomData = {
@@ -575,6 +575,14 @@ export default {
         } else if (e.which == 27) {
           // escape input box
           document.getElementById("chatInputBox").blur();
+        } else {
+          return;
+        }
+      }
+
+      if (e.target.className == "timer-input") {
+        if (e.which == 13) {
+          document.getElementById("start-timer").click();
         } else {
           return;
         }

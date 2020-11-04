@@ -21,7 +21,5 @@ router.post(
   ProfileController.saveProfileImageReference
 );
 
-// Create new profile
-router.post("/createProfile", ProfileController.createProfile);
 
 module.exports = router;

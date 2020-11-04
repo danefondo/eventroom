@@ -1,5 +1,4 @@
 const AccountSettings = require("../models/AccountSettingsModel");
-const ProfileModel = require("../../profile/models/ProfileModel");
 const User = require("../../user/models/UserModel");
 
 const {
@@ -21,14 +20,13 @@ const {
 const AccountSettingsDataController = {
   async updateProfileSettings(data) {
     let profileSettingsData = {
-      userId: data.userId,
       displayName: data.displayName,
       firstName: data.firstName,
       lastName: data.lastName,
       bio: data.bio,
       location: data.location,
     };
-    let query = { userId: data.userId };
+    let query = { _id: data.userId };
     let options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
     // $set used to update multiple fields
@@ -36,7 +34,7 @@ const AccountSettingsDataController = {
     let update = { $set: profileSettingsData };
     console.log("update", update);
 
-    await ProfileModel.findOneAndUpdate(query, update, options).exec();
+    await User.findOneAndUpdate(query, update, options).exec();
 
     let profileData = await AccountSettings.findOneAndUpdate(
       query,

@@ -81,5 +81,16 @@ const BookingController = {
     await processPostRequest(req, res, controller, options);
     return;
   },
+
+  async getUserNextSession(req, res) {
+    const options = {
+      validate: ["endOfWeekPlusTwoHours", "userId"],
+      funcToRun: "getUserNextSession",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
 };
 module.exports = BookingController;

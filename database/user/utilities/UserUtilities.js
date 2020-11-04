@@ -2,7 +2,6 @@ const User = require("../models/UserModel");
 
 const UserInteractionUtilities = require("./UserInteractionUtilities");
 const UserConfigurationsUtilities = require("./UserConfigurationsUtilities");
-const ProfileDataController = require("../../profile/controllers/ProfileDataController");
 
 async function getUserById(id) {
   return await User.findById(id).exec();
@@ -78,19 +77,10 @@ async function createUser({
       dateCreated: new Date(),
     });
 
-    const profileData = {
-      userId: newUser._id,
-      displayName: newUser.displayName,
-      email: newUser.email,
-      username: newUser.username,
-      firstName: newUser.firstName,
-      lastName: newUser.lastName,
-    };
     console.log("@utils", typeof newUser._id);
     return resolve(
       Promise.all([
         newUser.save(),
-        ProfileDataController.createProfile(profileData),
         UserInteractionUtilities.createUserInteraction(
           newUser._id,
           newUser.displayName,

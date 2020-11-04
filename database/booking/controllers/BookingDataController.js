@@ -287,11 +287,78 @@ function findMatchesForAllPossibleSlots(availableSessions, slotsToBookArray) {
   return processedSlots;
 }
 
+function getNextSession(userBookedSessions) {
+  // Get earliest date from array
+  let nextSession = null;
+
+  if (userBookedSessions.length) {
+    let bookedSessions = [];
+    let bookedSessionTimes = [];
+    let nextSessionRef = null;
+    userBookedSessions.forEach((session) => {
+      let sessionTimeInNum = new Date(session.dateTime).valueOf();
+      let sessionData = {
+        sessionTimeInNum: sessionTimeInNum,
+        sessionId: session._id,
+      };
+      bookedSessions.push(sessionData);
+      bookedSessionTimes.push(sessionTimeInNum);
+    });
+
+    let earliestSessionTimeInNum = Math.min(...bookedSessionTimes);
+    nextSessionRef = bookedSessions.find(
+      (s) => s.sessionTimeInNum.valueOf() === earliestSessionTimeInNum
+    );
+
+    nextSession = userBookedSessions.find(
+      (s) => s._id === nextSessionRef.sessionId
+    );
+  }
+
+  return nextSession;
+}
+
 const BookingDataController = {
+  async getUserNextSession(userData) {
+    // let query = { userId: userData.userId };
+    let userId = userData.userId;
+    let endOfWeekPlusTwoHours = userData.endOfWeekPlusTwoHours;
+
+    // this is milliseconds
+    let hourBeforeNow = new Date(Date.now() - 60 * 60 * 1000);
+
+    let query = {
+      $and: [
+        { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
+        { dateTime: { $gt: hourBeforeNow, $lt: endOfWeekPlusTwoHours } },
+      ],
+    };
+
+    let errors = {};
+    let nextUserSession = null;
+    let bookedSessionsThisWeek = null;
+
+    try {
+      bookedSessionsThisWeek = await SessionModel.find(query).exec();
+      console.log("bookedSessionsThisWeek: ", bookedSessionsThisWeek);
+      if (bookedSessionsThisWeek) {
+        nextUserSession = getNextSession(bookedSessionsThisWeek);
+      } else {
+        nextUserSession = {
+          NoSessionsThisWeek: true,
+        };
+      }
+    } catch (error) {
+      errors = prepareErrors(error, errors);
+      throw { errors: errors };
+    }
+    return nextUserSession;
+  },
+
   async getBookedSessionsForOneDay(dayData) {
     let endOfDay = dayData.endOfDay;
     let currentMoment = new Date();
-    console.log("ENDOFDAY", endOfDay);
+    // console.log("ENDOFDAY", endOfDay);
 
     let query = { dateTime: { $gt: currentMoment, $lt: endOfDay } };
 
@@ -299,7 +366,7 @@ const BookingDataController = {
     let allBookedSessions;
     try {
       allBookedSessions = await SessionModel.find(query).exec();
-      console.log("allBooked", allBookedSessions);
+      // console.log("allBooked", allBookedSessions);
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
@@ -386,18 +453,18 @@ const BookingDataController = {
           canceledSession.firstPartnerId = undefined;
           canceledSession.firstPartnerUsername = undefined;
           canceledSession.sessionThroughMatching = undefined;
-          // canceledSession.firstPartnerFirstName = undefined;
-          // canceledSession.firstPartnerLastName = undefined;
-          // canceledSession.firstPartnerDisplayName = undefined;
-          // canceledSession.firstPartnerProfileImageUrl = undefined;
+          canceledSession.firstPartnerFirstName = undefined;
+          canceledSession.firstPartnerLastName = undefined;
+          canceledSession.firstPartnerDisplayName = undefined;
+          canceledSession.firstPartnerProfileImageUrl = undefined;
         } else if (canceledSession.secondPartnerId == userId) {
           canceledSession.secondPartnerId = undefined;
           canceledSession.secondPartnerUsername = undefined;
           canceledSession.sessionThroughMatching = undefined;
-          // canceledSession.secondPartnerFirstName = undefined;
-          // canceledSession.secondPartnerLastName = undefined;
-          // canceledSession.secondPartnerDisplayName = undefined;
-          // canceledSession.secondPartnerProfileImageUrl = undefined;
+          canceledSession.secondPartnerFirstName = undefined;
+          canceledSession.secondPartnerLastName = undefined;
+          canceledSession.secondPartnerDisplayName = undefined;
+          canceledSession.secondPartnerProfileImageUrl = undefined;
         }
         await canceledSession.save();
       }
@@ -573,6 +640,10 @@ const BookingDataController = {
   async bookManySessionSlots(requestData) {
     let userId = requestData.userId;
     let username = requestData.username;
+    let firstName = requestData.firstName;
+    let lastName = requestData.lastName;
+    let displayName = requestData.displayName;
+    let profileImageUrl = requestData.profileImageUrl;
     let slotsToBookArray = requestData.slotsToBookArray;
     let slotsToBookTimesArray = requestData.slotsToBookTimesArray;
 
@@ -690,11 +761,18 @@ const BookingDataController = {
         finalUnmatchedSlots.length &&
         finalUnmatchedSlots.length > 0
       ) {
+        let userData = {
+          userId,
+          username,
+          firstName,
+          lastName,
+          displayName,
+          profileImageUrl,
+        };
         // Create new sessions for all slots remaining that did not find a match
         unmatchedBookedSessions = await BookingDataController.createAndBookManySessions(
           finalUnmatchedSlots,
-          userId,
-          username
+          userData
         );
       }
       // For all time slots with no match, create new session for slot
@@ -741,6 +819,10 @@ const BookingDataController = {
     let errors = {};
     let userId = matchingData.userId;
     let username = matchingData.username;
+    let firstName = matchingData.firstName;
+    let lastName = matchingData.lastName;
+    let displayName = matchingData.displayName;
+    let profileImageUrl = matchingData.profileImageUrl;
     let slotsWithFoundMatches = matchingData.slotsWithFoundMatches;
     let sessionsNoLongerFoundIds = [];
     // let sessionsNoLongerFound = [];
@@ -786,10 +868,18 @@ const BookingDataController = {
                 session.secondPartnerId = userId;
                 session.secondPartnerUsername = username;
                 session.sessionThroughMatching = true;
+                session.secondPartnerFirstName = firstName;
+                session.secondPartnerLastName = lastName;
+                session.secondPartnerDisplayName = displayName;
+                session.secondPartnerProfileImageUrl = profileImageUrl;
               } else if (session.secondPartnerId) {
                 session.firstPartnerId = userId;
                 session.firstPartnerUsername = username;
                 session.sessionThroughMatching = true;
+                session.firstPartnerFirstName = firstName;
+                session.firstPartnerLastName = lastName;
+                session.firstPartnerDisplayName = displayName;
+                session.firstPartnerProfileImageUrl = profileImageUrl;
               }
               await session.save();
               matchedBookedSessions.push(session);
@@ -827,6 +917,10 @@ const BookingDataController = {
     try {
       let userId = matchingData.userId;
       let username = matchingData.username;
+      let firstName = matchingData.firstName;
+      let lastName = matchingData.lastName;
+      let displayName = matchingData.displayName;
+      let profileImageUrl = matchingData.profileImageUrl;
       let partnerId = matchingData.partnerId;
       let sessionToMatch = matchingData.sessionToMatch;
       let sessionId = sessionToMatch._id;
@@ -845,11 +939,19 @@ const BookingDataController = {
         returnSession.secondPartnerId = userId;
         returnSession.secondPartnerUsername = username;
         returnSession.sessionThroughMatching = true;
+        returnSession.secondPartnerFirstName = firstName;
+        returnSession.secondPartnerLastName = lastName;
+        returnSession.secondPartnerDisplayName = displayName;
+        returnSession.secondPartnerProfileImageUrl = profileImageUrl;
       } else if (returnSession.secondPartnerId == partnerId) {
         // Set yourself as the other partner;
         returnSession.firstPartnerId = userId;
         returnSession.firstPartnerUsername = username;
         returnSession.sessionThroughMatching = true;
+        returnSession.firstPartnerFirstName = firstName;
+        returnSession.firstPartnerLastName = lastName;
+        returnSession.firstPartnerDisplayName = displayName;
+        returnSession.firstPartnerProfileImageUrl = profileImageUrl;
       } else {
         // Throw error and create new session instead
         returnSession = {
@@ -867,6 +969,12 @@ const BookingDataController = {
   async createAndBookSessionAndRoom(sessionData) {
     let errors = {};
     let session = null;
+    let userId = sessionData.userId;
+    let username = sessionData.username;
+    let firstName = sessionData.firstName;
+    let lastName = sessionData.lastName;
+    let displayName = sessionData.displayName;
+    let profileImageUrl = sessionData.profileImageUrl;
 
     // let query = {
     //   $and: [
@@ -884,14 +992,18 @@ const BookingDataController = {
 
     try {
       session = new SessionModel({
-        firstPartnerId: sessionData.userId,
-        firstPartnerUsername: sessionData.username,
+        firstPartnerId: userId,
+        firstPartnerUsername: username,
+        firstPartnerFirstName: firstName,
+        firstPartnerLastName: lastName,
+        firstPartnerDisplayName: displayName,
+        firstPartnerProfileImageUrl: profileImageUrl,
         sessionInterval: sessionData.sessionInterval,
         dateTime: sessionData.dateTime,
       });
 
       // create eventroom for session
-      let eventroom = new EventroomModel({
+      const eventroom = new EventroomModel({
         eventroomName: session._id,
         cofocusSessionId: session._id,
         dateCreated: new Date(),
@@ -907,8 +1019,9 @@ const BookingDataController = {
       //     eventroom,
       //     session
       //   );
-      await eventroom.save();
-      await session.save();
+      // await eventroom.save();
+      // await session.save();
+      Promise.all([eventroom.save(), session.save()]);
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
@@ -916,14 +1029,24 @@ const BookingDataController = {
     return session;
   },
 
-  async createAndBookManySessions(unmatchedSlots, userId, username) {
+  async createAndBookManySessions(unmatchedSlots, userData) {
     let errors = {};
     let unmatchedBookedSessions = [];
+    let userId = userData.userId;
+    let username = userData.username;
+    let firstName = userData.firstName;
+    let lastName = userData.lastName;
+    let displayName = userData.displayName;
+    let profileImageUrl = userData.profileImageUrl;
     try {
       for (let slot of unmatchedSlots) {
         session = new SessionModel({
           firstPartnerId: userId,
           firstPartnerUsername: username,
+          firstPartnerFirstName: firstName,
+          firstPartnerLastName: lastName,
+          firstPartnerDisplayName: displayName,
+          firstPartnerProfileImageUrl: profileImageUrl,
           sessionInterval: slot.sessionInterval,
           dateTime: slot.dateTime,
         });
@@ -945,8 +1068,9 @@ const BookingDataController = {
         //   eventroom,
         //   session
         // );
-        await eventroom.save();
-        await session.save();
+        // await eventroom.save();
+        // await session.save();
+        Promise.all([eventroom.save(), session.save()]);
         unmatchedBookedSessions.push(session);
       }
     } catch (error) {
@@ -1067,18 +1191,6 @@ const BookingDataController = {
 
     let profile = await Profile.findOneAndUpdate(query, update, options).exec();
     return profile;
-  },
-
-  async createProfile(profileData) {
-    const newProfile = new Profile({
-      userId: profileData.userId,
-      displayName: profileData.displayName,
-      email: profileData.email,
-      username: profileData.username,
-      firstName: profileData.firstName,
-      lastName: profileData.firstName,
-    });
-    return newProfile.save();
   },
 
   /**

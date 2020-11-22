@@ -1,5 +1,11 @@
 <template>
   <div class="video-streams">
+    <CofocusSession
+      v-if="isCofocusSession"
+      :user="user"
+      :sessionId="$route.params.eventroomName"
+      ref="cofocus"
+    />
     <div
       class="left-side side"
       :style="getLeftSideConfig"
@@ -97,6 +103,8 @@
 import IconBase from "../../../components/IconBase";
 import IconFlip from "../../../components/SVG/IconFlip";
 
+import CofocusSession from "../../Cofocus/CofocusSession";
+
 import {
   connect,
   LocalVideoTrack,
@@ -147,7 +155,7 @@ export default {
   data: function () {
     return initialState();
   },
-  props: ["userId", "eventroomId"],
+  props: ["user", "userId", "eventroomId", "isCofocusSession"],
   created() {
     this.attemptLaunchTwilioVideo(this.eventroomId);
   },
@@ -157,6 +165,7 @@ export default {
   components: {
     IconBase,
     IconFlip,
+    CofocusSession,
   },
   computed: {
     ...mapState({
@@ -619,12 +628,34 @@ export default {
         globalThis.participantConnected(participant, room);
       });
 
+      // Handle joining the Cofocus session
+      if (this.isCofocusSession) {
+        let joinTimestamp = {
+          participantId: this.userId,
+          timestamp: new Date(),
+          type: "join",
+          sessionId: this.$route.params.eventroomName,
+        };
+        this.$refs.cofocus.registerJoinTimestamp(joinTimestamp);
+      }
+
       // Handle a disconnected RemoteParticipant.
       room.on("participantDisconnected", (participant) => {
         console.log("PARTICIPANT DISCONNECTED", participant);
         globalThis.vueDestructDisconnectedParticipant(participant);
         // globalThis.detachParticipantTracks(participant);
         // globalThis.participantDisconnected(participant, room);
+
+        // Handle when the other user has left / disconnected
+        if (this.isCofocusSession) {
+          let leaveTimestamp = {
+            participantId: participant.identity,
+            timestamp: new Date(),
+            type: "leave",
+            sessionId: this.$route.params.eventroomName,
+          };
+          this.$refs.cofocus.registerLeaveTimestamp(leaveTimestamp);
+        }
       });
 
       // room.on("trackUnsubscribed", globalThis.onParticipantUnpublishedTrack);
@@ -695,6 +726,7 @@ export default {
       // // Set the current active Participant.
       // this.setCurrentActiveParticipant(room);
     },
+
     attemptLaunchTwilioVideo(eventroomId) {
       this.loading = true;
       const globalThis = this;

@@ -18,7 +18,7 @@ const BookingController = {
 
   async getAllBookedUsersForSpecificWeek(req, res) {
     const options = {
-      validate: ["endOfWeekDate"],
+      validate: ["userId", "startOfWeekDate", "endOfWeekDate"],
       funcToRun: "getAllBookedUsersForSpecificWeek",
       dataToPass: req.body,
       selfComplete: true,
@@ -29,7 +29,7 @@ const BookingController = {
 
   async getBookedSessionsForOneDay(req, res) {
     const options = {
-      validate: ["endOfDay"],
+      validate: ["userId", "startOfDay", "endOfDay"],
       funcToRun: "getBookedSessionsForOneDay",
       dataToPass: req.body,
       selfComplete: true,

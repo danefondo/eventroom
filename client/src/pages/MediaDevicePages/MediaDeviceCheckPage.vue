@@ -109,15 +109,17 @@
               />
               <span class="eventroom-slash">eventroom.to/</span>
               <div class="eventroom-to-container">
-              <span class="eventroom-to">{{ slug }}</span></div>
+                <span class="eventroom-to">{{ slug }}</span>
+              </div>
             </div>
             <!-- <div>request / knock / password (based on case) / join (you're in invite list, open for you)</div> -->
-            <div
+            <button
               @click="joinRoom"
+              class="joinRoom"
               :class="roomType === 'open' ? 'join-room' : 'request-to-join'"
             >
               {{ roomType === "open" ? "Join room" : "Request to join" }}
-            </div>
+            </button>
           </div>
         </div>
       </div>
@@ -635,7 +637,6 @@ export default {
 </script>
 
 <style scoped>
-
 .eventroom-logo {
   font-family: "Nunito", sans-serif;
   font-weight: 700;
@@ -724,7 +725,7 @@ export default {
   background-color: white;
   color: #520cd5;
   border: 1px solid #ececec;
-  padding: 15px 125px;
+  padding: 10px 125px;
   font-size: 25px;
   font-weight: bold;
   /* position: absolute;
@@ -1170,5 +1171,12 @@ lavenderblush
 }
 .create:hover {
   background-color: #37373a;
+}
+
+.join-room {
+  outline: none;
+  box-sizing: border-box;
+  font-family: "Nunito", "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", "Arial", sans-serif !important;
 }
 </style>

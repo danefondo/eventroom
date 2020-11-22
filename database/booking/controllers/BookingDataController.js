@@ -1,322 +1,23 @@
 const SessionModel = require("../models/SessionModel");
 const EventroomModel = require("../../eventroom/models/EventroomModel");
+const UserModel = require("../../user/models/UserModel");
 
-function prepareErrors(error, errors) {
-  if (error.errors) {
-    errors = error.errors;
-  } else {
-    errors.error = error;
-  }
-  return errors;
-}
+const {
+  removeOwnSessionsFromArray,
+  filterAvailableSessions,
+  checkIfMatchPreferenceAvailable,
+  getBestAvailableMatchByPreferences,
+  getBestRandomMatch,
+  filterAvailableSessionsForSlot,
+  findMatchesForAllPossibleSlots,
+  getNextSession,
+  checkIfDateInArrayOverlaps,
+  removeOverlappingDatesFromArray,
 
-// function mergeArrays(array1, array2) {
-//   let mergedArray = [];
+  removeOverlappingDates,
+} = require("../utilities/BookingUtilities");
 
-//   [...array1, ...array2];
-
-//   array1.forEach(function (object) {
-//     mergedArray.push(object);
-//   });
-
-//   array2.forEach(function (object) {
-//     mergedArray.push(object);
-//   });
-
-//   return mergedArray;
-// }
-
-function removeOwnSessionsFromArray(sessionsArray, userId) {
-  /* ===== 
-  ENSURE USER IS NOT IN THE ARRAY OF AVAILABLE SESSIONS 
-  TO PREVENT SELF-MATCHING 
-  (prevents having to check per iteration 
-    whether matching oneself or not)
-  (also prevents double booking,
-    as you do not get booked for any
-    time slot where you're already booked)
-  ===== */
-
-  //   let alreadyMatchedForTime = [];
-
-  //   console.log("available BEFORE", sessionsArray);
-  sessionsArray.forEach(function (eachSession, index, array) {
-    firstMatchCompare = eachSession.firstPartnerId == userId;
-    secondMatchCompare = eachSession.secondPartnerId == userId;
-    // If either partner is equal to user's id, remove from sessionsArray
-    if (firstMatchCompare || secondMatchCompare) {
-      console.log("found session with own id, removing from array");
-      array.splice(index, 1);
-
-      // Prepare data to display on client side
-      // for which slot of booked sessions
-      // already has been booked for that time
-
-      //   let alreadyMatchedForTimeSession = {
-      //     sessionTime: eachSession.dateTime,
-      //     sessionId: eachSession._id,
-      //   };
-      //   alreadyMatchedForTime.push(alreadyMatchedForTimeSession);
-    }
-    // console.log("available after ONE iteration", sessionsArray);
-  });
-
-  //   console.log("array after processing", sessionsArray);
-
-  return sessionsArray;
-}
-
-function filterAvailableSessions(existingSessionsArray) {
-  let availableSessions = [];
-
-  // Iterate and check if anyone available for session
-  // until match is found, if no match, create new session
-  existingSessionsArray.forEach(function (session) {
-    let firstPartnerSlotAvailable = false;
-    let secondPartnerSlotAvailable = false;
-
-    // Check if either partner match slot available
-    if (session.firstPartnerId && !session.secondPartnerId) {
-      // Set second partner slot as available => indicator of an unmatched session
-      secondPartnerSlotAvailable = true;
-    } else if (!session.firstPartnerId && session.secondPartnerId) {
-      // Set first partner slot as available => indicator of an unmatched session
-      firstPartnerSlotAvailable = true;
-    }
-
-    if (!firstPartnerSlotAvailable && !secondPartnerSlotAvailable) {
-      // TODO, SKIP & DELETE THIS
-      // + PERIODIC CLEAN UP OF ANY SIMILAR SESSIONS
-      console.log("A session with no one? Skip. Delete.");
-    } else if (firstPartnerSlotAvailable || secondPartnerSlotAvailable) {
-      availableSessions.push(session);
-    }
-    console.log("Available sessions: ", availableSessions);
-  });
-
-  return availableSessions;
-}
-
-/* ===== 
-IF SPECIFIC MATCH PREFERENCE EXISTS &&
-IF NOT YET MATCHED &&
-IF PREFERRED MATCH EXISTS
---> SET MATCH 
-===== */
-function checkIfMatchPreferenceAvailable(
-  desiredUserId,
-  sessionToMatch,
-  availableSessions
-) {
-  let preferredSession = null;
-  if (desiredUserId && !sessionToMatch) {
-    availableSessions.forEach(function (session) {
-      let firstId = session.firstPartnerId;
-      let secondId = session.secondPartnerId;
-      // Check if the session's existing partner is the desired partner
-      if (firstId == desiredUserId || secondId == desiredUserId) {
-        // If session's existing partner is a match
-        // Set it as the preferred user you have found
-        preferredSession = session;
-      }
-    });
-  }
-  return preferredSession;
-}
-
-/* ===== 
-IF GENERAL MATCH PREFERENCE EXISTS &&
-IF NOT YET MATCHED &&
-IF NO PREFERRED USER SESSION &&
-ITERATE OVER DETAILS OF SESSIONS
-IF SESSION WITH PREFERENCE MATCH EXISTS
---> SET MATCH 
-===== */
-function getBestAvailableMatchByPreferences(
-  preferences,
-  preferredUserSession,
-  sessionToMatch,
-  availableSessions
-) {
-  let bestPreferenceMatch = null;
-  if (preferences && !preferredUserSession && !sessionToMatch) {
-    console.log("skip for now", availableSessions);
-    // e.g. must have X amount of sessions
-    // must be male/female
-    // must have x anonymous rating
-    // must have x show up rate
-    // must have x cancellation rate
-    // must have profile picture
-    // must be elysium one connected
-    // must be a friend
-
-    // also filter to only see by these details
-
-    // Check for best match:
-    // iterate over each preference
-    // push to choiceList array if qualifies
-    // then push the rest to another list (if booking is enabled when no good match found)
-    // then later run function to determine best fit
-  }
-  return bestPreferenceMatch;
-}
-
-/* ===== 
-IF NO GENERAL PREFERENCES &&
-IF NO PREFERRED USER SESSION &&
-IF NOT YET MATCHED &&
-PICK RANDOM SESSION FROM LIST
---> SET MATCH 
-===== */
-function getBestRandomMatch(
-  preferences,
-  preferredUserSession,
-  sessionToMatch,
-  availableSessions
-) {
-  let randomGoodMatch = null;
-  if (!preferences && !preferredUserSession && !sessionToMatch) {
-    // Match for random available session
-    randomGoodMatch =
-      availableSessions[Math.floor(Math.random() * availableSessions.length)];
-  }
-  return randomGoodMatch;
-}
-
-// Iterate over all sessions and see if
-// any match slot time
-function filterAvailableSessionsForSlot(availableSessions, slot) {
-  let filteredAvailableSessions = [];
-  availableSessions.forEach((session) => {
-    let sessionDateTime = new Date(session.dateTime);
-    let slotDateTime = new Date(slot.dateTime);
-    if (sessionDateTime.valueOf() == slotDateTime.valueOf()) {
-      filteredAvailableSessions.push(session);
-    }
-  });
-  return filteredAvailableSessions;
-}
-
-// PAIR UP BOTH
-// Assign a match from available sessions
-// This is a filter function essentially dividing slot data into two arrays
-function findMatchesForAllPossibleSlots(availableSessions, slotsToBookArray) {
-  // Array of objects which contain booked slot data and available session
-  let slotsWithFoundMatches = [];
-
-  // Array of booked slots with no matches
-  let slotsWithNoFoundMatches = [];
-
-  // Sort through slots and match them against available sessions, pair up any matches
-  slotsToBookArray.forEach(function (slot) {
-    let sessionToMatch = null;
-
-    /*
-    Because current slots contain many times
-    and all available sessions also contain 
-    many times for the many slots, it is
-    necessary to find, per slot, the available
-    sessions specifically matching each slot
-    */
-    let filteredAvailableSessions = filterAvailableSessionsForSlot(
-      availableSessions,
-      slot
-    );
-
-    if (filteredAvailableSessions && filteredAvailableSessions.length) {
-      /* ===== CHECK IF MATCH PREFERENCE AVAILABLE ===== */
-      let desiredUserId = slot.specificUserPreferenceId;
-      let preferredUserSession = checkIfMatchPreferenceAvailable(
-        desiredUserId,
-        sessionToMatch,
-        filteredAvailableSessions
-      );
-
-      /* ===== IF PREFERRED MATCH AVAILABLE, SET TO MATCH ===== */
-      if (preferredUserSession) {
-        sessionToMatch = preferredUserSession;
-      }
-
-      /* ===== IF NO MATCH && IF PREFERENCES CHECK FOR BEST AVAILABLE MATCH ===== */
-      let preferences = slot.generalPreferences;
-      let bestAvailableMatchByPreferences = getBestAvailableMatchByPreferences(
-        preferences,
-        preferredUserSession,
-        sessionToMatch,
-        filteredAvailableSessions
-      );
-
-      /* ===== IF BEST MATCH FOUND, SET TO MATCH ===== */
-      if (bestAvailableMatchByPreferences) {
-        sessionToMatch = bestAvailableMatchByPreferences;
-      }
-
-      /* ===== IF NO MATCH && NO PREFERENCES, PICK AT RANDOM / SELECT BEST ===== */
-      let randomBestMatch = getBestRandomMatch(
-        preferences,
-        preferredUserSession,
-        sessionToMatch,
-        filteredAvailableSessions
-      );
-
-      /* ===== IF RANDOM BEST MATCH FOUND, SET TO MATCH ===== */
-      if (randomBestMatch) {
-        sessionToMatch = randomBestMatch;
-      }
-
-      if (sessionToMatch) {
-        let matchedPair = {
-          sessionToMatch: sessionToMatch,
-          slotMatched: slot,
-        };
-        slotsWithFoundMatches.push(matchedPair);
-      } else {
-        slotsWithNoFoundMatches.push(slot);
-      }
-    } else {
-      /* ===== IF NO FILTERED AVAILABLE SESSIONS, CANCEL FURTHER CHECKS AND PUSH SLOT TO NOT FOUND MATCHES ===== */
-      slotsWithNoFoundMatches.push(slot);
-    }
-  });
-
-  let processedSlots = {
-    slotsWithFoundMatches: slotsWithFoundMatches,
-    slotsWithNoFoundMatches: slotsWithNoFoundMatches,
-  };
-
-  return processedSlots;
-}
-
-function getNextSession(userBookedSessions) {
-  // Get earliest date from array
-  let nextSession = null;
-
-  if (userBookedSessions.length) {
-    let bookedSessions = [];
-    let bookedSessionTimes = [];
-    let nextSessionRef = null;
-    userBookedSessions.forEach((session) => {
-      let sessionTimeInNum = new Date(session.dateTime).valueOf();
-      let sessionData = {
-        sessionTimeInNum: sessionTimeInNum,
-        sessionId: session._id,
-      };
-      bookedSessions.push(sessionData);
-      bookedSessionTimes.push(sessionTimeInNum);
-    });
-
-    let earliestSessionTimeInNum = Math.min(...bookedSessionTimes);
-    nextSessionRef = bookedSessions.find(
-      (s) => s.sessionTimeInNum.valueOf() === earliestSessionTimeInNum
-    );
-
-    nextSession = userBookedSessions.find(
-      (s) => s._id === nextSessionRef.sessionId
-    );
-  }
-
-  return nextSession;
-}
+const { prepareErrors } = require("../../../utilities/errorHandlers");
 
 const BookingDataController = {
   async getUserNextSession(userData) {
@@ -325,7 +26,7 @@ const BookingDataController = {
     let endOfWeekPlusTwoHours = userData.endOfWeekPlusTwoHours;
 
     // this is milliseconds
-    let hourBeforeNow = new Date(Date.now() - 60 * 60 * 1000);
+    let hourBeforeNow = new Date(Date.now() - 50 * 60 * 1000);
 
     let query = {
       $and: [
@@ -356,11 +57,26 @@ const BookingDataController = {
   },
 
   async getBookedSessionsForOneDay(dayData) {
-    let endOfDay = dayData.endOfDay;
-    let currentMoment = new Date();
-    // console.log("ENDOFDAY", endOfDay);
+    let userId = dayData.userId;
+    let startOfDay = new Date(dayData.startOfDay);
+    let endOfDay = new Date(dayData.endOfDay);
+    let hourBefore = 50 * 60 * 1000;
+    let hourBeforeNow = new Date(Date.now() - hourBefore);
+    let hourBeforeStartOfDay = new Date(startOfDay.valueOf() - hourBefore);
 
-    let query = { dateTime: { $gt: currentMoment, $lt: endOfDay } };
+    let query = {
+      $or: [
+        {
+          $and: [
+            { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
+            {
+              dateTime: { $gt: hourBeforeStartOfDay, $lt: endOfDay },
+            },
+          ],
+        },
+        { dateTime: { $gt: hourBeforeNow, $lt: endOfDay } },
+      ],
+    };
 
     let errors = {};
     let allBookedSessions;
@@ -393,10 +109,30 @@ const BookingDataController = {
   },
 
   async getAllBookedUsersForSpecificWeek(weekData) {
+    let startOfWeekDate = new Date(weekData.startOfWeekDate);
+    let hourInMS = 60 * 60 * 1000;
+    let hourBeforeStartOfWeek = new Date(startOfWeekDate.valueOf() - hourInMS);
+
     let endOfWeekDate = weekData.endOfWeekDate;
     let currentMoment = new Date();
 
-    let query = { dateTime: { $gt: currentMoment, $lt: endOfWeekDate } };
+    let userId = weekData.userId;
+
+    // let query = { dateTime: { $gt: currentMoment, $lt: endOfWeekDate } };
+
+    let query = {
+      $or: [
+        {
+          $and: [
+            { $or: [{ firstPartnerId: userId }, { secondPartnerId: userId }] },
+            {
+              dateTime: { $gt: hourBeforeStartOfWeek, $lt: endOfWeekDate },
+            },
+          ],
+        },
+        { dateTime: { $gt: currentMoment, $lt: endOfWeekDate } },
+      ],
+    };
 
     let errors = {};
     let allBookedSessions;
@@ -422,11 +158,17 @@ const BookingDataController = {
     let canceledSession = null;
     let sessionHasMatch = false;
     let noAccess = false;
+    let canceledSessionDate = null;
 
     try {
       // sessionId = mongoose.Types.ObjectId(sessionId);
       canceledSession = await SessionModel.findById(sessionId).exec();
       console.log("found session to cancel", canceledSession);
+
+      if (!canceledSession) {
+        errors.FailedToReturnCanceledSession = true;
+        throw { errors: errors };
+      }
 
       // Check if is a matched session
       if (canceledSession.firstPartnerId && canceledSession.secondPartnerId) {
@@ -440,6 +182,9 @@ const BookingDataController = {
           noAccess = true;
         }
       }
+
+      canceledSessionDate = canceledSession.dateTime;
+      console.log("canceledSESSIONDATE", canceledSessionDate);
 
       // If no match, just delete the session & eventroom
       if (!sessionHasMatch && !noAccess) {
@@ -466,8 +211,18 @@ const BookingDataController = {
           canceledSession.secondPartnerDisplayName = undefined;
           canceledSession.secondPartnerProfileImageUrl = undefined;
         }
+
         await canceledSession.save();
       }
+      // Update user sessions
+      let userQuery = { _id: userId };
+      let pull = {
+        $pull: {
+          sessions: sessionId,
+          bookedSessionTimes: canceledSessionDate,
+        },
+      };
+      await UserModel.update(userQuery, pull).exec();
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
@@ -504,6 +259,17 @@ const BookingDataController = {
     // filters include having selected a set of preferred matches in drag&drop list
 
     try {
+      let user = await UserModel.findById(userId).exec();
+      let userAlreadyHasSessionForTime = checkIfDateInArrayOverlaps(
+        user.bookedSessionTimes,
+        sessionData.dateTime
+      );
+
+      if (userAlreadyHasSessionForTime) {
+        errors.UserAlreadyHasSessionForTimeError = true;
+        throw { errors: errors };
+      }
+
       let query = { dateTime: sessionData.dateTime };
 
       // Check for whether any sessions exist for the time
@@ -647,9 +413,6 @@ const BookingDataController = {
     let slotsToBookArray = requestData.slotsToBookArray;
     let slotsToBookTimesArray = requestData.slotsToBookTimesArray;
 
-    console.log("@bookManySessionSlots @1 Slots:", slotsToBookArray);
-    console.log("@bookManySessionSlots @1 Slot times:", slotsToBookTimesArray);
-
     // Prepare data arrays
     let matchedBookedSessions = [];
     let unmatchedBookedSessions = [];
@@ -663,6 +426,23 @@ const BookingDataController = {
     let errors = {};
 
     try {
+      let user = await UserModel.findById(userId).exec();
+
+      slotsToBookTimesArray = removeOverlappingDatesFromArray(
+        user.bookedSessionTimes,
+        slotsToBookTimesArray
+      );
+
+      slotsToBookArray = removeOverlappingDates(
+        user.bookedSessionTimes,
+        slotsToBookArray
+      );
+
+      if (!slotsToBookTimesArray.length || !slotsToBookArray.length) {
+        errors.UserAlreadyHasSessionForTimeError = true;
+        throw { errors: errors };
+      }
+
       let query = { dateTime: { $in: slotsToBookTimesArray } };
 
       // Check for whether any sessions exist for the time
@@ -828,6 +608,8 @@ const BookingDataController = {
     // let sessionsNoLongerFound = [];
     let slotsWithNoLongerFoundSession = [];
     let matchedBookedSessions = [];
+    let sessionIds = [];
+    let bookedSessionTimes = [];
     try {
       let sessionIdsArray = [];
 
@@ -861,29 +643,32 @@ const BookingDataController = {
           for (let session of sessionsArray) {
             // console.log("session BEFORE updating data", session);
 
-            // Compare mongoose object id's
-            if (session._id.equals(id)) {
-              // set new partner id
-              if (session.firstPartnerId) {
-                session.secondPartnerId = userId;
-                session.secondPartnerUsername = username;
-                session.sessionThroughMatching = true;
-                session.secondPartnerFirstName = firstName;
-                session.secondPartnerLastName = lastName;
-                session.secondPartnerDisplayName = displayName;
-                session.secondPartnerProfileImageUrl = profileImageUrl;
-              } else if (session.secondPartnerId) {
-                session.firstPartnerId = userId;
-                session.firstPartnerUsername = username;
-                session.sessionThroughMatching = true;
-                session.firstPartnerFirstName = firstName;
-                session.firstPartnerLastName = lastName;
-                session.firstPartnerDisplayName = displayName;
-                session.firstPartnerProfileImageUrl = profileImageUrl;
+            if (session.dateTime)
+              if (session._id.equals(id)) {
+                // Compare mongoose object id's
+                // set new partner id
+                if (session.firstPartnerId) {
+                  session.secondPartnerId = userId;
+                  session.secondPartnerUsername = username;
+                  session.sessionThroughMatching = true;
+                  session.secondPartnerFirstName = firstName;
+                  session.secondPartnerLastName = lastName;
+                  session.secondPartnerDisplayName = displayName;
+                  session.secondPartnerProfileImageUrl = profileImageUrl;
+                } else if (session.secondPartnerId) {
+                  session.firstPartnerId = userId;
+                  session.firstPartnerUsername = username;
+                  session.sessionThroughMatching = true;
+                  session.firstPartnerFirstName = firstName;
+                  session.firstPartnerLastName = lastName;
+                  session.firstPartnerDisplayName = displayName;
+                  session.firstPartnerProfileImageUrl = profileImageUrl;
+                }
+                await session.save();
+                matchedBookedSessions.push(session);
+                sessionIds.push(session._id);
+                bookedSessionTimes.push(new Date(session.dateTime));
               }
-              await session.save();
-              matchedBookedSessions.push(session);
-            }
           }
         }
       } else {
@@ -908,12 +693,24 @@ const BookingDataController = {
       returnData.matchingResultLeftovers = slotsWithNoLongerFoundSession;
     }
     returnData.matchedBookedSessions = matchedBookedSessions;
+    if (sessionIds.length) {
+      // Update user sessions
+      let userQuery = { _id: userId };
+      let pushMany = {
+        $addToSet: {
+          sessions: { $each: sessionIds },
+          bookedSessionTimes: { $each: bookedSessionTimes },
+        },
+      };
+      await UserModel.update(userQuery, pushMany).exec();
+    }
     return returnData;
   },
 
   async matchWithExistingSession(matchingData) {
     let returnSession = null;
     let errors = {};
+
     try {
       let userId = matchingData.userId;
       let username = matchingData.username;
@@ -958,11 +755,21 @@ const BookingDataController = {
           MatchedPartnerNoLongerThere: true,
         };
       }
+      await returnSession.save();
+      // Update user sessions
+      let userQuery = { _id: userId };
+      let push = {
+        $push: {
+          sessions: returnSession._id,
+          bookedSessionTimes: new Date(returnSession.dateTime),
+        },
+      };
+      await UserModel.update(userQuery, push).exec();
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
-    await returnSession.save();
+
     return returnSession;
   },
 
@@ -1026,12 +833,25 @@ const BookingDataController = {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
+
+    // Update user sessions
+    let userQuery = { _id: userId };
+    let push = {
+      $push: {
+        sessions: session._id,
+        bookedSessionTimes: new Date(sessionData.dateTime),
+      },
+    };
+    await UserModel.update(userQuery, push).exec();
+
     return session;
   },
 
   async createAndBookManySessions(unmatchedSlots, userData) {
     let errors = {};
     let unmatchedBookedSessions = [];
+    let sessionIds = [];
+    let bookedSessionTimes = [];
     let userId = userData.userId;
     let username = userData.username;
     let firstName = userData.firstName;
@@ -1072,11 +892,23 @@ const BookingDataController = {
         // await session.save();
         Promise.all([eventroom.save(), session.save()]);
         unmatchedBookedSessions.push(session);
+        sessionIds.push(session._id);
+        bookedSessionTimes.push(new Date(slot.dateTime));
       }
     } catch (error) {
       errors = prepareErrors(error, errors);
       throw { errors: errors };
     }
+
+    // Update user sessions
+    let userQuery = { _id: userId };
+    let pushMany = {
+      $addToSet: {
+        sessions: { $each: sessionIds },
+        bookedSessionTimes: { $each: bookedSessionTimes },
+      },
+    };
+    await UserModel.update(userQuery, pushMany).exec();
 
     return unmatchedBookedSessions;
   },
@@ -1112,11 +944,11 @@ const BookingDataController = {
     let errors = {};
 
     try {
-      let response = await SessionModel.find(slotsQuery).exec();
+      let sessions = await SessionModel.find(slotsQuery).exec();
 
-      if (response) {
+      if (sessions.length) {
         responseData.sessionsExist = true;
-        responseData.existingSessionsArray = response;
+        responseData.existingSessionsArray = sessions;
       }
     } catch (error) {
       errors.FailedToCheckSessionsExist = true;
@@ -1125,145 +957,6 @@ const BookingDataController = {
     }
 
     return responseData;
-  },
-
-  /**
-   * Creates a room with given data.
-   * @param {*} roomData
-   */
-  async createRoom(roomData) {
-    console.log("@createroomutil, roomdata", roomData);
-    const room = new Room({
-      eventId: roomData.eventId,
-      hostId: roomData.hostId,
-      dateCreated: new Date(),
-      sessionId: roomData.sessionId,
-    });
-    return room.save();
-  },
-
-  async updateProfileByUserId() {},
-
-  async getProfileByUserId(userId) {
-    // By userId, not Profile._id
-    return Profile.findOne({ userId: userId }).exec();
-  },
-
-  async getManyProfilesByUserIds(participantIds) {
-    let participants = {};
-    let tempUsers = await TempUser.find({ _id: { $in: participantIds } });
-    console.log("TEMP USERS LIST", tempUsers);
-
-    let users = await Profile.find({ userId: { $in: participantIds } });
-    console.log("USERS LIST", users);
-
-    if (tempUsers) {
-      participants.tempUsers = tempUsers;
-    }
-
-    if (users) {
-      participants.users = users;
-    }
-
-    // IF NOTHING IN EITHER, THROW OR RETURN EMPTY
-    // OTHERWISE COMBINE
-    // Get profiles by ids
-    console.log("PARTICIPANTS", participants);
-    return participants;
-  },
-
-  async saveProfileImageReference(imageData) {
-    // save profile image data
-    console.log("imageData", imageData);
-    let setData = {
-      "profileImage.fileName": imageData.fileName,
-      "profileImage.fileUrl": imageData.fileUrl,
-    };
-    let query = { userId: imageData.userId };
-    let options = { upsert: true, new: true, setDefaultsOnInsert: true };
-
-    // $set used to update multiple fields
-    // https://stackoverflow.com/questions/37267042/mongoose-findoneandupdate-updating-multiple-fields
-    let update = { $set: setData };
-    console.log("update", update);
-
-    await AccountSettings.findOneAndUpdate(query, update, options).exec();
-
-    let profile = await Profile.findOneAndUpdate(query, update, options).exec();
-    return profile;
-  },
-
-  /**
-   * Creates a room with given data.
-   * @param {*} roomData
-   */
-  async createRoom(roomData) {
-    console.log("@createroomutil, roomdata", roomData);
-    const room = new Room({
-      eventId: roomData.eventId,
-      hostId: roomData.hostId,
-      dateCreated: new Date(),
-      sessionId: roomData.sessionId,
-    });
-    return room.save();
-  },
-
-  /**
-   * Sets Vonage session id for the room
-   * @param {*} roomId
-   * @param {*} sessionId
-   */
-  async setSessionId(roomId, sessionId) {
-    let room;
-    try {
-      room = Room.findById(roomId).exec();
-      if (!room) throw Error("no room found");
-    } catch (err) {
-      console.log("@addsessionid error:", err);
-      return Promise.reject("problem while adding session id");
-    }
-
-    room.sessionId = sessionId;
-    return room.save();
-  },
-
-  /**
-   * Adds a session token to the room
-   * @param {*} roomId
-   * @param {*} sessionToken
-   */
-  async addSessionToken(roomId, sessionToken) {
-    let room;
-    try {
-      room = Room.findById(roomId).exec();
-      if (!room) throw Error("no room found");
-    } catch (err) {
-      console.log("@addsessiontoken error", err);
-      return Promise.reject("error while adding session token");
-    }
-
-    if (room.sessionTokens) {
-      room.sessionTokens.push(sessionToken);
-    } else {
-      room.sessionTokens = [sessionToken];
-    }
-
-    return room.save();
-  },
-
-  async getRoomById(roomId) {
-    return Room.findById(roomId).exec();
-  },
-
-  async deleteAll() {
-    try {
-      await Room.remove({}).exec();
-      await TempUser.remove({}).exec();
-    } catch (err) {
-      console.log("err");
-      return Promise.reject("error");
-    }
-    return { success: true };
   },
 };
 

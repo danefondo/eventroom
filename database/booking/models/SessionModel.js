@@ -13,6 +13,7 @@ const SessionSchema = new Schema({
   // Chosen length of session, which determines end of session time
   sessionInterval: Number,
 
+  /* First core partner data */
   firstPartnerId: String,
   firstPartnerUsername: String,
   firstPartnerFirstName: String,
@@ -22,6 +23,23 @@ const SessionSchema = new Schema({
   firstPartnerProfileImageUrlSmall: String,
   firstPartnerSessionCustomTitle: String,
 
+  firstPartnerSessionData: {
+    partnerJoinedOnce: Boolean,
+    partnerJoinedDuringSession: Boolean,
+    partnerWasLate: Boolean,
+    partnerWasEarly: Boolean,
+    partnerLatenessInMS: Number,
+    partnerEarlinessInMS: Number,
+    partnerTimestamps: [],
+    partnerTotalTimeInSessionInMS: [],
+
+    partnerAttendanceSuccessful: Boolean,
+
+    originalPartnerHasRematched: Boolean,
+    originalPartnerHasCanceled: Boolean,
+  },
+
+  /* Second core partner data */
   secondPartnerId: String,
   secondPartnerUsername: String,
   secondPartnerFirstName: String,
@@ -30,6 +48,26 @@ const SessionSchema = new Schema({
   secondPartnerProfileImageUrl: String,
   secondPartnerProfileImageUrlSmall: String,
   secondPartnerSessionCustomTitle: String,
+
+  secondPartnerSessionData: {
+    partnerJoinedOnce: Boolean,
+    partnerJoinedDuringSession: Boolean,
+    partnerWasLate: Boolean,
+    partnerWasEarly: Boolean,
+    partnerLatenessInMS: Number,
+    partnerEarlinessInMS: Number,
+    partnerTimestamps: [],
+    partnerTotalTimeInSessionInMS: [],
+
+    partnerAttendanceSuccessful: Boolean,
+
+    originalPartnerHasRematched: Boolean,
+    originalPartnerHasCanceled: Boolean,
+  },
+
+  /* Session status */
+  sessionHasStarted: Boolean,
+  sessionHasFinished: Boolean,
 
   sessionIsMatched: Boolean,
 

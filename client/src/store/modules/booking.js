@@ -1,4 +1,4 @@
-// import { isEqual, parseISO } from "date-fns";
+import { setYear, setMonth, setDate, setHours, setMinutes } from "date-fns";
 
 const getDefaultState = () => {
   return {
@@ -7,8 +7,18 @@ const getDefaultState = () => {
       specificUserPreferenceId: null,
       dateTime: null,
     },
-    selectedToBook: [],
+
     isCancelingSlots: [],
+
+    selectedSlotName: "",
+    selectedSlotStartTime: null,
+    selectedSlotDateString: null,
+
+    selectedSlotDateTime: null,
+
+    selectedInterval: 50,
+
+    currentlyBooking: false,
   };
 };
 
@@ -28,18 +38,6 @@ const mutations = {
     }
   },
 
-  selectSlot(state, slotData) {
-    state.selectedToBook.push(slotData);
-  },
-
-  cancelSlot(state, slotData) {
-    let index = state.selectedToBook.findIndex(
-      (slot) => slot.dateTime.valueOf() === slotData.dateTime.valueOf()
-    );
-
-    state.selectedToBook.splice(index, 1);
-  },
-
   setIsCanceling(state, slotData) {
     state.isCancelingSlots.push(slotData);
   },
@@ -56,8 +54,38 @@ const mutations = {
     state.isCancelingSlots = [];
   },
 
-  clearAllSelections(state) {
-    state.selectedToBook = [];
+  setBookerData(state, slot) {
+    state.selectedSlotDateTime = new Date(slot.dateTime);
+    state.selectedSlotStartTime = slot.slotStartTime;
+
+    const dateString = `${slot.yearNum}-${slot.monthNum}-${slot.dateNum}`;
+    state.selectedSlotDateString = dateString;
+  },
+
+  setSelectedSlotName(state, value) {
+    state.selectedSlotName = value;
+  },
+
+  setSelectedSlotDateString(state, value) {
+    state.selectedSlotDateString = value;
+
+    let splitValue = value.split("-");
+    console.log("splitValue", splitValue);
+    state.selectedSlotDateTime = setYear(state.selectedSlotDateTime, splitValue[0]);
+    state.selectedSlotDateTime = setMonth(state.selectedSlotDateTime, splitValue[1] -1);
+    state.selectedSlotDateTime = setDate(state.selectedSlotDateTime, splitValue[2]);
+  },
+
+  setSelectedSlotStartTime(state, value) {
+    state.selectedSlotStartTime = value;
+    let splitValue = value.split(":");
+    console.log("splitValue", splitValue);
+    state.selectedSlotDateTime = setHours(state.selectedSlotDateTime, splitValue[0]);
+    state.selectedSlotDateTime = setMinutes(state.selectedSlotDateTime, splitValue[1]);
+  },
+
+  setCurrentlyBooking(state, newState) {
+    state.currentlyBooking = newState;
   },
 };
 
@@ -71,14 +99,6 @@ const actions = {
     state.commit("updateBookingData", bookingData);
   },
 
-  selectSlot(state, slotData) {
-    state.commit("selectSlot", slotData);
-  },
-
-  cancelSlot(state, slotData) {
-    state.commit("cancelSlot", slotData);
-  },
-
   setIsCanceling(state, slotData) {
     state.commit("setIsCanceling", slotData);
   },
@@ -87,12 +107,28 @@ const actions = {
     state.commit("exitIsCanceling", slotData);
   },
 
-  clearAllSelections(state) {
-    state.commit("clearAllSelections");
-  },
-
   clearAllCanceling(state) {
     state.commit("clearAllCanceling");
+  },
+
+  setBookerData(state, slot) {
+    state.commit("setBookerData", slot);
+  },
+
+  setSelectedSlotName(state, value) {
+    state.commit("setSelectedSlotName", value);
+  },
+
+  setSelectedSlotDateString(state, value) {
+    state.commit("setSelectedSlotDateString", value);
+  },
+
+  setSelectedSlotStartTime(state, value) {
+    state.commit("setSelectedSlotStartTime", value);
+  },
+
+  setCurrentlyBooking(state, newState) {
+    state.commit("setCurrentlyBooking", newState);
   },
 };
 

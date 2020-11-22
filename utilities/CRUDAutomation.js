@@ -2,13 +2,14 @@ const ProfileDataController = require("../database/profile/controllers/ProfileDa
 const AccountSettingsDataController = require("../database/settings/controllers/AccountSettingsDataController");
 const EventroomDataController = require("../database/eventroom/controllers/EventroomDataController");
 const BookingDataController = require("../database/booking/controllers/BookingDataController");
-
+const SessionDataController = require("../database/booking/controllers/SessionDataController");
 
 const DataControllers = {
   ProfileDataController,
   AccountSettingsDataController,
   EventroomDataController,
-  BookingDataController
+  BookingDataController,
+  SessionDataController,
 };
 
 const CRUDAutomation = {
@@ -242,6 +243,5 @@ const CRUDAutomation = {
 };
 
 module.exports = CRUDAutomation;
-
 
 // If anyone ever steals any of Elysium's code. I will make you regret it for the rest of your life.

@@ -86,7 +86,7 @@ const EventRoutes = require("./routes/API/EventRoutes");
 const UserActionRoutes = require("./routes/API/UserActionRoutes");
 const EventroomRoutes = require("./routes/API/EventroomRoutes");
 const BookingRoutes = require("./routes/API/BookingRoutes");
-const ProfileModel = require("./database/profile/models/ProfileModel");
+const SessionRoutes = require("./routes/API/SessionRoutes");
 app.use("/api/accounts", AccountRoutes);
 app.use("/api/settings", AccountSettings);
 app.use("/api/profiles", ProfileRoutes);
@@ -94,6 +94,7 @@ app.use("/api/events", EventRoutes);
 app.use("/api/userActions", UserActionRoutes);
 app.use("/api/eventroom", EventroomRoutes);
 app.use("/api/booking", BookingRoutes);
+app.use("/api/session", SessionRoutes);
 
 /* ====== REQUESTS HANDLING ====== */
 
@@ -325,6 +326,7 @@ io.on("connection", function (socket) {
       // return socket.emit("messageSendFailed", response);
     }
     // console.log("Session:", data.session);
+    console.log("APP SIDE SESSIONS", data.sessions);
     socket.to(data.roomType).emit("receivePushedSessions", data.sessions);
     // io.removeAllListeners();
   });

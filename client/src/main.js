@@ -12,6 +12,8 @@ import { format } from "date-fns";
 import VueHotkey from "v-hotkey";
 import autolinker, { AUTOLINKER_NAME } from "vue-autolinker";
 
+import pageTitleMixin from "./mixins/pageTitleMixin";
+
 import { setGlobals } from "./config/axios";
 import router from "./router";
 import store from "./store/index";
@@ -25,6 +27,7 @@ Vue.use(CKEditor);
 Vue.use(VueYoutube);
 Vue.use(VueCookies);
 Vue.use(VueHotkey);
+Vue.mixin(pageTitleMixin);
 
 Vue.directive(AUTOLINKER_NAME, autolinker);
 

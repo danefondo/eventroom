@@ -47,8 +47,11 @@
         v-if="RTCConfig.twilio && userId && eventroom.eventroomId"
         :eventroomId="eventroom.eventroomId"
         :userId="userId"
+        :user="user"
+        :isCofocusSession="isCofocusSession"
         ref="twilio"
       />
+      <FloatingChat v-show="chat" />
       <VanillaRTCVideo
         v-if="RTCConfig.vanillaRTC && userId && eventroom.eventroomId"
         :eventroomId="eventroom.eventroomId"
@@ -80,6 +83,8 @@ import VanillaRTCVideo from "./VanillaRTC/VanillaRTCVideo";
 import axios from "axios";
 import auth from "../../config/auth";
 import { destroyTempToken, setTempToken } from "../../config/axios";
+
+import FloatingChat from "./CofocusComponents/FloatingChat";
 
 import logo from "../../assets/logo.png";
 // import SessionController from "../../session/SessionController";
@@ -149,6 +154,7 @@ export default {
     RoomShortcuts,
     TwilioVideo,
     VanillaRTCVideo,
+    FloatingChat,
   },
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
@@ -282,6 +288,7 @@ export default {
         next();
       }
     },
+
     async checkIfRoomPasswordMatches() {
       let errors = {};
       try {
@@ -687,6 +694,7 @@ export default {
   margin: 0 auto;
   width: 100%;
   position: relative;
+  display: flex;
 }
 
 .room-pass-verif {

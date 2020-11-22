@@ -22,6 +22,16 @@ const routes = [
     component: () => import("./pages/CorePages/HomePage"),
   },
 
+  /* ====== COFOCUS PROFILE ROUTES ====== */
+  {
+    path: "/profile/:userId",
+    component: () => import("./pages/Cofocus/ProfileCofocus"),
+    name: "ProfileCofocus",
+    meta: {
+      requireAuthentication: true,
+    },
+  },
+
   /* ====== COFOCUS BOOKING ROUTES ====== */
   {
     path: "/dashboard/booking",

@@ -74,36 +74,35 @@ export default {
   methods: {
     toggleDayWeek(dayOrWeek) {
       // prevent toggle if already same
+      console.log("test1");
       if (
         (dayOrWeek == "week" && this.week) ||
         (dayOrWeek == "day" && !this.week)
       ) {
+        console.log("failtest");
         return;
       } else {
+        console.log("testprogress");
         this.$emit("toggleDayWeekView");
       }
     },
     switchWeek(prevNext) {
       let week = this.currentWeekStart;
-      console.log("switchWeekBEFORE", week);
       if (prevNext === "forward") {
         week = addWeeks(week, 1);
       } else {
         week = subWeeks(week, 1);
       }
-      console.log("switchWeekAFTERE", week);
       this.$emit("switchWeek", week);
     },
     switchDay(prevNext) {
       let selectedDay = this.currentSelectedDay;
-      console.log("switchDayBEFORE", selectedDay);
 
       if (prevNext === "forward") {
         selectedDay = addDays(selectedDay, 1);
       } else {
         selectedDay = subDays(selectedDay, 1);
       }
-      console.log("switchDayAFTER", selectedDay);
       this.$emit("switchDay", selectedDay);
     },
     setToToday() {

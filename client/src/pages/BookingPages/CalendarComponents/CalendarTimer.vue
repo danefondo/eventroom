@@ -47,7 +47,6 @@ export default {
 
       timerInterval: null,
       timePassed: 0,
-
     };
   },
   computed: {
@@ -88,5 +87,16 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.session-notifier {
+  background-color: #f7f7fb;
+  padding: 20px;
+  border-radius: 20px;
+  font-weight: 700;
+  color: #5600ff;
+  width: 275px;
+  font-size: 20px;
+  margin: 0px auto;
+  box-sizing: border-box;
+}
 </style>

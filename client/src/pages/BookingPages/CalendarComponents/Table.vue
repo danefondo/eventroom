@@ -179,7 +179,7 @@ export default {
   name: "Table",
   data() {
     return {
-      interval: 60,
+      interval: 50,
       height: 105 / 4,
       selectedHeight: 105,
       boxHeight: 105,
@@ -334,7 +334,7 @@ export default {
       // need to check if session currently happening in slot / sessions nearby?
       // then show
 
-      if (slot.hasCurrentSession) {
+      if (slot.hasCurrentOrNextSession) {
         isPastHour = false;
       }
 

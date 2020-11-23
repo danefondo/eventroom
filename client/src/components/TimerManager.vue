@@ -83,7 +83,7 @@ export default {
   },
 
   methods: {
-    async getUserNextSession() {
+    async getUserNextSession(recheck = false) {
       // Get everyone's booked sessions for this week from this time forward (no past sessions)
       try {
         if (!this.user || !this.user._id) {
@@ -110,7 +110,7 @@ export default {
 
         if (response.data.success) {
           this.changeState("gettingNextSession", false);
-          this.checkIfSameElseSetNew(nextSession);
+          this.checkIfSameElseSetNew(nextSession, recheck);
         }
       } catch (error) {
         console.log("@gettingNextSession Error: ", error);
@@ -148,7 +148,7 @@ export default {
     session is set.  
     ====== */
 
-    checkIfSameElseSetNew(session) {
+    checkIfSameElseSetNew(session, recheck) {
       // If current or next session exist
       if (this.currentSession || this.nextSession) {
         let nextStartInMS = new Date(this.nextSession.dateTime).valueOf();
@@ -158,18 +158,18 @@ export default {
           // If existing session id is same as new session
           if (session._id !== this.nextSession._id) {
             this.resetSessionAndTimer();
-            this.setNextOrCurrentSession(session);
+            this.setNextOrCurrentSession(session, recheck);
           }
         } else {
           this.resetSessionAndTimer();
-          this.setNextOrCurrentSession(session);
+          this.setNextOrCurrentSession(session, recheck);
         }
       } else {
-        this.setNextOrCurrentSession(session);
+        this.setNextOrCurrentSession(session, recheck);
       }
     },
 
-    setNextOrCurrentSession(session) {
+    setNextOrCurrentSession(session, recheck) {
       if (session) {
         let sessionStartInMS = new Date(session.dateTime).valueOf();
         let sessionIntervalInMS = session.sessionInterval * 60 * 1000;
@@ -192,11 +192,11 @@ export default {
         } else if (isCurrentSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", session);
-          this.startCountdownToNextSession();
+          this.startCountdownToNextSession(recheck);
         } else if (isUpcomingSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", null);
-          this.startCountdownToNextSession();
+          this.startCountdownToNextSession(recheck);
         }
       } else {
         this.changeState("nextSession", null);
@@ -222,7 +222,7 @@ export default {
       return weekData;
     },
 
-    startCountdownToNextSession() {
+    startCountdownToNextSession(recheck) {
       /* Set session start time in MS */
       let nextSessionStart = this.nextSession.dateTime;
       let nextSessionStartInMS = new Date(nextSessionStart).valueOf();
@@ -243,13 +243,16 @@ export default {
       this.changeState("oneMinToStartInMS", oneMinToStartInMS);
       this.changeState("tenMinToStartInMS", tenMinToStartInMS);
 
-      this.changeState("doneLoadingTimes", true);
-      // this.$nextTick(() => {
-      //   this.changeState("doneLoadingTimes", true);
-      //   // this.$nextTick(() => {
-      //   //   this.startTimer();
-      //   // });
-      // });
+      this.$nextTick(() => {
+        this.changeState("doneLoadingTimes", true);
+        if (recheck) {
+          this.startTime();
+        }
+        this.$store.dispatch(
+          "calendar/updateCalendarCurrentSessionSlot",
+          this.nextSession
+        );
+      });
     },
 
     startTimer() {

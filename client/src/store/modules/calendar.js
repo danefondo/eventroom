@@ -359,9 +359,9 @@ const mutations = {
           sessionStartInMS == thirtyBefore ||
           sessionStartInMS == fortyFiveBefore
         ) {
-          slot.hasCurrentSession = true;
+          slot.hasCurrentOrNextSession = true;
         } else {
-          slot.hasCurrentSession = false;
+          slot.hasCurrentOrNextSession = false;
         }
       });
     });

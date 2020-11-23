@@ -121,55 +121,6 @@ export default {
 
     async checkIfSessionStillThere() {
       this.$emit("checkIfSessionStillThere");
-      // check if still there
-      // if not, reset timer && vuex for timer
-      // get next session again OR current session
-      // if session id is not matching, then check if time matches
-      // if start time is different, cancel initial timers
-      // update with new timer
-      // and of course, somewhere, update or change the current && next sessions
-
-      // when can it still be a 'current' session?
-      // if it started 60m ago, it cannot be
-      // if it started 50m ago, it can be
-      // if it started 40m ago, it can be
-      // so it must be 50 (or the interval of sessions)
-
-      // what else must be true?
-      // how often must it happen?
-
-      // this function can also be used
-
-      // so what do I check?
-
-      // I should just query for the next upcoming session
-      // should it check for whether that specific session exists as well, still?
-
-      // another variable that can change is that partner can cancel
-
-      // is partner still there?
-
-      // there should be some sort of blockers...
-      // if x thing is in process currently, then do not do one of the updates
-
-      // so basically just get next or current session
-
-      // or should I get the same session?
-      // basically, unless you actively canceled a session, which would also update
-      // the current next session, with this re-usable function
-      // then on YOUR end the session should absolutely definitely exist
-
-      // and if it does not, this can be handled on the session page
-      // which will notify you, that something went wrong with your session
-      // or that your partner has canceled and that we're trying to
-      // find you a new partner
-
-      // so ideally, it is a re-usable function
-      // it is
-
-      //
-
-      return 1;
     },
   },
 
@@ -206,32 +157,19 @@ export default {
       // Timeout for that, then set whichever possible new session is next
     },
   },
-
-  // Check if session still exists
-
   // Check if user still in session, if not -->
 
   // Check if partner still there, if not -->
 
-  // Recompute this per book & cancel if changes
-
   // Delete session if no match found by start time? or rematch if possible, and if not then delete
 
-  // checkIfNextSessionStillExists() {},
   // checkIfUserStillInSession() {
   //   // Get back in the session!
   // },
 
-  // if calendar page, actually update
-
   // set exceptions for 25m && 100m intervals --> if interval == 25 / 50 / 100
 
   // add check if cofocus or not
-
-  // get from database, get all users and calc the next session
-  // get them from -1h from now (for assurance)
-  // also get +2h this week end, to account for midnight
-  // capture next OR ongoing session
 };
 </script>
 

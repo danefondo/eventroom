@@ -6,20 +6,20 @@
 export default {
   name: "TimerChecks",
   props: [
-    "tenMinToStartInSec",
+    "tenMinToStartInMS",
     "didNextSessionTenMinCheck",
     "nextSessionIsTenMinToStart",
-    "oneMinToStartInSec",
+    "oneMinToStartInMS",
     "didNextSessionOneMinCheck",
-    "nextSessionStartInSec",
+    "nextSessionStartInMS",
     "didSessionStartedCheck",
-    "nextSessionEndInSec",
+    "nextSessionEndInMS",
     "didSessionFinishedCheck",
   ],
   methods: {
-    doTenMinCheck(nowInSec) {
+    doTenMinCheck(nowInMS) {
       if (
-        nowInSec >= this.tenMinToStartInSec &&
+        nowInMS >= this.tenMinToStartInMS &&
         !this.didNextSessionTenMinCheck &&
         !this.nextSessionIsTenMinToStart
       ) {
@@ -30,9 +30,9 @@ export default {
       }
     },
 
-    doOneMinCheck(nowInSec) {
+    doOneMinCheck(nowInMS) {
       if (
-        nowInSec >= this.oneMinToStartInSec &&
+        nowInMS >= this.oneMinToStartInMS &&
         !this.didNextSessionOneMinCheck
       ) {
         this.changeState("didNextSessionOneMinCheck", true);
@@ -41,9 +41,9 @@ export default {
       }
     },
 
-    doSessionStartCheck(nowInSec) {
+    doSessionStartCheck(nowInMS) {
       if (
-        nowInSec >= this.nextSessionStartInSec &&
+        nowInMS >= this.nextSessionStartInMS &&
         !this.didSessionStartedCheck
       ) {
         this.changeState("sessionHasStarted", true);
@@ -53,11 +53,11 @@ export default {
       }
     },
 
-    doSessionEndCheck(nowInSec) {
-      console.log("now, end", nowInSec, this.nextSessionEndInSec);
+    doSessionEndCheck(nowInMS) {
+      // console.log("now, end", nowInMS, this.nextSessionEndInMS);
       if (
-        this.nextSessionEndInSec &&
-        nowInSec >= this.nextSessionEndInSec &&
+        this.nextSessionEndInMS &&
+        nowInMS >= this.nextSessionEndInMS &&
         !this.didSessionFinishedCheck
       ) {
         clearInterval(this.timerInterval);

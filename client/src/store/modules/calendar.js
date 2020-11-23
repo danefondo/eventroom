@@ -367,6 +367,36 @@ const mutations = {
     });
   },
 
+  // setCalendarPastMatchedSessions(state, sessions) {
+  //   // 1. for user sessions
+  //   // 2. if past && had matched
+  //   // 3. set true && show
+
+  //   // let sessionStartInMS = new Date(session.dateTime).valueOf();
+  //   // let FIFTEEN_MINUTES = 900000; // milliseconds
+
+  //   // state.calendarData.forEach((hourRow) => {
+  //   //   hourRow.hourRowDays.forEach((slot) => {
+  //   //     let slotStartInMS = new Date(slot.dateTime).valueOf();
+
+  //   //     let fifteenBefore = slotStartInMS - FIFTEEN_MINUTES;
+  //   //     let thirtyBefore = slotStartInMS - FIFTEEN_MINUTES * 2;
+  //   //     let fortyFiveBefore = slotStartInMS - FIFTEEN_MINUTES * 3;
+
+  //   //     if (
+  //   //       sessionStartInMS == slotStartInMS ||
+  //   //       sessionStartInMS == fifteenBefore ||
+  //   //       sessionStartInMS == thirtyBefore ||
+  //   //       sessionStartInMS == fortyFiveBefore
+  //   //     ) {
+  //   //       slot.hasPastMatchedSession = true;
+  //   //     } else {
+  //   //       slot.hasPastMatchedSession = false;
+  //   //     }
+  //   //   });
+  //   // });
+  // },
+
   /* ====== ADDING SESSIONS TO DATA  ====== */
 
   pushManyCalendarSessions(state, updateData) {
@@ -852,11 +882,11 @@ const actions = {
           updatedSession.firstPartnerId == userId ||
           updatedSession.secondPartnerId == userId;
 
-        for (let i = 0; i < state.allUserSessions.length; i++) {
-          if (state.allUserSessions[i]._id == updatedSession._id) {
+        for (let i = 0; i < state.state.allUserSessions.length; i++) {
+          if (state.state.allUserSessions[i]._id == updatedSession._id) {
             if (partnerCompare) {
               let updateObject = {
-                oldSession: state.allUserSessions[i],
+                oldSession: state.state.allUserSessions[i],
                 updatedSession,
               };
               sessions.push(updateObject);

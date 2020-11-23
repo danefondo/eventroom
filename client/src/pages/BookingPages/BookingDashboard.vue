@@ -32,10 +32,11 @@
             :allUserSessions="allUserSessions"
             :nextSession="nextSession"
             :currentSession="currentSession"
+            :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
           />
         </div>
         <div class="sidebar">
-          <CalendarTimer />
+          <TimerManager v-if="user && isAuthenticated" />
           <Booker
             :user="user"
             :selectedInterval="selectedInterval"
@@ -72,6 +73,7 @@ Welcome to Cofocus.
 
 import { requestWithAuthentication } from "../../config/api";
 import { mapState } from "vuex";
+import TimerManager from "../../components/TimerManager";
 import {
   generateCalendarData,
   getWeekDates,
@@ -156,13 +158,15 @@ export default {
 
       nextSession: (state) => state.cofocus.nextSession,
       currentSession: (state) => state.cofocus.currentSession,
+      nextSessionIsTenMinToStart: (state) =>
+        state.cofocus.nextSessionIsTenMinToStart,
     }),
   },
   components: {
+    TimerManager,
     Switcher,
     Table,
     Booker,
-    CalendarTimer: () => import("./CalendarComponents/CalendarTimer"),
   },
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);

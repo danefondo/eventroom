@@ -99,6 +99,7 @@
                 userHasSessionForSlot(eachHourRow, i) &&
                 !eachHourRow.hourRowDays[i].isCanceling
               "
+              :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
               :boxHeight="getBoxHeights"
               :slotData="eachHourRow.hourRowDays[i]"
               :sessionTime="
@@ -207,6 +208,7 @@ export default {
     "allUserSessions",
     "nextSession",
     "currentSession",
+    "nextSessionIsTenMinToStart",
   ],
   computed: {
     getHeights() {

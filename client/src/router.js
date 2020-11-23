@@ -39,6 +39,8 @@ const routes = [
     name: "BookingDashboard",
     meta: {
       requireAuthentication: true,
+      customTimer: true,
+      calendar: true,
     },
   },
 
@@ -48,7 +50,7 @@ const routes = [
     path: "/session/:eventroomName",
     component: () => import("./pages/RoomPages/Room"),
     name: "CofocusPage",
-    meta: { hideNavigation: true },
+    meta: { hideNavigation: true, customTimer: true, session: true },
     beforeEnter(to, from, next) {
       let eventroomName = to.params.eventroomName;
       let routeData = {

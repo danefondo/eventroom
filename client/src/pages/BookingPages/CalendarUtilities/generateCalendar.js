@@ -144,6 +144,12 @@ function createDayObjectForTimeRow(
     // peopleMatchedSessionsForSlot: [],
 
     // matched or unmatched, show these to the user as available to match
+    // each user has array of user ids for who they ok with matching 
+    // each user also has 'locked in / not locked in' state for current session 
+    // (which could be a default)
+    // (or locked in if already w/some preferred user or of higher preference priority)
+    // if not locked in and user's id matches one of the ids in some user's list
+    // then this user can see
     peopleAvailableForMatchingWithUserForSlot: [],
 
     // experimental
@@ -171,7 +177,7 @@ function createDayObjectForTimeRow(
     // showing the 'Join' button for next and ongoing sessions
     hasCurrentSession: false,
 
-    hasPastSession: false,
+    hasPastMatchedSession: false,
 
     // isPastHour: false,
 

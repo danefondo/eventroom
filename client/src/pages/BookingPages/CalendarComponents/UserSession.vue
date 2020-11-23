@@ -12,7 +12,7 @@
       <span class="booked-time">{{ sessionTime }}</span>
       <div v-if="userIsMatchedForSlot">
         <span class="booked-title">{{ `${matchedPartnerName}` }}</span>
-        <router-link :to="sessionLink" v-if="slotData.hasCurrentSession || slotData.hasNextSession" class="join-session"> Join </router-link>
+        <router-link :to="sessionLink" v-if="nextSessionIsTenMinToStart && (slotData.hasCurrentSession || slotData.hasNextSession)" class="join-session"> Join </router-link>
         <div class="selected-close" @click="setIsCanceling">x</div>
       </div>
       <span v-else class="booked-title-unmatched">Not yet matched... </span>
@@ -38,6 +38,7 @@ export default {
     "userIsMatchedForSlot",
     "sessionLink",
     "matchedPartnerName",
+    "nextSessionIsTenMinToStart",
   ],
   components: {
     CancelSession,

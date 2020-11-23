@@ -1,7 +1,8 @@
 <template>
   <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
     <Nav v-if="!$route.meta.hideNavigation" />
-    <TimerManager />
+    <!-- Do not show this timer in Calendar & Session pages -->
+    <TimerManager v-if="user && isAuthenticated && !$route.meta.customTimer" />
     <div
       :class="
         $route.meta.hideNavigation ? 'page-container full' : 'page-container'
@@ -13,6 +14,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import Nav from "./components/Nav";
 import TimerManager from "./components/TimerManager";
 
@@ -21,6 +23,12 @@ export default {
   components: {
     Nav,
     TimerManager,
+  },
+  computed: {
+    ...mapState({
+      user: (state) => state.auth.user,
+      isAuthenticated: (state) => state.auth.authenticationStatus,
+    }),
   },
 };
 </script>

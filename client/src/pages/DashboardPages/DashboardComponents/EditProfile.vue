@@ -4,7 +4,15 @@
     <div class="profile-rows">
       <div class="settings-subtitle" style="margin-bottom: 30px">Avatar</div>
       <div class="profile-row">
-        <ImageUpload v-model="image" :uploading="uploadingImage" />
+        <IKImageUpload
+          :fileUrl="fileUrl"
+          :fileName="fileName"
+          :tempImage="tempImage"
+          @updateReference="saveProfileImageReference"
+          @deleteImage="deleteProfileImage"
+          @removeImagePostFail="removeImagePostFail"
+          @setTempImage="setTempImage"
+        />
       </div>
       <div class="profile-row">
         <div class="input-container">
@@ -71,7 +79,7 @@
 <script>
 import DecoupledEditor from "@ckeditor/ckeditor5-build-decoupled-document";
 import { requestWithAuthentication } from "../../../config/api";
-import ImageUpload from "./ImageUpload";
+import IKImageUpload from "./IKImageUpload";
 // import axios from "axios";
 
 export default {
@@ -79,14 +87,14 @@ export default {
   data() {
     return {
       updatingSettings: false,
-      uploadingImage: false,
       failedToGetProfileData: false,
       requestProfileDataFinished: false,
       updateSuccessful: false,
       updateFailed: false,
       fileName: null,
       fileUrl: null,
-      image: null,
+      fileId: null,
+      tempImage: null,
       displayName: "",
       location: "",
       bio: "",
@@ -122,7 +130,7 @@ export default {
   },
   props: ["user"],
   components: {
-    ImageUpload,
+    IKImageUpload,
   },
   mounted() {
     this.getProfileDataByUserId();
@@ -147,12 +155,11 @@ export default {
           } else {
             let fileName = profileData[key]["fileName"];
             let fileUrl = profileData[key]["fileUrl"];
-            if (fileName && fileUrl) {
+            let fileId = profileData[key]["fileId"];
+            if (fileName && fileUrl && fileId) {
               this.fileName = profileData[key]["fileName"];
               this.fileUrl = profileData[key]["fileUrl"];
-              this.image = {
-                preview: profileData[key]["fileUrl"],
-              };
+              this.fileId = profileData[key]["fileId"];
             }
           }
         }
@@ -163,7 +170,7 @@ export default {
       }
     },
     async saveProfileSettings() {
-      console.log("@user", this.user);
+      // console.log("@user", this.user);
       let profileSettings = {
         userId: this.user._id,
         displayName: this.displayName,
@@ -176,7 +183,7 @@ export default {
       await this.runInitialValidation();
 
       try {
-        console.log("@saveProfileSettings", profileSettings);
+        // console.log("@saveProfileSettings", profileSettings);
         this.updatingSettings = true;
 
         const result = await requestWithAuthentication(
@@ -189,7 +196,7 @@ export default {
           this.updatingSettings = false;
           this.updateSuccessful = true;
           let globalThis = this;
-          setTimeout(function() {
+          setTimeout(function () {
             globalThis.updateSuccessful = false;
           }, 5000);
         }
@@ -201,51 +208,32 @@ export default {
         this.updatingSettings = false;
       }
     },
+
     async runInitialValidation() {
-      console.log("Good to go!");
+      // console.log("Good to go!");
     },
-    async uploadImage() {
-      try {
-        this.uploadingImage = true;
-        const fileName = Date.now().toString();
-        const fileType = this.image.file.type;
-        let imageData = {
-          fileName,
-          fileType,
-        };
 
-        const result = await requestWithAuthentication(
-          `post`,
-          `api/settings/getS3Signature`,
-          imageData
-        );
-
-        console.log("result", result);
-        let returnData = result.data.returnData;
-        const signedRequest = returnData.signedRequest;
-        let uploadResult = await fetch(signedRequest, {
-          method: "PUT",
-          body: this.image.file,
-          headers: {
-            "Content-Type": this.image.file.type,
-            processData: false,
-          },
-        });
-
-        console.log("upres", uploadResult);
-        this.fileName = returnData.fileName;
-        this.fileUrl = returnData.url;
-        this.saveProfileImageReference();
-      } catch (error) {
-        this.uploadingImage = false;
-      }
+    setTempImage(imageData) {
+      this.tempImage = imageData.preview;
     },
-    async saveProfileImageReference() {
+
+    removeImagePostFail() {
+      this.tempImage = null;
+    },
+
+    async saveProfileImageReference(image) {
       let imageData = {};
+      if (this.fileId) {
+        await this.deleteProfileImage();
+      }
+      this.fileName = image.name;
+      this.fileUrl = image.url;
+      this.fileId = image.fileId;
       try {
-        if (this.fileName && this.fileUrl) {
-          imageData.fileName = this.fileName;
-          imageData.fileUrl = this.fileUrl;
+        if (image.name && image.url && image.fileId) {
+          imageData.fileName = image.name;
+          imageData.fileUrl = image.url;
+          imageData.fileId = image.fileId;
           imageData.userId = this.user._id;
         } else {
           throw { ImageDataMissingError: true };
@@ -255,16 +243,29 @@ export default {
           `api/profiles/saveProfileImageReference`,
           imageData
         );
-        console.log("successfully saved reference", result);
+        console.log("Successfully saved reference", result);
       } catch (error) {
         console.log("error", error);
       }
     },
-  },
-  watch: {
-    image: async function () {
-      if (this.image && this.image.file) {
-        await this.uploadImage();
+
+    async deleteProfileImage() {
+      try {
+        let deleteData = {
+          userId: this.user._id,
+          fileId: this.fileId,
+        };
+        this.fileName = null;
+        this.fileUrl = null;
+        this.fileId = null;
+        let result = await requestWithAuthentication(
+          `post`,
+          `api/profiles/deleteProfileImage`,
+          deleteData
+        );
+        console.log("Successfully removed reference", result);
+      } catch (error) {
+        console.log("error", error);
       }
     },
   },
@@ -379,7 +380,6 @@ export default {
 .save:hover {
   background-color: #6e00ffc9;
 }
-
 
 .general-error {
   color: #a72143;

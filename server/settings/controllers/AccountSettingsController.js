@@ -1,63 +1,12 @@
 const AccountSettingsDataController = require("../../../database/settings/controllers/AccountSettingsDataController");
-const { verifyPassword } = require("../../auth/utilities/Utils");
 
-const { signS3 } = require("../utilities/AWS");
+var ImageKit = require("imagekit");
 
-const {
-  validatePostRequest,
-  processPostRequest,
-} = require("../../../utilities/CRUDAutomation");
+const { processPostRequest } = require("../../../utilities/CRUDAutomation");
 
 const controller = "AccountSettingsDataController";
 
 const AccountSettingsController = {
-  //   async createEventroom(req, res) {
-  //     if (!req.body) {
-  //       return res.status(400).send({ error: "Invalid request 400" });
-  //     }
-
-  //     let eventroomName = req.body.eventroomName;
-  //     if (!eventroomName) {
-  //       // Ideally just create a new slug here to maximize UX
-  //       return res
-  //         .status(400)
-  //         .send({ error: "Invalid request: Eventroom name missing" });
-  //     }
-  //     eventroomName = eventroomName.replace(/[^0-9a-z_-]/gi, "");
-  //     let eventroomData = {};
-  //     // const userId = req.user._id;
-  //     const hostId = req.body.hostId;
-  //     // let userIsHost;
-  //     try {
-  //       // Prepare data for creating an Eventroom
-  //       eventroomData.eventroomName = eventroomName;
-
-  //       // Check if Eventroom already exists
-  //       let eventroomExists = await checkIfEventroomExistsByName(eventroomName);
-
-  //       let alreadyExists = false;
-  //       if (eventroomExists) {
-  //         alreadyExists = true;
-  //         return res.status(200).send({ alreadyExists });
-  //       }
-
-  //       eventroomData.dateCreated = new Date();
-
-  //       if (hostId) {
-  //         eventroomData.hostId = hostId;
-  //         // userIsHost = hostId == userId;
-  //       }
-
-  //       // Create Eventroom and return it
-  //       let eventroom = await EventroomDataController.createEventroom(
-  //         eventroomData
-  //       );
-  //       return res.status(200).send({ eventroom });
-  //     } catch (error) {
-  //       console.log("@createEventroom", error);
-  //       res.status(500).send({ error: "An unknown error occurred" });
-  //     }
-  //   },
   async getProfileDataByUserId(req, res) {
     const options = {
       validate: ["userId"],
@@ -69,101 +18,17 @@ const AccountSettingsController = {
     return;
   },
 
-  async getS3Signature(req, res) {
-    let clientData = req.body;
-    let errors = {};
+  async getImageKitSignature(req, res) {
+    var imagekit = new ImageKit({
+      publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+      privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+      urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+    });
 
-    if (!clientData) {
-      errors.InvalidRequest = true;
-      return res.status(400).send({ errors: errors });
-    }
+    var authenticationParameters = imagekit.getAuthenticationParameters();
 
-    let fileName = clientData.fileName;
-    let fileType = clientData.fileType;
-
-    if (!fileName || !fileType) {
-      errors.MissingImageData = true;
-      return res.status(500).send({ errors: errors });
-    }
-
-    try {
-      let result = await signS3(fileName, fileType);
-
-      if (!result || !result.success || result.error || !result.returnData) {
-        errors.FailedToGetUploadPermission = true;
-        return res.status(500).send({ errors: errors });
-      }
-
-      console.log("returnData", result.returnData);
-
-      let success = result.success;
-      let returnData = result.returnData;
-      res.status(200).send({ success, returnData });
-    } catch (error) {
-      console.log("Error occurred while attempting to sign S3.", error);
-      errors.exceptionError = true;
-      return res.status(500).send({ errors: errors });
-    }
-  },
-
-  // async saveProfileImageReference(req, res) {
-  //   const options = {
-  //     validate: ["userId", "fileName", "fileUrl"],
-  //     funcToRun: "saveProfileImageReference",
-  //     queryToPass: req.body.userId,
-  //     selfComplete: true,
-  //   };
-  //   await processPostRequest(req, res, controller, options);
-  //   return;
-  // },
-
-  async saveProfileImageReference(req, res) {
-    let clientData = req.body;
-    let errors = {};
-
-    if (!clientData) {
-      errors.InvalidRequest = true;
-      return res.status(400).send({ errors: errors });
-    }
-
-    let fileName = clientData.fileName;
-    let fileUrl = clientData.fileUrl;
-
-    if (!fileName || !fileUrl) {
-      errors.MissingImageData = true;
-      return res.status(500).send({ errors: errors });
-    }
-
-    let imageData = {
-      fileName,
-      fileUrl,
-    };
-
-    try {
-    } catch (error) {
-      let uploadResult = await AccountSettingsDataController.saveProfileImageReference(
-        imageData
-      );
-
-      if (!result || !result.success || result.error || !result.returnData) {
-        errors.FailedToGetUploadPermission = true;
-        return res.status(500).send({ errors: errors });
-      }
-
-      console.log("returnData", result.returnData);
-
-      let success = result.success;
-      let returnData = result.returnData;
-      res.status(200).send({ success, returnData });
-    }
-  },
-
-  async changeProfileImage(req, res) {
-    console.log(req, res);
-  },
-
-  async deleteProfileImage(req, res) {
-    console.log(req, res);
+    res.set({ "Access-Control-Allow-Origin": "*" });
+    res.status(200).send(authenticationParameters);
   },
 
   async updateProfileSettings(req, res) {
@@ -178,10 +43,10 @@ const AccountSettingsController = {
   },
 
   /**
-   * 
-   * @param {*} req 
-   * @param {*} res 
-   * 
+   *
+   * @param {*} req
+   * @param {*} res
+   *
    * Returns:
    * If success: {success: true}
    * If fail: { errors: UserIdMissing
@@ -230,7 +95,7 @@ const AccountSettingsController = {
       const result = await AccountSettingsDataController.changePassword(
         clientData.userId,
         clientData.oldPassword,
-        clientData.newPassword,
+        clientData.newPassword
       );
 
       if (!result || !result.success) {

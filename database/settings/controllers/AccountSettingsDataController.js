@@ -1,21 +1,9 @@
-const AccountSettings = require("../models/AccountSettingsModel");
 const User = require("../../user/models/UserModel");
 
 const {
   hashPassword,
   verifyPassword,
 } = require("../../../server/auth/utilities/Utils");
-
-// const aws = require('aws-sdk');
-
-// aws.config.update({
-// 	accessKeyId: "AKIARKLMM5TMEHGOSNJC",
-// 	secretAccessKey: "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",
-// 	region: "us-east-1"
-// });
-
-// const s3 = new aws.S3();
-// const S3_BUCKET = 'curata';
 
 const AccountSettingsDataController = {
   async updateProfileSettings(data) {
@@ -34,9 +22,7 @@ const AccountSettingsDataController = {
     let update = { $set: profileSettingsData };
     console.log("update", update);
 
-    await User.findOneAndUpdate(query, update, options).exec();
-
-    let profileData = await AccountSettings.findOneAndUpdate(
+    let profileData = await User.findOneAndUpdate(
       query,
       update,
       options
@@ -45,12 +31,8 @@ const AccountSettingsDataController = {
     return profileData;
   },
 
-  async saveProfileImageReference(imageData) {
-    console.log(imageData);
-  },
-
   async getProfileDataByUserId(userId) {
-    return AccountSettings.findOne({ userId: userId }).exec();
+    return User.findById(userId).exec();
   },
 
   async changePassword(userId, oldPassword, newPassword) {

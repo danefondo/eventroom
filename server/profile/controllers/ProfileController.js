@@ -27,8 +27,19 @@ const ProfileController = {
 
   async saveProfileImageReference(req, res) {
     const options = {
-      validate: ["userId", "fileName", "fileUrl"],
+      validate: ["userId", "fileName", "fileUrl", "fileId"],
       funcToRun: "saveProfileImageReference",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
+
+  async deleteProfileImage(req, res) {
+    const options = {
+      validate: ["userId", "fileId"],
+      funcToRun: "deleteProfileImage",
       dataToPass: req.body,
       selfComplete: true,
     };

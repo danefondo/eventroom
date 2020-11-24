@@ -16,6 +16,7 @@
     "date-fns": "^2.16.1",
     "detectrtc": "^1.4.1",
     "gsap": "^3.5.1",
+    "imagekitio-vue": "^1.0.8",
     "jwt-decode": "^2.2.0",
     "maxlength-contenteditable": "^1.0.1",
     "socket.io-client": "^2.3.0",

@@ -21,5 +21,10 @@ router.post(
   ProfileController.saveProfileImageReference
 );
 
+// Remove profile image reference
+router.post(
+  "/deleteProfileImage",
+  ProfileController.deleteProfileImage
+);
 
 module.exports = router;

@@ -39,6 +39,7 @@ const UserSchema = new Schema({
   profileImage: {
     fileName: String,
     fileUrl: String,
+    fileId: String,
   },
   eventrooms: [String],
   claimedEventrooms: [String],

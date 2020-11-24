@@ -1,7 +1,7 @@
 const User = require("../../user/models/UserModel");
 const TempUser = require("../../room/models/TempUserModel");
-const AccountSettings = require("../../settings/models/AccountSettingsModel");
-const mongoose = require("mongoose");
+
+var ImageKit = require("imagekit");
 
 const ProfileDataController = {
   async updateProfileByUserId() {},
@@ -35,10 +35,11 @@ const ProfileDataController = {
 
   async saveProfileImageReference(imageData) {
     // save profile image data
-    console.log("imageData", imageData);
+    console.log("imageDataPROFILE", imageData);
     let setData = {
       "profileImage.fileName": imageData.fileName,
       "profileImage.fileUrl": imageData.fileUrl,
+      "profileImage.fileId": imageData.fileId,
     };
     let query = { _id: imageData.userId };
     let options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -46,9 +47,37 @@ const ProfileDataController = {
     // $set used to update multiple fields
     // https://stackoverflow.com/questions/37267042/mongoose-findoneandupdate-updating-multiple-fields
     let update = { $set: setData };
-    console.log("update", update);
 
-    await AccountSettings.findOneAndUpdate(query, update, options).exec();
+    let profile = await User.findOneAndUpdate(query, update, options).exec();
+    return profile;
+  },
+
+  async deleteProfileImage(deleteData) {
+    var imagekit = new ImageKit({
+      publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
+      privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
+      urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT,
+    });
+
+    let fileId = deleteData.fileId;
+    imagekit.deleteFile(fileId, function (error, result) {
+      if (error) console.log(error);
+      else console.log(result);
+    });
+
+    let userId = deleteData.userId;
+
+    let setData = {
+      "profileImage.fileName": undefined,
+      "profileImage.fileUrl": undefined,
+      "profileImage.fileId": undefined,
+    };
+    let query = { _id: userId };
+    let options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+    // $set used to update multiple fields
+    // https://stackoverflow.com/questions/37267042/mongoose-findoneandupdate-updating-multiple-fields
+    let update = { $set: setData };
 
     let profile = await User.findOneAndUpdate(query, update, options).exec();
     return profile;

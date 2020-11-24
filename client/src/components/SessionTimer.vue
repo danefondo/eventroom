@@ -131,8 +131,6 @@ export default {
       } else {
         let nowInMS = Date.now();
 
-        // change various styles with this
-
         this.$refs.timerchecks.doTenMinCheck(nowInMS);
 
         this.$refs.timerchecks.doOneMinCheck(nowInMS);
@@ -142,30 +140,8 @@ export default {
         this.$refs.timerchecks.doSessionEndCheck(nowInMS);
       }
 
-      // If now > starttime && notJoinedYet => 'You're late'
-
-      // If now > starttime && alreadyJoined => 'Please get back to session'
-
-      // If now > starttime && hasJoined && isInSession => 'Session ends in...'
-
-      // If now > endtime => 'Session has finished.'
-
-      // If sessionHasStarted && onePartnerHasArrived && partnerCanceledSession
-      // 'It seems your partner has canceled the session.'
-      // 'Partner has canceled while you were late' (if >2m)
-
-      // Timeout for that, then set whichever possible new session is next
     },
   },
-  // Check if user still in session, if not -->
-
-  // Check if partner still there, if not -->
-
-  // Delete session if no match found by start time? or rematch if possible, and if not then delete
-
-  // checkIfUserStillInSession() {
-  //   // Get back in the session!
-  // },
 
   // set exceptions for 25m && 100m intervals --> if interval == 25 / 50 / 100
 

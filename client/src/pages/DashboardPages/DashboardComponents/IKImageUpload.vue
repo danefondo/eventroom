@@ -56,16 +56,6 @@
 <script>
 import profileUpload from "../../../assets/images/profile-upload2.png";
 
-import Vue from "vue";
-import ImageKit from "imagekitio-vue";
-
-import { BASE_PATH } from "../../../constants";
-Vue.use(ImageKit, {
-  urlEndpoint: "https://ik.imagekit.io/elysiumone",
-  publicKey: "public_N9SCrFWZhbWKrNYzwCPO0WAy4kE=",
-  authenticationEndpoint: BASE_PATH + "/api/settings/getImageKitSignature",
-});
-
 export default {
   name: "IKImageUpload",
   props: ["fileName", "fileUrl", "tempImage"],

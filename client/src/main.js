@@ -11,6 +11,8 @@ import VueYoutube from "vue-youtube";
 import { format } from "date-fns";
 import VueHotkey from "v-hotkey";
 import autolinker, { AUTOLINKER_NAME } from "vue-autolinker";
+import ImageKit from "imagekitio-vue";
+import { BASE_PATH } from "./constants";
 
 import pageTitleMixin from "./mixins/pageTitleMixin";
 
@@ -28,6 +30,12 @@ Vue.use(VueYoutube);
 Vue.use(VueCookies);
 Vue.use(VueHotkey);
 Vue.mixin(pageTitleMixin);
+
+Vue.use(ImageKit, {
+  urlEndpoint: "https://ik.imagekit.io/elysiumone",
+  publicKey: "public_N9SCrFWZhbWKrNYzwCPO0WAy4kE=",
+  authenticationEndpoint: BASE_PATH + "/api/settings/getImageKitSignature",
+});
 
 Vue.directive(AUTOLINKER_NAME, autolinker);
 

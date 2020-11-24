@@ -30,6 +30,9 @@ export default {
       isAuthenticated: (state) => state.auth.authenticationStatus,
     }),
   },
+  mounted() {
+    console.log(process.env);
+  },
 };
 </script>
 

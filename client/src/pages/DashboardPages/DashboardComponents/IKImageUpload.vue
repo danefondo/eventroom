@@ -118,7 +118,7 @@ export default {
 
     onSuccess(res) {
     //   console.log("Success");
-    //   console.log(res);
+      console.log(res);
       this.$emit("updateReference", res);
       this.uploadingImage = false;
     },

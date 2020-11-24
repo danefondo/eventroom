@@ -2,8 +2,9 @@
   <div @click="selectSlot">
     <div class="booked-unmatched-container">
       <div class="booked-unmatched-info">
-        <img
+        <ik-image
           loading="lazy"
+          :transformation="[{ height: 60, width: 60 }]"
           v-if="profileImage"
           :src="profileImage"
           class="calendar-profile-icon"
@@ -27,6 +28,15 @@
 <script>
 import IconBase from "../../../components/IconBase";
 import IconProfile from "../../../components/SVG/IconProfile";
+import ImageKit from "imagekitio-vue";
+import Vue from "vue";
+
+import { BASE_PATH } from "../../../constants";
+Vue.use(ImageKit, {
+  urlEndpoint: "https://ik.imagekit.io/elysiumone",
+  publicKey: "public_N9SCrFWZhbWKrNYzwCPO0WAy4kE=",
+  authenticationEndpoint: BASE_PATH + "/api/settings/getImageKitSignature",
+});
 
 export default {
   name: "UnmatchedPerson",

@@ -212,12 +212,14 @@ export default {
 
     startReceivingBookedSessions() {
       this.sockets.subscribe("receiveBookedSessions", (sessions) => {
+        console.log("received", sessions);
         this.updateCalendarPostReceive(sessions);
       });
     },
 
     startReceivingCanceledSessions() {
       this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
+        console.log("received canceled", sessions);
         this.updateCalendarPostReceive(sessions);
       });
     },
@@ -235,9 +237,10 @@ export default {
         );
       }
 
-      this.$nextTick(() => {
+      // this.$nextTick(() => {
+        console.log("Update calendar availability.");
         this.updateCalendarAvailability();
-      });
+      // });
     },
 
     async getAllBookedUsersForSpecificWeek(refresh = false, day = false) {
@@ -356,6 +359,7 @@ export default {
     },
 
     updateCalendarAvailability() {
+      console.log("Update calendar availability.");
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
 

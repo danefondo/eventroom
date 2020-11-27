@@ -290,6 +290,7 @@ const mutations = {
 
   /* ====== SLOT AVAILABILITY STATE CHANGING  ====== */
   updateCalendarSlotAvailability(state, updateData) {
+    console.log("@calendar.js: Update slot availability.", updateData);
     // Could create some algorithm to determine last affected session
     // and then instead of always iterating through all calendar slots
     // breaking the loop if latest session in array has been checked
@@ -649,11 +650,12 @@ const mutations = {
       for (let i = 0; i < state.allUserSessions.length; i++) {
         if (state.allUserSessions[i]._id == session._id) {
           state.allUserSessions.splice(i, 1);
-          if (isUserSession) {
-            state.allUserSessions.push(session);
-          }
           break;
         }
+      }
+
+      if (isUserSession) {
+        state.allUserSessions.push(session);
       }
     });
   },
@@ -800,6 +802,7 @@ const actions = {
 
   /* ====== SLOT AVAILABILITY STATE CHANGING  ====== */
   updateCalendarSlotAvailability(state, updateType) {
+    console.log("@calendar.js: Update slot availability.");
     let array = "allUserSessions";
     if (updateType == 0) {
       updateType = "isAvailableForBooking";

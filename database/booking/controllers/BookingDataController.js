@@ -816,7 +816,7 @@ const BookingDataController = {
         dateCreated: new Date(),
         hostId: "cofocus",
         creatorId: "cofocus",
-        // expireAt: null,
+        expireAt: null,
       });
 
       session.eventroomId = eventroom._id;
@@ -878,7 +878,7 @@ const BookingDataController = {
           dateCreated: new Date(),
           hostId: "cofocus",
           creatorId: "cofocus",
-          // expireAt: null,
+          expireAt: null,
         });
 
         session.eventroomId = eventroom._id;

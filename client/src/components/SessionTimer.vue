@@ -110,6 +110,8 @@ export default {
         () => (this.currentTimeInMS = Date.now()),
         1000
       );
+
+      this.changeState("timerHasBeenStarted", true);
     },
 
     resetSessionAndTimer() {
@@ -121,6 +123,11 @@ export default {
 
     async checkIfSessionStillThere() {
       this.$emit("checkIfSessionStillThere");
+    },
+
+    changeState(field, newValue) {
+      let dispatchObject = { field, newValue };
+      this.$store.dispatch("cofocus/changeSingleState", dispatchObject);
     },
   },
 

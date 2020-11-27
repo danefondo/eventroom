@@ -327,7 +327,7 @@ io.on("connection", function (socket) {
     }
     // console.log("Session:", data.session);
     console.log("APP SIDE SESSIONS", data.sessions);
-    socket.to(data.roomType).emit("receivePushedSessions", data.sessions);
+    socket.to(data.roomType).emit("receiveBookedSessions", data.sessions);
     // io.removeAllListeners();
   });
 

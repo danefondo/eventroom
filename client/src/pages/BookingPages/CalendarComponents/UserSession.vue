@@ -8,6 +8,8 @@
         :boxHeight="boxHeight"
         :quickCancel="true"
         :sessionTime="sessionTime"
+        @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+        parentName="UserSession"
       />
       <span class="booked-time">{{ sessionTime }}</span>
       <div v-if="userIsMatchedForSlot">
@@ -52,6 +54,11 @@ export default {
     // IconProfile,
   },
   methods: {
+    refreshNextOrCurrentSession() {
+      console.log("Init refresh from UserSession.vue")
+      this.$emit("refreshNextOrCurrentSession");
+    },
+
     setIsCanceling() {
       let slot = JSON.parse(JSON.stringify(this.slotData));
 

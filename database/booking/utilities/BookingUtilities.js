@@ -113,7 +113,6 @@ function getBestAvailableMatchByPreferences(
   if (preferences && !preferredUserSession && !sessionToMatch) {
     console.log("skip for now", availableSessions);
     // e.g. must have X amount of sessions
-    // must be male/female
     // must have x anonymous rating
     // must have x show up rate
     // must have x cancellation rate

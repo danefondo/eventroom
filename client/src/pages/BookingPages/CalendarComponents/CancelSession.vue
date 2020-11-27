@@ -27,7 +27,6 @@ export default {
     "boxHeight",
     "sessionTime",
   ],
-
   methods: {
     async cancelSession() {
       let errors = {};
@@ -38,13 +37,13 @@ export default {
           userId: this.user._id,
           sessionId: localSession._id,
         };
-        console.log("@cancelSession, sendData: ", sendData);
+        // console.log("@cancelSession, sendData: ", sendData);
         const response = await requestWithAuthentication(
           `post`,
           `api/booking/cancelSession`,
           sendData
         );
-        console.log("@cancelSession, response: ", response);
+        // console.log("@cancelSession, response: ", response);
         let session = response.data.result;
         if (!session) {
           errors.FailedToCancelSession = true;
@@ -53,14 +52,6 @@ export default {
 
         if (response.data.success) {
           this.handleSuccessfulCancel(session, localSession);
-
-          this.exitIsCanceling();
-
-          this.$nextTick(function () {
-            console.log("are you running?");
-            this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
-            // this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
-          });
         }
       } catch (error) {
         console.log("@cancelSession, error: ", error);
@@ -71,6 +62,8 @@ export default {
     // If had a partner, add to people sessions
 
     handleSuccessfulCancel(session, localSession) {
+      this.$emit("refreshNextOrCurrentSession");
+
       // For cancel receiver to quickly filter to the right session
       let sessionIsEmpty = false;
 
@@ -85,9 +78,55 @@ export default {
         sessionIsEmpty = true;
       }
 
+      this.exitIsCanceling();
+
       this.updateCalendarDataAfterCancel(cancelData);
 
       this.pushCancelUpdateToOthers(localSession, sessionIsEmpty, session);
+    },
+
+    updateCalendarDataAfterCancel(dataFromCancel) {
+      /* ====== REMOVE AFFECTED USER SESSIONS ====== */
+      let removeInfo = {
+        sessionId: dataFromCancel.sessionId,
+        sessionDateTime: dataFromCancel.sessionDateTime,
+      };
+      this.$store.dispatch(
+        "calendar/removeInfoFromCalendarAfterCancel",
+        removeInfo
+      );
+
+      if (dataFromCancel.session) {
+        /* ====== ADD REMAINS TO OTHER PEOPLE SESSIONS ====== */
+        let pushInfo = { session: dataFromCancel.session };
+        this.$store.dispatch(
+          "calendar/pushInfoToCalendarAfterCancel",
+          pushInfo
+        );
+      }
+
+      this.$nextTick(function () {
+        this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
+      });
+    },
+
+    exitIsCanceling() {
+      let slot = JSON.parse(JSON.stringify(this.slotData));
+
+      let updateData = {
+        targetSlot: slot,
+        newSlotState: false,
+        all: false,
+        field: 1,
+      };
+
+      // Sets 'isCanceling' to false (field: 1 == isCanceling)
+      this.$store.dispatch("calendar/updateCalendarSelectedSlots", updateData);
+
+      slot.isCanceling = false;
+
+      // Remove from currently being canceled array
+      this.$store.dispatch("booking/exitIsCanceling", slot);
     },
 
     pushCancelUpdateToOthers(localSession, sessionIsEmpty, session) {
@@ -109,49 +148,8 @@ export default {
         sessions: sessions,
         roomType: "cofocus",
       };
-      console.log("Pushing canceled sessions to others");
+      // console.log("Pushing canceled sessions to others");
       this.$socket.emit("pushCanceledSessionsToOthers", sessionInfo);
-    },
-
-    exitIsCanceling() {
-      let slot = JSON.parse(JSON.stringify(this.slotData));
-
-      let updateData = {
-        targetSlot: slot,
-        newSlotState: false,
-        all: false,
-        field: 1,
-      };
-
-      this.$store.dispatch("calendar/updateCalendarSelectedSlots", updateData);
-      slot.isCanceling = false;
-      this.$store.dispatch("booking/exitIsCanceling", slot);
-
-      this.$nextTick(function () {
-        this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
-      });
-    },
-
-    updateCalendarDataAfterCancel(dataFromCancel) {
-      /* ====== REMOVE AFFECTED USER SESSIONS ====== */
-      let removeInfo = {
-        sessionId: dataFromCancel.sessionId,
-        sessionDateTime: dataFromCancel.sessionDateTime,
-      };
-      this.$store.dispatch(
-        "calendar/removeInfoFromCalendarAfterCancel",
-        removeInfo
-      );
-
-      console.log("CANCEL SESSION: ", dataFromCancel.session);
-      if (dataFromCancel.session) {
-        /* ====== ADD REMAINS TO OTHER PEOPLE SESSIONS ====== */
-        let pushInfo = { session: dataFromCancel.session };
-        this.$store.dispatch(
-          "calendar/pushInfoToCalendarAfterCancel",
-          pushInfo
-        );
-      }
     },
   },
 };

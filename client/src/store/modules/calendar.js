@@ -24,7 +24,7 @@ const state = {
   currentWeekStart: startOfISOWeek(new Date()),
 
   minimumTime: "00:00",
-  maximumTime: "23:00",
+  maximumTime: "23:59",
 
   fieldsToUpdate: [
     "dateTime",
@@ -278,6 +278,16 @@ const mutations = {
     state.selectedToBook = [];
   },
 
+  removeSelectionsInThePast(state) {
+    for (var i = state.selectedToBook.length - 1; i > -1; i--) {
+      let slotData = state.selectedToBook[i];
+      let slotStartTimeInMS = new Date(slotData.dateTime).valueOf();
+      if (Date.now() > slotStartTimeInMS) {
+        state.selectedToBook.splice(i, 1);
+      }
+    }
+  },
+
   /* ====== SLOT AVAILABILITY STATE CHANGING  ====== */
   updateCalendarSlotAvailability(state, updateData) {
     // Could create some algorithm to determine last affected session
@@ -290,8 +300,8 @@ const mutations = {
 
     array = state[updateData.array];
 
-    console.log("array", array);
-    console.log("type", type);
+    // console.log("array", array);
+    // console.log("type", type);
 
     if (array.length) {
       const FIFTEEN_MINUTES = 900000; // milliseconds
@@ -342,6 +352,7 @@ const mutations = {
   },
 
   updateCalendarCurrentSessionSlot(state, session) {
+    console.log("I AM HERE. AS I SHOULD BE. SO PROBLEM IS WITH ME.");
     let sessionStartInMS = new Date(session.dateTime).valueOf();
     let FIFTEEN_MINUTES = 900000; // milliseconds
 
@@ -352,12 +363,16 @@ const mutations = {
         let fifteenBefore = slotStartInMS - FIFTEEN_MINUTES;
         let thirtyBefore = slotStartInMS - FIFTEEN_MINUTES * 2;
         let fortyFiveBefore = slotStartInMS - FIFTEEN_MINUTES * 3;
+        let fifteenAfter = slotStartInMS + FIFTEEN_MINUTES;
+
+        // Technically, this only calculates current session
 
         if (
           sessionStartInMS == slotStartInMS ||
           sessionStartInMS == fifteenBefore ||
           sessionStartInMS == thirtyBefore ||
-          sessionStartInMS == fortyFiveBefore
+          sessionStartInMS == fortyFiveBefore ||
+          sessionStartInMS == fifteenAfter
         ) {
           slot.hasCurrentOrNextSession = true;
         } else {
@@ -514,26 +529,6 @@ const mutations = {
     slot.peopleSessionsForSlot.push(pushData.session);
   },
 
-  pushPeopleSessionsPostPushReceive(state, sessions) {
-    sessions.forEach((session) => {
-      state.calendarData.forEach((hourRow) => {
-        hourRow.hourRowDays.forEach((slot) => {
-          let sessionDateTime = new Date(session.dateTime);
-          let sessionId = session._id;
-          if (slot.dateTime.valueOf() == sessionDateTime.valueOf()) {
-            let inPeopleSessionsForSlot = checkIfInArrayById(
-              slot.peopleSessionsForSlot,
-              sessionId
-            );
-            if (!inPeopleSessionsForSlot) {
-              slot.peopleSessionsForSlot.push(session);
-            }
-          }
-        });
-      });
-    });
-  },
-
   /* ====== ADD TO CALENDAR AFTER BOOKING ====== */
   pushInfoToCalendarAfterBooking(state, pushInfo) {
     pushInfo.forEach((pushObject) => {
@@ -605,19 +600,48 @@ const mutations = {
 
   /* ====== UPDATE CALENDAR DATA POST BOOKING OR CANCEL RECEIVE ====== */
 
-  updateUserSessionsPostUpdateReceive(state, updateData) {
-    // Because rendering only happens from slot data
-    // then for allUserSessions, it's ok to just remove
-    // the old version and add the new one
-    updateData.forEach((session) => {
-      let updatedSession = JSON.parse(JSON.stringify(session));
-
+  updateCalendarAfterReceive(state, updateData) {
+    let userId = updateData.userId;
+    let sessions = updateData.sessions;
+    sessions.forEach((session) => {
+      if (session.session) {
+        session = session.session;
+      }
+      let updatedSession = JSON.parse(JSON.stringify(session)); // session.session???
+      let isUserSession = isUserEitherPartnerInSession(session, userId);
       state.calendarData.forEach((hourRow) => {
         hourRow.hourRowDays.forEach((slot) => {
-          let sessionDateTime = new Date(session.dateTime);
+          let sessionDateTime = new Date(updatedSession.dateTime);
+          // Find slot that matches datetime
           if (slot.dateTime.valueOf() == sessionDateTime.valueOf()) {
-            slot.userSessionsForSlot.splice(0, 1);
-            slot.userSessionsForSlot.push(updatedSession);
+            // Remove any from existing sessions that exist in new
+            // Since it can only find one, the for loop index remove
+            // will work to splice & remove without worrying about
+            // messing up the indexes,
+
+            for (var i = slot.userSessionsForSlot.length - 1; i > -1; i--) {
+              let userSession = slot.userSessionsForSlot[i];
+              if (userSession._id == updatedSession._id) {
+                slot.userSessionsForSlot.splice(i, 1);
+                break;
+              }
+            }
+
+            if (isUserSession) {
+              slot.userSessionsForSlot.push(updatedSession);
+            }
+
+            for (var x = slot.peopleSessionsForSlot.length - 1; x > -1; x--) {
+              let peopleSession = slot.peopleSessionsForSlot[x];
+              if (peopleSession._id == updatedSession._id) {
+                slot.peopleSessionsForSlot.splice(x, 1);
+                break;
+              }
+            }
+
+            if (!isUserSession) {
+              slot.peopleSessionsForSlot.push(updatedSession);
+            }
           }
         });
       });
@@ -625,33 +649,12 @@ const mutations = {
       for (let i = 0; i < state.allUserSessions.length; i++) {
         if (state.allUserSessions[i]._id == session._id) {
           state.allUserSessions.splice(i, 1);
-          state.allUserSessions.push(session);
+          if (isUserSession) {
+            state.allUserSessions.push(session);
+          }
           break;
         }
       }
-    });
-  },
-
-  updatePeopleSessionsPostUpdateReceive(state, updateData) {
-    updateData.forEach((session) => {
-      console.log("session stuff");
-      let updatedSession = JSON.parse(JSON.stringify(session.session));
-
-      state.calendarData.forEach((hourRow) => {
-        hourRow.hourRowDays.forEach((slot) => {
-          let sessionDateTime = new Date(updatedSession.dateTime);
-          if (slot.dateTime.valueOf() == sessionDateTime.valueOf()) {
-            let peopleSessionsForSlot = slot.peopleSessionsForSlot;
-            for (var i = peopleSessionsForSlot.length - 1; i > -1; i--) {
-              let peopleSession = peopleSessionsForSlot[i];
-              if (peopleSession._id == updatedSession._id) {
-                peopleSessionsForSlot.splice(i, 1);
-                peopleSessionsForSlot.push(updatedSession);
-              }
-            }
-          }
-        });
-      });
     });
   },
 
@@ -710,22 +713,6 @@ const mutations = {
     let [hourRowIndex, slotIndex] = pushObject.indexes;
     let slot = state.calendarData[hourRowIndex].hourRowDays[slotIndex];
     slot.peopleSessionsForSlot.push(pushObject.session);
-  },
-
-  removeEmptyPeopleSessionFromCalendar(state, removeInfo) {
-    state.calendarData.forEach((hourRow) => {
-      hourRow.hourRowDays.forEach((slot) => {
-        let sessionDateTime = new Date(removeInfo.sessionDateTime);
-        if (slot.dateTime.valueOf() == sessionDateTime.valueOf()) {
-          for (let i = 0; i < slot.peopleSessionsForSlot.length; i++) {
-            if (slot.peopleSessionsForSlot[i]._id == removeInfo.sessionId) {
-              slot.peopleSessionsForSlot.splice(i, 1);
-              break;
-            }
-          }
-        }
-      });
-    });
   },
 
   /* ====== CHANGE CALENDAR SLOT STATES  ====== */
@@ -932,18 +919,6 @@ const actions = {
     state.commit("updateCalendarSessionsPostPushReceive", pushData);
   },
 
-  pushPeopleSessionsPostPushReceive(state, sessions) {
-    state.commit("pushPeopleSessionsPostPushReceive", sessions);
-  },
-
-  updateUserSessionsPostUpdateReceive(state, sessions) {
-    state.commit("updateUserSessionsPostUpdateReceive", sessions);
-  },
-
-  updatePeopleSessionsPostUpdateReceive(state, updateData) {
-    state.commit("updatePeopleSessionsPostUpdateReceive", updateData);
-  },
-
   updateSessionWithNewValues(state, sessions) {
     state.commit("updateSessionWithNewValues", sessions);
   },
@@ -964,10 +939,6 @@ const actions = {
     state.commit("updateCalendarSelectedSlots", slotUpdateData);
   },
 
-  removeEmptyPeopleSessionFromCalendar(state, removeInfo) {
-    state.commit("removeEmptyPeopleSessionFromCalendar", removeInfo);
-  },
-
   pushInfoToCalendarAfterCancel(state, pushInfo) {
     state.commit("pushInfoToCalendarAfterCancel", pushInfo);
   },
@@ -978,6 +949,14 @@ const actions = {
 
   pushInfoToCalendarAfterBooking(state, pushInfo) {
     state.commit("pushInfoToCalendarAfterBooking", pushInfo);
+  },
+
+  removeSelectionsInThePast(state) {
+    state.commit("removeSelectionsInThePast");
+  },
+
+  updateCalendarAfterReceive(state, updateData) {
+    state.commit("updateCalendarAfterReceive", updateData);
   },
 };
 

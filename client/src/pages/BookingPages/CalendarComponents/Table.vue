@@ -109,6 +109,7 @@
               :sessionLink="joinSessionLink(eachHourRow, i)"
               :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
               :user="user"
+              @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
             />
             <!-- Must only show if not selected -->
             <UnmatchedPerson
@@ -134,6 +135,7 @@
               <div class="highlight-info">Select?</div>
             </div> -->
             <BookSession
+              @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
               v-if="eachHourRow.hourRowDays[i].isSelected"
               :user="user"
               :slotData="eachHourRow.hourRowDays[i]"
@@ -150,6 +152,7 @@
               :slotPerson="returnUnmatchedBookedPeople(eachHourRow, i, 'name')"
             />
             <CancelSession
+              @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
               v-if="eachHourRow.hourRowDays[i].isCanceling"
               :user="user"
               :slotData="eachHourRow.hourRowDays[i]"
@@ -228,6 +231,10 @@ export default {
     },
   },
   methods: {
+    refreshNextOrCurrentSession() {
+      this.$emit("refreshNextOrCurrentSession");
+    },
+
     isFullHour(time) {
       let minutes = time.split(":")[1];
       // console.log("minutes", minutes);
@@ -334,7 +341,11 @@ export default {
       // need to check if session currently happening in slot / sessions nearby?
       // then show
 
-      if (slot.hasCurrentOrNextSession) {
+      if (
+        slot.hasCurrentOrNextSession ||
+        slot.isSelected ||
+        !slot.isAvailableForSelecting
+      ) {
         isPastHour = false;
       }
 

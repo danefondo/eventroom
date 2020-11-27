@@ -39,6 +39,12 @@ const getDefaultState = () => {
     tenMinToStartInMS: 0,
 
     doneLoadingTimes: false,
+    timerHasBeenStarted: false,
+    timerManagerHasMounted: false,
+    initialFinalizeCompleted: false,
+
+    refreshTimerQueue: [],
+    currentlyRefreshingNextSession: false,
   };
 };
 
@@ -67,6 +73,14 @@ const mutations = {
   setDidTenMinCheck(state) {
     state.didNextSessionTenMinCheck = true;
   },
+
+  pushToRefreshQueue(state) {
+    state.refreshTimerQueue.push(Date.now());
+  },
+
+  clearRefreshQueue(state) {
+    state.refreshTimerQueue = [];
+  },
 };
 
 // Asynchronous
@@ -86,6 +100,14 @@ const actions = {
   // 10 TO START
   setIsTenMinToStart(state) {
     state.commit("setIsTenMinToStart");
+  },
+
+  pushToRefreshQueue(state) {
+    state.commit("pushToRefreshQueue");
+  },
+
+  clearRefreshQueue(state) {
+    state.commit("clearRefreshQueue");
   },
 };
 

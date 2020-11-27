@@ -50,55 +50,63 @@ export default {
         sendData.lastName = this.user.lastName;
         sendData.displayName = this.user.displayName;
         sendData.profileImageUrl = this.user.profileImageUrl;
-        console.log("@bookSession, sendData: ", sendData);
+        // console.log("@bookSession, sendData: ", sendData);
         const response = await requestWithAuthentication(
           `post`,
           `api/booking/bookSessionSlot`,
           sendData
         );
-        console.log("@bookSession, response: ", response);
+        // console.log("@bookSession, response: ", response);
         let session = response.data.result;
         if (!session) {
           errors.FailedToBookSession = true;
           throw { errors: errors };
         }
-        console.log("@SESSION FROM RESPONSE", session);
+        // console.log("@SESSION FROM RESPONSE", session);
 
         if (response.data.success) {
-          let pushData = {
-            session,
-            userId: this.user._id,
-          };
-          console.log("@PUSHDATA FROM RESPONSE", pushData);
-          /* ====== ADD TO CALENDAR AFTER BOOKING ====== */
-          this.$store.dispatch("calendar/pushOneCalendarSession", pushData);
-
-          //   Prepare data for socket
-          let sessions = [];
-          sessions.push(session);
-
-          console.log("SESSIONS IN RESPONSE", sessions);
-
-          let sessionInfo = {
-            userId: this.user._id,
-            sessions: sessions,
-            roomType: "cofocus",
-          };
-
-          this.$socket.emit("pushSessionsToOthers", sessionInfo);
-
-          this.$store.dispatch("booking/setCurrentlyBooking", false);
-
-          this.$nextTick(function () {
-            this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
-          });
-
-          this.cancelSlot();
+          this.handleSuccessfulBooking(session);
         }
       } catch (error) {
         console.log("errorBooking", error);
         this.$store.dispatch("booking/setCurrentlyBooking", false);
       }
+    },
+
+    handleSuccessfulBooking(session) {
+      this.$emit("refreshNextOrCurrentSession");
+
+      let pushData = {
+        session,
+        userId: this.user._id,
+      };
+
+      // Add to calendar after booking
+      this.$store.dispatch("calendar/pushOneCalendarSession", pushData);
+
+      this.$store.dispatch("booking/setCurrentlyBooking", false);
+
+      this.$nextTick(() => {
+        this.pushBookingUpdateToOthers(session);
+        this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
+
+        // Must be last or component is destroyed before
+        this.cancelSlot();
+      });
+    },
+
+    pushBookingUpdateToOthers(session) {
+      //   Prepare data for socket
+      let sessions = [];
+      sessions.push(session);
+
+      let sessionInfo = {
+        userId: this.user._id,
+        sessions: sessions,
+        roomType: "cofocus",
+      };
+
+      this.$socket.emit("pushSessionsToOthers", sessionInfo);
     },
 
     /* Clear single selection */
@@ -115,9 +123,10 @@ export default {
       this.$store.dispatch("calendar/updateCalendarSelectedSlots", updateData);
 
       slot.isSelected = false;
-      this.$store.dispatch("calendar/cancelSlot", slot);
 
       this.$nextTick(function () {
+        // Must be last or component is destroyed before
+        this.$store.dispatch("calendar/cancelSlot", slot);
         this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
       });
     },

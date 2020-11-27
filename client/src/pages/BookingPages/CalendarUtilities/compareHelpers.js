@@ -8,14 +8,25 @@ export const isEitherPartner = (firstPartnerId, secondPartnerId, userId) => {
 };
 
 export const isUserEitherPartnerInSession = (session, userId) => {
-  let firstPartnerId = session.firstPartnerId;
-  let secondPartnerId = session.secondPartnerId;
-  let firstPartnerCompare = firstPartnerId == userId;
-  let secondPartnerCompare = secondPartnerId == userId;
+  let firstPartnerCompare = session.firstPartnerId == userId;
+  let secondPartnerCompare = session.secondPartnerId == userId;
   if (firstPartnerCompare || secondPartnerCompare) {
     return true;
   }
   return false;
+};
+
+export const isUserPartnerStillSame = (oldSession, newSession) => {
+  let partnerIsSame = false;
+  // This cover lack of partner
+  if (
+    oldSession.firstPartnerId == newSession.firstPartnerId &&
+    oldSession.secondPartnerId == newSession.secondPartnerId
+  ) {
+    partnerIsSame = true;
+  }
+
+  return partnerIsSame;
 };
 
 export const checkIfInArrayById = (sessionsArray, sessionId) => {
@@ -101,6 +112,7 @@ export const isSessionMatched = (session, slot) => {
 export default {
   isEitherPartner,
   isUserEitherPartnerInSession,
+  isUserPartnerStillSame,
   checkIfInArray,
   checkIfInArrayById,
   checkIfInArrayAndReturnIndex,

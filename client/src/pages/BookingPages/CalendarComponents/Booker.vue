@@ -129,8 +129,8 @@ export default {
           sessionsToBook.push(slotData);
         });
 
-        console.log("BEFORE SEND 1 sessiontimes:", sessionTimes);
-        console.log("BEFORE SEND 2 sessionsToBook:", sessionsToBook);
+        // console.log("BEFORE SEND 1 sessiontimes:", sessionTimes);
+        // console.log("BEFORE SEND 2 sessionsToBook:", sessionsToBook);
 
         sessionsToBook = JSON.parse(JSON.stringify(sessionsToBook));
 
@@ -147,7 +147,7 @@ export default {
           profileImageUrl: this.user.profileImageUrl,
         };
 
-        console.log("BEFORE SEND 3 sendData:", sendData);
+        // console.log("BEFORE SEND 3 sendData:", sendData);
 
         const response = await requestWithAuthentication(
           `post`,
@@ -165,29 +165,33 @@ export default {
             sessions,
             userId: this.user._id,
           };
-          console.log("@PUSHDATA FROM RESPONSE", pushData);
+          // console.log("@PUSHDATA FROM RESPONSE", pushData);
           /* ====== ADD TO CALENDAR AFTER BOOKING ====== */
           this.$store.dispatch("calendar/pushManyCalendarSessions", pushData);
 
-          let sessionsInfo = {
-            userId: this.user._id,
-            sessions: sessions,
-            roomType: "cofocus",
-          };
-          this.$socket.emit("pushSessionsToOthers", sessionsInfo);
+          this.$emit("refreshNextOrCurrentSession");
 
           this.$store.dispatch("booking/setCurrentlyBooking", false);
 
-          this.cancelBooking();
-
           this.$nextTick(function () {
+            this.pushBookingUpdateToOthers(sessions);
             this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
+            this.cancelBooking();
           });
         }
       } catch (error) {
         console.log("errorBooking", error);
         this.$store.dispatch("booking/setCurrentlyBooking", false);
       }
+    },
+
+    pushBookingUpdateToOthers(sessions) {
+      let sessionsInfo = {
+        userId: this.user._id,
+        sessions: sessions,
+        roomType: "cofocus",
+      };
+      this.$socket.emit("pushSessionsToOthers", sessionsInfo);
     },
 
     /* Clear all current selections */

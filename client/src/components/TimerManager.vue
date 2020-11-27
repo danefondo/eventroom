@@ -27,15 +27,21 @@ import { mapState } from "vuex";
 import { endOfISOWeek } from "date-fns";
 import { requestWithAuthentication } from "../config/api";
 import SessionTimer from "./SessionTimer";
+import { isUserPartnerStillSame } from "../pages/BookingPages/CalendarUtilities/compareHelpers";
 
 export default {
   name: "TimerManager",
   async mounted() {
     await this.getUserNextSession();
+    // TODO: For some reason, when setting Vuex data her
+    // and even inside 'getUserNextSession' and then calling
+    // getUserNextSession from parent BookingDashboard.vue
+    // the Vuex data set here gets reset.
   },
   components: {
     SessionTimer,
   },
+  props: ["parentName"],
   computed: {
     ...mapState({
       user: (state) => state.auth.user,
@@ -79,11 +85,19 @@ export default {
       tenMinToStartInMS: (state) => state.cofocus.tenMinToStartInMS,
 
       doneLoadingTimes: (state) => state.cofocus.doneLoadingTimes,
+      timerHasBeenStarted: (state) => state.cofocus.timerHasBeenStarted,
+
+      timerManagerHasMounted: (state) => state.cofocus.timerManagerHasMounted,
+      initialFinalizeCompleted: (state) =>
+        state.cofocus.initialFinalizeCompleted,
+      refreshTimerQueue: (state) => state.cofocus.refreshTimerQueue,
+      currentlyRefreshingNextSession: (state) =>
+        state.cofocus.currentlyRefreshingNextSession,
     }),
   },
 
   methods: {
-    async getUserNextSession(recheck = false) {
+    async getUserNextSession() {
       // Get everyone's booked sessions for this week from this time forward (no past sessions)
       try {
         if (!this.user || !this.user._id) {
@@ -92,6 +106,7 @@ export default {
         }
         this.changeState("gettingNextSession", true);
         this.changeState("gettingNextSessionError", false);
+        this.changeState("currentlyRefreshingNextSession", true);
 
         let weekData = this.prepEndOfWeekData();
 
@@ -103,14 +118,14 @@ export default {
 
         let nextSession = response.data.result;
         if (response.data.result.NoSessionsThisWeek) {
-          return;
+          return console.log("@getUserNextSession: No sessions found.");
         }
 
         // if (!nextSession) throw new Error("Failed to fetch next session.");
 
         if (response.data.success) {
           this.changeState("gettingNextSession", false);
-          this.checkIfSameElseSetNew(nextSession, recheck);
+          this.checkIfSameElseSetNew(nextSession);
         }
       } catch (error) {
         console.log("@gettingNextSession Error: ", error);
@@ -148,28 +163,46 @@ export default {
     session is set.  
     ====== */
 
-    checkIfSameElseSetNew(session, recheck) {
+    checkIfSameElseSetNew(session) {
       // If current or next session exist
-      if (this.currentSession || this.nextSession) {
-        let nextStartInMS = new Date(this.nextSession.dateTime).valueOf();
+      if (this.nextSession) {
+        let oldSession = this.nextSession;
+        let oldStartInMS = new Date(oldSession.dateTime).valueOf();
         let sessionStartInMS = new Date(session.dateTime).valueOf();
         // If existing session time is same as new session
-        if (sessionStartInMS == nextStartInMS) {
+        if (sessionStartInMS == oldStartInMS) {
           // If existing session id is same as new session
-          if (session._id !== this.nextSession._id) {
+          if (session._id !== oldSession._id) {
             this.resetSessionAndTimer();
-            this.setNextOrCurrentSession(session, recheck);
+            this.setNextOrCurrentSession(session);
+          }
+          // If previous user partner is still same
+          else if (!isUserPartnerStillSame(oldSession, session)) {
+            this.resetSessionAndTimer();
+            this.setNextOrCurrentSession(session);
+          }
+          // This was a mad to find case, stay aware of this
+          // rewrote entire logic only to discover that in
+          // the case that nothing needs changing, the
+          // currentlRefreshingNextSession needs to be set
+          // to false, and refreshQueue to empty array.
+          else {
+            console.log("@TimerManager: No refresh needed.");
+            this.changeState("currentlyRefreshingNextSession", false);
+            if (this.refreshTimerQueue.length) {
+              this.handleRefreshQueue();
+            }
           }
         } else {
           this.resetSessionAndTimer();
-          this.setNextOrCurrentSession(session, recheck);
+          this.setNextOrCurrentSession(session);
         }
       } else {
-        this.setNextOrCurrentSession(session, recheck);
+        this.setNextOrCurrentSession(session);
       }
     },
 
-    setNextOrCurrentSession(session, recheck) {
+    setNextOrCurrentSession(session) {
       if (session) {
         let sessionStartInMS = new Date(session.dateTime).valueOf();
         let sessionIntervalInMS = session.sessionInterval * 60 * 1000;
@@ -192,11 +225,11 @@ export default {
         } else if (isCurrentSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", session);
-          this.startCountdownToNextSession(recheck);
+          this.startCountdownToNextSession();
         } else if (isUpcomingSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", null);
-          this.startCountdownToNextSession(recheck);
+          this.startCountdownToNextSession();
         }
       } else {
         this.changeState("nextSession", null);
@@ -204,25 +237,7 @@ export default {
       }
     },
 
-    prepEndOfWeekData() {
-      let endOfWeekDate = endOfISOWeek(new Date());
-
-      let twoHoursInMS = 2 * 60 * 60 * 1000;
-
-      // Add +2 hours to end of this week to account for midnight for all intervals
-      let endOfWeekPlusTwoHours = new Date(
-        endOfWeekDate.valueOf() + twoHoursInMS
-      );
-
-      let weekData = {
-        endOfWeekPlusTwoHours: endOfWeekPlusTwoHours,
-        userId: this.user._id,
-      };
-
-      return weekData;
-    },
-
-    startCountdownToNextSession(recheck) {
+    startCountdownToNextSession() {
       /* Set session start time in MS */
       let nextSessionStart = this.nextSession.dateTime;
       let nextSessionStartInMS = new Date(nextSessionStart).valueOf();
@@ -243,16 +258,56 @@ export default {
       this.changeState("oneMinToStartInMS", oneMinToStartInMS);
       this.changeState("tenMinToStartInMS", tenMinToStartInMS);
 
+      // console.log("Enter land of the tick!");
       this.$nextTick(() => {
-        this.changeState("doneLoadingTimes", true);
-        if (recheck) {
-          this.startTime();
-        }
-        this.$store.dispatch(
-          "calendar/updateCalendarCurrentSessionSlot",
-          this.nextSession
-        );
+        this.finalizeRefresh();
       });
+    },
+
+    finalizeRefresh() {
+      this.$store.dispatch(
+        "calendar/updateCalendarCurrentSessionSlot",
+        this.nextSession
+      );
+
+      this.changeState("currentlyRefreshingNextSession", false);
+
+      if (this.timerHasBeenStarted) {
+        this.startTimer();
+      }
+
+      if (this.refreshTimerQueue.length) {
+        this.handleRefreshQueue();
+      }
+
+      if (
+        !this.initialFinalizeCompleted ||
+        !this.doneLoadingTimes ||
+        !this.timerManagerHasMounted
+      ) {
+        this.setInitialChecksAsComplete();
+      }
+    },
+
+    async handleRefreshQueue() {
+      console.log("@TimerManager: Refresh Queue.");
+      this.$store.dispatch("cofocus/clearRefreshQueue");
+
+      if (this.currentlyRefreshingNextSession) {
+        this.$store.dispatch("cofocus/pushToRefreshQueue");
+        console.log("@TimerManager: Adding to refresh queue.");
+      } else if (this.timerManagerHasMounted && this.initialFinalizeCompleted) {
+        this.changeState("currentlyRefreshingNextSession", true);
+        console.log("@TimerManager: Initializing refresh from queue.");
+        await this.getUserNextSession();
+      }
+    },
+
+    setInitialChecksAsComplete() {
+      this.changeState("doneLoadingTimes", true);
+      this.changeState("initialFinalizeCompleted", true);
+
+      this.changeState("timerManagerHasMounted", true);
     },
 
     startTimer() {
@@ -269,6 +324,24 @@ export default {
       } else if (this.$route.meta.calendar) {
         this.$refs.sessiontimer.resetSessionAndTimer();
       }
+    },
+
+    prepEndOfWeekData() {
+      let endOfWeekDate = endOfISOWeek(new Date());
+
+      let twoHoursInMS = 2 * 60 * 60 * 1000;
+
+      // Add +2 hours to end of this week to account for midnight for all intervals
+      let endOfWeekPlusTwoHours = new Date(
+        endOfWeekDate.valueOf() + twoHoursInMS
+      );
+
+      let weekData = {
+        endOfWeekPlusTwoHours: endOfWeekPlusTwoHours,
+        userId: this.user._id,
+      };
+
+      return weekData;
     },
 
     changeState(field, newValue) {

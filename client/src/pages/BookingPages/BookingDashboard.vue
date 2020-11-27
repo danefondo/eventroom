@@ -33,10 +33,11 @@
             :nextSession="nextSession"
             :currentSession="currentSession"
             :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
+            @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
           />
         </div>
         <div class="sidebar">
-          <TimerManager v-if="user && isAuthenticated" />
+          <TimerManager ref="timer" parentName="booking" />
           <Booker
             :user="user"
             :selectedInterval="selectedInterval"
@@ -45,6 +46,7 @@
             :selectedSlotName="selectedSlotName"
             :selectedSlotStartTime="selectedSlotStartTime"
             :selectedSlotDateString="selectedSlotDateString"
+            @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
           />
         </div>
       </div>
@@ -84,8 +86,6 @@ import Switcher from "./CalendarComponents/Switcher";
 import Table from "./CalendarComponents/Table";
 import Booker from "./CalendarComponents/Booker";
 
-import { prepNewReceivedSessionsToPush } from "./CalendarUtilities/receiveHelper";
-
 import {
   endOfDay,
   startOfISOWeek,
@@ -108,25 +108,6 @@ export default {
       interval: 15,
 
       height: 100,
-
-      firstPartnerFields: [
-        "firstPartnerId",
-        "firstPartnerUsername",
-        "firstPartnerFirstName",
-        "firstPartnerLastName",
-        "firstPartnerDisplayName",
-        "firstPartnerProfileImageUrl",
-        "firstPartnerSessionCustomTitle",
-      ],
-      secondPartnerFields: [
-        "secondPartnerId",
-        "secondPartnerUsername",
-        "secondPartnerFirstName",
-        "secondPartnerLastName",
-        "secondPartnerDisplayName",
-        "secondPartnerProfileImageUrl",
-        "secondPartnerSessionCustomTitle",
-      ],
     };
   },
   computed: {
@@ -160,6 +141,13 @@ export default {
       currentSession: (state) => state.cofocus.currentSession,
       nextSessionIsTenMinToStart: (state) =>
         state.cofocus.nextSessionIsTenMinToStart,
+
+      timerManagerHasMounted: (state) => state.cofocus.timerManagerHasMounted,
+      initialFinalizeCompleted: (state) =>
+        state.cofocus.initialFinalizeCompleted,
+      refreshTimerQueue: (state) => state.cofocus.refreshTimerQueue,
+      currentlyRefreshingNextSession: (state) =>
+        state.cofocus.currentlyRefreshingNextSession,
     }),
   },
   components: {
@@ -172,18 +160,18 @@ export default {
     this.cleanBeforeLeave(true, next);
   },
   async mounted() {
-    console.log("@Step 1: Render calendar structure.");
+    // console.log("@Step 1: Render calendar structure.");
     await this.initWeekCalendar();
 
-    console.log("@Step 2: Join Cofocus socket port.");
+    // console.log("@Step 2: Join Cofocus socket port.");
     this.$socket.emit("joinCofocusCalendar", "cofocus");
 
-    console.log("@Step 3: Start listening to pushes and cancels.");
-    this.startReceivingPushedSessions();
+    // console.log("@Step 3: Start listening to pushes and cancels.");
+    this.startReceivingBookedSessions();
     this.startReceivingCanceledSessions();
     // Consider also listening to 'rematches'.
 
-    console.log("@Step 4: Setup cleaning for when you leave.");
+    // console.log("@Step 4: Setup cleaning for when you leave.");
     let globalThis = this;
     window.onbeforeunload = () => {
       globalThis.cleanBeforeLeave();
@@ -208,86 +196,47 @@ export default {
       }
     },
 
-    startReceivingPushedSessions() {
-      this.sockets.subscribe("receivePushedSessions", (sessions) => {
-        let processingObject = {
-          sessions: sessions,
-          userId: this.user._id,
-          calendarData: this.calendarData,
-        };
-        /* ====== PROCESS RECEIVED SESSION DATA ====== */
-        let prepData = prepNewReceivedSessionsToPush(processingObject);
+    changeState(field, newValue) {
+      let dispatchObject = { field, newValue };
+      this.$store.dispatch("cofocus/changeSingleState", dispatchObject);
+    },
 
-        if (prepData) {
-          /* ====== UPDATE EXISTING USER SESSIONS ====== */
-          if (prepData.userSessionsToUpdate.length) {
-            this.$store.dispatch(
-              "calendar/updateUserSessionsPostUpdateReceive",
-              prepData.userSessionsToUpdate
-            );
-          }
+    async refreshNextOrCurrentSession() {
+      if (this.currentlyRefreshingNextSession) {
+        this.$store.dispatch("cofocus/pushToRefreshQueue");
+      } else if (this.timerManagerHasMounted && this.initialFinalizeCompleted) {
+        console.log("Let's refresh IN BOOKING.");
+        await this.$refs.timer.getUserNextSession();
+      }
+    },
 
-          /* ====== UPDATE EXISTING PEOPLE SESSIONS ====== */
-          if (prepData.peopleSessionsToUpdate.length) {
-            this.$store.dispatch(
-              "calendar/updatePeopleSessionsPostUpdateReceive",
-              prepData.peopleSessionsToUpdate
-            );
-          }
-
-          /* ====== PUSH NEW PEOPLE SESSIONS ====== */
-          if (prepData.peopleSessionsToPush.length) {
-            this.$store.dispatch(
-              "calendar/pushPeopleSessionsPostPushReceive",
-              prepData.peopleSessionsToPush
-            );
-          }
-        }
+    startReceivingBookedSessions() {
+      this.sockets.subscribe("receiveBookedSessions", (sessions) => {
+        this.updateCalendarPostReceive(sessions);
       });
     },
 
     startReceivingCanceledSessions() {
       this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
-        console.log("SESSIONS RECEIVED FROM CANCEL", sessions);
-        /* ====== REMOVE DELETED SESSION-CANCELED EMTPY SESSION ====== */
+        this.updateCalendarPostReceive(sessions);
+      });
+    },
 
-        // Iterate starting from the end;
-        for (var i = sessions.length - 1; i > -1; i--) {
-          let session = sessions[i];
-          if (session.sessionIsEmptyAndToBeDeleted) {
-            this.$store.dispatch(
-              "calendar/removeEmptyPeopleSessionFromCalendar",
-              session
-            );
-            sessions.splice(i, 1);
-          }
-        }
-
-        /* ====== UPDATE ALL OTHER SESSIONS ====== */
-        let processingObject = {
+    updateCalendarPostReceive(sessions) {
+      if (sessions.length) {
+        let updateData = {
           sessions,
           userId: this.user._id,
-          calendarData: this.calendarData,
         };
 
-        /* ====== PROCESS RECEIVED SESSION DATA ====== */
-        let prepData = prepNewReceivedSessionsToPush(processingObject);
+        this.$store.dispatch(
+          "calendar/updateCalendarAfterReceive",
+          updateData
+        );
+      }
 
-        /* ====== UPDATE EXISTING PEOPLE SESSIONS ====== */
-        if (prepData.peopleSessionsToUpdate.length) {
-          this.$store.dispatch(
-            "calendar/updatePeopleSessionsPostUpdateReceive",
-            prepData.peopleSessionsToUpdate
-          );
-        }
-
-        /* ====== UPDATE USER AFFECTED SESSIONS ====== */
-        if (prepData.userSessionsToUpdate.length) {
-          this.$store.dispatch(
-            "calendar/updateUserSessionsPostUpdateReceive",
-            prepData.userSessionsToUpdate
-          );
-        }
+      this.$nextTick(() => {
+        this.updateCalendarAvailability();
       });
     },
 
@@ -322,11 +271,11 @@ export default {
         if (!allBookedSessions)
           throw new Error("Failed to fetch general sessions.");
 
-        console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
+        // console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
 
         if (response.data.success) {
           this.gettingAllBookedSessions = false;
-          console.log(refresh);
+          // console.log(refresh);
 
           if (refresh) {
             this.iterativeRefreshCalendarSessions(allBookedSessions);
@@ -366,7 +315,7 @@ export default {
 
       this.$store.dispatch("calendar/hardRefreshCalendarSessions", updateData);
 
-      this.$nextTick(function () {
+      this.$nextTick(() => {
         this.updateCalendarAvailability();
       });
     },
@@ -384,7 +333,7 @@ export default {
         updateData
       );
 
-      this.$nextTick(function () {
+      this.$nextTick(() => {
         this.updateCalendarAvailability();
       });
     },
@@ -410,12 +359,11 @@ export default {
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
 
-      if (this.currentSession) {
-        this.$store.dispatch(
-          "calendar/updateCalendarCurrentSessionSlot",
-          this.currentSession
-        );
-      }
+      this.refreshNextOrCurrentSession();
+    },
+
+    removeSelectionsInThePast() {
+      this.$store.dispatch("calendar/removeSelectionsInThePast");
     },
 
     async syncCalendarWithDatabase() {
@@ -424,6 +372,7 @@ export default {
       } else {
         await this.getAllBookedUsersForSpecificWeek(true, true);
       }
+      this.removeSelectionsInThePast();
       this.renderSavedSelectionsIfAny();
       this.$nextTick(() => {
         this.updateCalendarAvailability();

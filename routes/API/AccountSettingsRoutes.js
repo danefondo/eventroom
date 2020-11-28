@@ -5,7 +5,7 @@ const {
 } = require("../../server/auth/controllers/AuthController");
 const AccountSettingsController = require("../../server/settings/controllers/AccountSettingsController");
 
-const DataValidator = require("../../server/auth/validators/DataValidator");
+const DataValidator = require("../../server/auth/utilities/DataValidator");
 
 const router = Express.Router();
 

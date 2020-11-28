@@ -8,7 +8,7 @@ const TempUserController = require('../../server/event/controllers/TempUserContr
 const VerificationController = require("../../server/auth/controllers/VerificationController");
 
 const AccountUtilities =  require('../../server/account/utilities/AccountUtilities');
-const DataValidator = require('../../server/auth/validators/DataValidator');
+const DataValidator = require('../../server/auth/utilities/DataValidator');
 
 const router = Express.Router();
 

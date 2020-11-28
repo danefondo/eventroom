@@ -1,4 +1,4 @@
-import { requestWithAuthentication } from "../../config/api";
+import authAPI from "../../api/auth";
 
 const state = {
   ready: false,
@@ -6,7 +6,6 @@ const state = {
   user: null,
 
   authenticationStatus: false,
-  verificationStatus: false,
 
   // This userId can be both an anonymous user's id and an actual user's id
   userId: "",
@@ -15,56 +14,38 @@ const state = {
 const getters = {};
 
 const mutations = {
-  ready(state) {
-    state.ready = true;
+  ready(state, isReady) {
+    state.ready = isReady;
   },
-
   updateAuthenticationStatus(state, newStatus) {
-    // console.log("before: ", state.authenticationStatus);
     state.authenticationStatus = newStatus;
-    // console.log("after:", state.authenticationStatus);
   },
-
-  updateVerificationStatus(state, newStatus) {
-    // console.log("before: ", state.verificationStatus);
-    state.verificationStatus = newStatus;
-    // console.log("after:", state.verificationStatus);
-  },
-
   updateUser(state, newUser) {
     state.user = newUser;
+    state.userId = newUser ? newUser._id : "";
   },
-
   updateUserId(state, userId) {
     state.userId = userId;
   },
+  updateAll(state, data) {
+    state.authenticationStatus = data.authenticationStatus;
+    state.user = data.user;
+    state.userId = data.userId;
+    state.ready = true;
+  }
 };
 
 const actions = {
-  updateUserId(state, userId) {
-    state.commit("updateUserId", userId);
-  },
   authenticate: async ({ commit }) => {
-    let response;
-    try {
-      response = await requestWithAuthentication(
-        "get",
-        `/api/accounts/authenticate`
-      );
-    } catch (err) {
-      console.log("@store auth err:", err);
-      return err;
-    }
+    const response = await authAPI.authenticate();
     if (response && response.data && response.data.success) {
       commit("updateAuthenticationStatus", true);
-      commit("updateVerificationStatus", response.data.user.isVerified);
       commit("updateUser", response.data.user);
-      commit("ready");
+      commit("ready", true);
     } else {
       commit("updateAuthenticationStatus", false);
-      commit("updateVerificationStatus", false);
       commit("updateUser", null);
-      commit("ready");
+      commit("ready", true);
     }
 
     return true;

@@ -1,26 +1,29 @@
 <template>
-    <div>
-        <p> SHAME ON YOU! you should never log out </p>
-        <br/>
-        <p> Please wait while we redirect you to our endless feed of new events</p>
-    </div>
+  <div v-if="loggingOut">
+    You are currently logging out.
+  </div>
+  <div v-else>
+    Somethings wrong
+  </div>
 </template>
-
 <script>
-import auth from '../../config/auth';
+import auth from "../../api/auth";
 
 export default {
-    name: "LogoutPage",
-    async beforeRouteEnter (to, from, next) {
-      try {
-        const response = await auth.logout();
-        console.log("@logout_beforeenter: ", response.data);
-        if (response.data.success) {
-          next();
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    },
+  name: "LogoutPage",
+  data() {
+    return {
+      loggingOut: true,
+
+    }
+  },
+  async created() {
+    try {
+      const response = await auth.logout();
+      console.log("logout response: ", response);
+    } catch (error) {
+      console.log("@logoutpage: error", error);
+    }
+  }
 }
 </script>

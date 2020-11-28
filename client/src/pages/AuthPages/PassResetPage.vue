@@ -34,14 +34,13 @@
 </template>
 
 <script>
-import { requestWithAuthentication } from '../../config/api';
-import auth from '../../config/auth';
+import auth from '../../api/auth';
 
 export default {
   name: "PassResetPage",
   async beforeRouteEnter (to, from, next) {
     try {
-      const response = await requestWithAuthentication('get', `/api/accounts/passresetconfirmation`);
+      const response = await auth.passResetConfirmation();
       if (response && response.data && response.data.success) {
         next();
       } else {
@@ -65,9 +64,11 @@ export default {
     async submitNewPassword() {
       this.submitting = true;
       try {
-        const response = await requestWithAuthentication('post', `/api/accounts/passreset`, { newPassword: this.newPassword });
+
+        const response = await auth.passreset({ newPassword: this.newPassword });
+
         if (response.data.success) {
-          await auth.isAuthenticated();
+          await auth.authenticate();
           this.submitting = false;
           this.submitted = true;
           this.$router.push("/");

@@ -58,7 +58,6 @@ export default {
     ...mapState({
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
-      isVerified: (state) => state.auth.verificationStatus,
       ready: (state) => state.auth.ready,
     }),
     profileLink: function () {
@@ -80,6 +79,7 @@ export default {
     };
   },
   mounted() {
+    console.log("@nav: ", this.isAuthenticated, this.ready);
     document.addEventListener("click", this.close);
   },
   beforeDestroy() {

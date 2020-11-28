@@ -5,8 +5,8 @@
   <div class="registration">
     <div class="registration-block">
       <div class="auth-header">
-        <h1 class="auth-title">{{ $t("register.join-title") }}</h1>
-        <div class="auth-subtitle">{{ $t("register.join-tagline") }}</div>
+        <h1 class="auth-title">Welcome to Eventroom</h1>
+        <div class="auth-subtitle">The most personal video experience you'll ever have.</div>
       </div>
       <div class="registration-form">
         <form class="auth-form" method="POST" @submit.prevent="register()">
@@ -33,7 +33,7 @@
                 class="auth-input"
                 name="username"
                 type="text"
-                :placeholder="$t('register.username')"
+                placeholder="Username"
                 autocomplete="falsess"
               />
               <div v-if="getError('username')" class="inputErrorContainer">
@@ -47,7 +47,7 @@
                   class="auth-input"
                   name="password"
                   :type="passwordType ? 'password' : 'text'"
-                  :placeholder="$t('register.pass')"
+                  placeholder="Password (at least 8 characters)"
                   autocomplete="off"
                 />
                 <div class="showPassContainer">
@@ -69,7 +69,7 @@
                   class="auth-input"
                   name="passcheck"
                   :type="passwordCheckType ? 'password' : 'text'"
-                  :placeholder="$t('register.confirm-pass')"
+                  placeholder="Confirm password"
                   autocomplete="off"
                 />
                 <div class="showPassContainer">
@@ -90,15 +90,13 @@
               :disabled="submitting"
               class="auth-button"
               type="submit"
-              :value="
-                submitting ? $t('register.creating') : $t('register.create')
-              "
+              value="Create"
             />
           </div>
         </form>
-        <router-link class="auth-alt-button" to="/account/login">{{
-          $t("register.already-have-account")
-        }}</router-link>
+        <router-link class="auth-alt-button" :to= "{name: 'LoginPage'}">
+          Already have an account?
+        </router-link>
       </div>
       <!-- <div class="external-auth fb-auth">
         <a class="fb-link" :href="facebookLoginLink">Sign up with FB</a>
@@ -111,15 +109,12 @@
 </template>
 
 <script>
-import auth from "../../config/auth";
-// import SuccessPage from "./SuccessPage";
+import auth from "../../api/auth";
 import { BASE_PATH } from "../../constants";
 
 export default {
   name: "RegisterPage",
-  components: {
-    // SuccessPage,
-  },
+
   data() {
     return {
       email: "",
@@ -132,8 +127,8 @@ export default {
       submitting: false,
       success: false,
 
-      googleLoginLink: BASE_PATH + "/api/accounts/google",
-      facebookLoginLink: BASE_PATH + "/api/accounts/facebook",
+      googleLoginLink: BASE_PATH + "/api/auth/google",
+      facebookLoginLink: BASE_PATH + "/api/auth/facebook",
 
       registrationMethod: "",
     };
@@ -159,12 +154,13 @@ export default {
         this.registrationMethod = "local";
         console.log("registration successful: ", response.data);
         // this.$router.push('/');
-        window.location.href = "/";
+        this.$router.push("/");
       } catch (error) {
         if (error.response && error.response.status === 422) {
           this.errors = error.response.data.errors;
           console.log(this.errors);
         } else {
+          console.log(error);
           console.log("internal server error");
         }
       } finally {
@@ -207,7 +203,6 @@ export default {
   max-width: 350px;
   width: 325px;
   text-align: center;
-  margin-top: -156px;
 }
 .auth-button {
   outline: none;

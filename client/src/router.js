@@ -186,16 +186,11 @@ const routes = [
     name: "VerificationPage",
   },
   {
-    path: "/account/verificationRequired",
-    component: () => import("./pages/AuthPages/RequireVerificationPage"),
-    name: "RequireVerificationPage",
-  },
-  {
     path: "/account/resetpassword/:token",
-    component: () => import("./pages/AuthPages/PassResetRedirect"),
+    component: () => import("./pages/AuthPages/PassResetRedirectPage"),
   },
   {
-    path: "/account/resetpassword",
+    path: "/account/passreset",
     component: () => import("./pages/AuthPages/PassResetPage"),
   },
 
@@ -260,7 +255,11 @@ const routes = [
   },
 
   /* ====== ERROR ROUTES ====== */
-
+  {
+    path: "/errors/error",
+    component: () => import("./pages/ErrorPages/ErrorPage"),
+    name: "ErrorPage",
+  },
   {
     path: "/errors/eventroomNotFound",
     name: "RoomNotFound",
@@ -291,8 +290,7 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   if (to.meta || noReAuth.includes(to.name)) {
-    // console.log("@router, need auth or noreauth")
-    const user = store.state.auth.user;
+    console.log("@router, need auth or noreauth")
     const authenticationStatus = store.state.auth.authenticationStatus;
 
     let nextHasBeenCalled = false;
@@ -301,15 +299,6 @@ router.beforeEach(async (to, from, next) => {
       console.log("@router go login");
       nextHasBeenCalled = true;
       next({ name: "LoginPage" }); // TODO proper error page/error code or smth
-    }
-    if (
-      to.meta.requireVerification &&
-      user &&
-      !user.isVerified &&
-      !nextHasBeenCalled
-    ) {
-      nextHasBeenCalled = true;
-      next({ name: "RequireVerificationPage" });
     }
     if (
       noReAuth.includes(to.name) &&
@@ -321,9 +310,11 @@ router.beforeEach(async (to, from, next) => {
       next("/");
     }
     if (!nextHasBeenCalled) {
+      console.log("@router nexted")
       next();
     }
   } else {
+    console.log("@router else")
     next();
   }
 });

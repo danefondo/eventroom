@@ -27,6 +27,7 @@ export default {
   },
   mounted() {
     console.log("Hello. I am Macintosh.");
+    console.log("Macintosh: ", this.$route.meta.hideNavigation)
   },
   computed: {
     ...mapState({

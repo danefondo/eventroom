@@ -57,7 +57,6 @@ export default {
     ...mapState({
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
-      isVerified: (state) => state.auth.verificationStatus,
       tempUser: (state) => state.tempuser.tempUser,
     }),
   },

@@ -71,6 +71,8 @@ const requestInstantMatch = function(socket, user) {
  * 
  * NB! unnecessary within components, but may be useful outside. Within components, you can just do 
  * Promise.then(res => this.data).catch(err => this.error) and check whether error or data exists.
+ * 
+ * TODO: Move to utilities
  */
 const makeRequestQuerable = function(promise) {
   if (promise.isResolved) return promise

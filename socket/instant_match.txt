@@ -1,0 +1,89 @@
+INSTANT MATCH / REMATCH logic
+
+One downside is, there is no guarantee of preference matching with this vanilla scheme.
+Preference matching can be done e.g. on client side, but this complicates things and might not 
+The other is, current version require Redis, which seems to be fairly simple to set up
+
+***************************************************************************************************
+example with three users:
+user1: the user who just requested an instant match
+user2: user who requested an instant match before but has not yet been matched
+user3: user who requested an instant match before but has not yet been matched
+
+user2 and user3 might have incompatible preferences, which is why they have not yet been matched with themselves
+
+***************************************************************************************************
+PROTOCOL
+
+1. User1 client emits to event "REQUEST_INSTANT_MATCH"
+	data: user1_id, user1_preferences, user1_data
+2. Server adds user1 to Redis table 
+2. User1 client subscribes to "INSTANT_MATCH_WAITLIST"
+3. User1 client subscribes to "INSTANT_MATCH_{USER1_ID}"
+3. Server broadcasts to event "INSTANT_MATCH_WAITLIST"
+	data: user1_id, random_room_string, user1_preferences, user1_data
+4. Clients in "INSTANT_MATCH_WAITLIST" process the request
+	user2: compare user1_preferences with user2_data and user2_preferences with user1_data
+	user3: compare user1_preferences with user3_data and user3_preferences with user1_data
+5. If matched, clients emit to event "INSTANT_MATCH"
+	data: user1_id, matched_user_id (e.g. user1_id, user2_id, if the client was user2)
+6. Checks if user1_id in Redis,
+	if yes, then remove matched_user_id
+	if not, then waits. 
+7. Server creates a new session
+	participants: user1, user2 (or whoever was faster)
+8. Server emits to "INSTANT_MATCH_{USER1_ID}", "INSTANT_MATCH_{USER2_ID}" (or whoever was faster)
+	data: session_data
+9. User1 and user2 can now join the session.
+10. For every 
+11. User1 unsubscribes from "INSTANT_MATCH_WAITLIST", "INSTANT_MATCH_{USER1_ID}"
+12. User2 unsubscribes from "INSTANT_MATCH_WAITLIST", "INSTANT_MATCH_{USER2_ID}"
+
+***************************************************************************************************
+ANALYSIS 
+
+The following hold after the completion of this protocol
+1. No user knows anything identifiable about any other user in the waiting list 
+2. Server and database memory consumption is minimal
+3. Server only creates the session when a match is found
+4. If preferences were not met, the session is not formed
+5. Session data is sent *only* to two users. If several users matched with user1 at the same time, the one who got user1 removed from Redis faster 'wins' and gets session. 
+
+EXPECTED SERVER-SIDE PERFORMANCE:
+
+Server does the following: 
+1. listens to events "REQUEST_INSTANT_MATCH",
+2. adds the user to Redis
+2. broadcast the heard event to "INSTANT_MATCH_WAITLIST",
+3. listens to "INSTANT_MATCH",
+4. removes matched users from Redis,
+5. creates a new session,
+6. emits the session data to matched people.
+
+That is, for every person that request an instant match, the server does 
+2+n guaranteed operations (1., 2., 3.), where n is the number of people listening on "INSTANT_MATCH_WAITLIST"
+(3., 4., 5., 6.) for every successful match. Successful match reduces the number of people in the waiting list by 2. 
+
+So there are two main performance determinators: 
+1. nr of people using instant match
+2. nr of people in the waiting list *at the same time*
+
+So even if we assume at each minute 1000 people use instant match (i.e. we have approx 50k users *per hour*), the speed of removing people from the waiting list means that the load should be essentially negligible
+
+EXPECTED CLIENT-SIDE PERFORMANCE:
+
+Client does the following:
+1. emits to "REQUEST_INSTANT_MATCH",
+2. subscribes to "INSTANT_MATCH_WAITLIST" and "INSTANT_MATCH_{user_id}",
+3. processes every event at "INSTANT_MATCH_WAITLIST". Processing means comparing user_datas with preferences. Preferences should only include convenience preferences (mic, pic, etc), not group preferences (for performance),
+4. if preferences match, emit to "INSTANT_MATCH"
+5. if match formed, get session data from "INSTANT_MATCH_{user_id}".
+6. unsubscribe from "INSTANT_MATCH_WAITLIST" and "INSTANT_MATCH_{user_id}".
+
+The only performance bottleneck is 3., i.e. when the user is in the queue for a long time and waits to get people with appropriate preferences etc. But, since the user probably is doing nothing at the same time anyway, it shouldn't really influence the experience.
+
+More concretely, the nr of operation is 
+(nr of comparisons)*(nr of new people in the waiting list before match)
+So if we have 1000 people at every minute, it only means 1000*(nr of comparisons) per minute
+1000 people at every minute is fairly high volume, so I think we're fine :)
+

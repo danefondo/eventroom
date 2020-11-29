@@ -1,5 +1,7 @@
-
 const IDENTIFIER = "instant_waitlist:";
+const EXPIRY_TIME = 10*60;  // 10 min
+
+
 /**
  * Instant Match Controller
  * @param {redis client} redisClient 
@@ -7,15 +9,14 @@ const IDENTIFIER = "instant_waitlist:";
 module.exports = function(redisClient) {
   let module = {};
 
-  module.setWaitlistUser = function(userID) {
+  module.setWaitlistUser = function(userID, socketID) {
     const key = IDENTIFIER+userID;
-    redisClient.set(key, 1, (err, reply) => {
+    redisClient.set(key, socketID, "EX", EXPIRY_TIME, (err, reply) => {
       if (err) {
         console.log("set instant waitlist, error:", err);
       }
       else if (reply) {
-        console.log("set instant waitlist, reply:", reply);
-        console.log("replyvalue == 'OK':", reply=="OK")
+        console.log("set instant waitlist, reply:", reply, " key: ", key, " value, ", socketID);
       }
     })
   } 

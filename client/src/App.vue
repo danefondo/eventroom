@@ -2,6 +2,7 @@
   <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
     <Nav v-if="!$route.meta.hideNavigation" />
     <!-- Do not show this timer in Calendar & Session pages -->
+    <TempComp/>
 
     <!-- <TimerManager parentName="app" v-if="user && isAuthenticated && !$route.meta.customTimer" /> -->
     <div
@@ -17,12 +18,14 @@
 <script>
 import { mapState } from "vuex";
 import Nav from "./components/Nav";
+import TempComp from "./components/TempComp";
 // import TimerManager from "./components/TimerManager";
 
 export default {
   name: "App",
   components: {
     Nav,
+    TempComp,
     // TimerManager,
   },
   mounted() {

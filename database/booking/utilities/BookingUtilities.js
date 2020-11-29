@@ -288,6 +288,15 @@ function getNextSession(userBookedSessions) {
   return nextSession;
 }
 
+function checkIfBookRequestInPast(toBookTime) {
+  let hasTimePassed = false;
+  let toBookTimeInMS = new Date(toBookTime).valueOf();
+  if (toBookTimeInMS < Date.now()) {
+    hasTimePassed = true;
+  }
+  return hasTimePassed;
+}
+
 function checkIfDateInArrayOverlaps(datesArray, date) {
   const FIFTEEN_MINUTES = 15 * 60 * 1000; // milliseconds
   let overlaps = false;
@@ -320,6 +329,28 @@ function checkIfDateInArrayOverlaps(datesArray, date) {
     return false;
   }
   return true;
+}
+
+function removePastDates(datesToUpdate, nowInMS) {
+  for (var i = datesToUpdate.length - 1; i > -1; i--) {
+    let dateToUpdate = datesToUpdate[i];
+    let dateToUpdateInMS = new Date(dateToUpdate.dateTime).valueOf();
+    if (dateToUpdateInMS < nowInMS) {
+      datesToUpdate.splice(i, 1);
+    }
+  }
+  return datesToUpdate;
+}
+
+function removePastDatesFromArray(datesToUpdate, nowInMS) {
+  for (var i = datesToUpdate.length - 1; i > -1; i--) {
+    let dateToUpdate = datesToUpdate[i];
+    let dateToUpdateInMS = new Date(dateToUpdate).valueOf();
+    if (dateToUpdateInMS < nowInMS) {
+      datesToUpdate.splice(i, 1);
+    }
+  }
+  return datesToUpdate;
 }
 
 function removeOverlappingDates(userDates, datesToUpdate) {
@@ -377,8 +408,12 @@ module.exports = {
   filterAvailableSessionsForSlot,
   findMatchesForAllPossibleSlots,
   getNextSession,
+  checkIfBookRequestInPast,
   checkIfDateInArrayOverlaps,
   removeOverlappingDatesFromArray,
 
   removeOverlappingDates,
+
+  removePastDates,
+  removePastDatesFromArray,
 };

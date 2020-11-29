@@ -177,7 +177,7 @@ function createDayObjectForTimeRow(
     // showing the 'Join' button for next and ongoing sessions
     hasCurrentOrNextSession: false,
 
-    hasPastMatchedSession: false,
+    hasPastSession: false,
 
     // isPastHour: false,
 

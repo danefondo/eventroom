@@ -3,7 +3,6 @@
     <thead>
       <tr>
         <th class="empty"></th>
-        <!-- renderHTMLDateRow -->
         <th
           v-for="(eachDate, index) in weekDates"
           :key="index"
@@ -18,22 +17,6 @@
       </tr>
     </thead>
     <tbody>
-      <!-- renderGrid
-      
-      somehow
-      must add some sort of class
-      or disable selecting
-      if there is a session in 'interval' distance
-
-      likewise in the backend
-      there must be a check
-
-      to prevent any overlapping sessions ever being booked
-
-      must somehow calculate that no sessions before slot by interval
-      and no sessions after slot by interval
-      
-       -->
       <tr
         v-for="(eachHourRow, rowIndex) in calendarData"
         :key="rowIndex"
@@ -52,30 +35,27 @@
           :class="isPastHour(eachHourRow, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
-          <div
-            :style="getSelectedHeights"
-            class="past-container"
-            v-if="isPastHour(eachHourRow, i)"
-          >
-            <div @mousemove="showIsPast" class="past-inner tooltip">
-              <span id="tooltip-span"> This hour has passed. </span>
-            </div>
-            <!-- all YOUR booked sessions, either matched or unmatched-->
-            <div
-              v-if="
-                returnBestBookedToMatch(eachHourRow, i, 'userSessionsForSlot')
-              "
-              class="booked-session"
-            >
-              <span v-if="isMatched(eachHourRow, i)">{{
-                `Matched with ${isMatched(eachHourRow, i)}`
-              }}</span>
-              <span v-else>Not yet matched...</span>
-              <span>{{
-                returnBestBookedToMatch(eachHourRow, i, "userSessionsForSlot")
-              }}</span>
-            </div>
-          </div>
+          <PastSession
+            v-if="
+              isPastHour(eachHourRow, i) &&
+              !eachHourRow.hourRowDays[i].hasPastSession &&
+              userHadMatchedSessionForSlot(eachHourRow, i)
+            "
+            :boxHeight="getBoxHeights"
+            :slotData="eachHourRow.hourRowDays[i]"
+            :sessionTime="
+              bookedSessionTime(eachHourRow, i, 'userSessionsForSlot')
+            "
+            :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
+            :user="user"
+          />
+          <PastSlot
+            v-if="
+              isPastHour(eachHourRow, i) &&
+              !eachHourRow.hourRowDays[i].hasPastSession &&
+              !userHadMatchedSessionForSlot(eachHourRow, i)
+            "
+          />
           <div
             class="general-container"
             v-else-if="!isPastHour(eachHourRow, i)"
@@ -89,11 +69,6 @@
               :boxHeight="getBoxHeights"
               :slotData="eachHourRow.hourRowDays[i]"
             />
-            <!--     
-              1. If not past day
-              2. If user has booked session at time, show that and nothing else
-              3. If user has no booked session at time && others that are UNMATCHED are booked for the time, show first in list or best preferences (if many, show faces icons in row)
-            -->
             <UserSession
               v-if="
                 userHasSessionForSlot(eachHourRow, i) &&
@@ -124,16 +99,6 @@
               "
               :profileName="returnUnmatchedBookedPeople(eachHourRow, i, 'name')"
             />
-            <!-- all YOUR booked sessions, either matched or unmatched-->
-
-            <!-- <div
-              v-if="!eachHourRow.hourRowDays[i].isSelected"
-              @click="$emit('select-slot', eachHourRow.hourRowDays[i])"
-              :style="getBoxHeights"
-              class="highlight-container"
-            >
-              <div class="highlight-info">Select?</div>
-            </div> -->
             <BookSession
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
               v-if="eachHourRow.hourRowDays[i].isSelected"
@@ -165,6 +130,13 @@
           </div>
         </td>
       </tr>
+      <LastHourRows
+        :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
+        :boxHeight="getSelectedHeights"
+        :currentWeekStart="currentWeekStart"
+        :currentSelectedDay="currentSelectedDay"
+        :week="week"
+      />
     </tbody>
   </table>
 </template>
@@ -177,6 +149,9 @@ import CancelSession from "./CancelSession";
 import UnmatchedPerson from "./UnmatchedPerson";
 import SlotHoverEmpty from "./SlotHoverEmpty";
 import UserSession from "./UserSession";
+import PastSlot from "./PastSlot";
+import PastSession from "./PastSession";
+import LastHourRows from "./LastHourRows";
 
 export default {
   name: "Table",
@@ -194,6 +169,9 @@ export default {
     UnmatchedPerson,
     SlotHoverEmpty,
     UserSession,
+    PastSlot,
+    PastSession,
+    LastHourRows,
   },
   props: [
     "user",
@@ -212,6 +190,9 @@ export default {
     "nextSession",
     "currentSession",
     "nextSessionIsTenMinToStart",
+    "currentWeekStart",
+    "currentSelectedDay",
+    "week",
   ],
   computed: {
     getHeights() {
@@ -299,36 +280,11 @@ export default {
       return true;
     },
 
-    // if (
-    //   (isBefore(slotStartTime, sessionStartTime) &&
-    //     isBefore(sessionStartTime, slotEndTime)) ||
-    //   isEqual(slotStartTime, sessionStartTime) ||
-    //   isEqual(slotEndTime, sessionEndTime) ||
-    //   isBefore(slotStartTime, sessionEndTime)
-    // ) {
-    //   return false;
-    // }
-
-    // const slotEndTime = addMinutes(slotStartTime, this.interval);
-
-    // let sessionEndTime = addMinutes(sessionStartTime, sessionInterval);
-
     joinSessionLink(eachHourRow, i) {
       let sessionId =
         eachHourRow.hourRowDays[i]["userSessionsForSlot"][0]["_id"];
       let sessionLink = "/session/" + sessionId;
       return sessionLink;
-    },
-    showIsPast(e) {
-      // if (!document.hidden) {
-      let tooltip = e.target.children[0];
-      if (tooltip) {
-        var x = e.clientX,
-          y = e.clientY;
-        tooltip.style.top = y + 20 + "px";
-        tooltip.style.left = x + 20 + "px";
-      }
-      // }
     },
 
     isPastHour(eachHourRow, i) {
@@ -370,6 +326,25 @@ export default {
       }
 
       return userHasSessionForSlot;
+    },
+    userHadMatchedSessionForSlot(eachHourRow, i) {
+      let userHadMatchedSessionForSlot = false;
+      if (
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i] &&
+        eachHourRow.hourRowDays[i]["userSessionsForSlot"] &&
+        eachHourRow.hourRowDays[i]["userSessionsForSlot"].length
+      ) {
+        let slot = eachHourRow.hourRowDays[i]["userSessionsForSlot"];
+        let session = slot[0];
+
+        if (session && session.firstPartnerId && session.secondPartnerId) {
+          userHadMatchedSessionForSlot = true;
+        }
+      }
+
+      return userHadMatchedSessionForSlot;
     },
     userIsMatchedForSlot(eachHourRow, i) {
       let session = null;
@@ -624,43 +599,6 @@ export default {
 
 .selected-close:hover {
   background-color: #dcdfe0;
-}
-
-.past-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 70px;
-  cursor: default;
-}
-
-.past-inner {
-  background-color: #eef1f3;
-  border-radius: 4px;
-  height: 95%;
-  width: 95%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  cursor: default;
-}
-
-.tooltip {
-  text-decoration: none;
-  position: relative;
-}
-.tooltip span {
-  display: none;
-  z-index: 9999;
-  background-color: white;
-  padding: 4px 8px;
-  border-radius: 360px;
-}
-.tooltip:hover span {
-  display: block;
-  position: fixed;
-  overflow: hidden;
 }
 
 .hour {

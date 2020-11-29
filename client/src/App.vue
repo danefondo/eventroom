@@ -27,6 +27,7 @@ export default {
   },
   mounted() {
     console.log("Hello. I am Macintosh.");
+    console.log("Make the small things unforgettable.");
   },
   computed: {
     ...mapState({

@@ -11,10 +11,13 @@ const {
   filterAvailableSessionsForSlot,
   findMatchesForAllPossibleSlots,
   getNextSession,
+  checkIfBookRequestInPast,
   checkIfDateInArrayOverlaps,
   removeOverlappingDatesFromArray,
 
   removeOverlappingDates,
+  removePastDatesFromArray,
+  removePastDates,
 } = require("../utilities/BookingUtilities");
 
 const { prepareErrors } = require("../../../utilities/errorHandlers");
@@ -259,6 +262,12 @@ const BookingDataController = {
     // filters include having selected a set of preferred matches in drag&drop list
 
     try {
+      let isPastSession = checkIfBookRequestInPast(sessionData.dateTime);
+      if (isPastSession) {
+        errors.CannotBookSessionInPast = true;
+        throw { errors: errors };
+      }
+
       let user = await UserModel.findById(userId).exec();
       let userAlreadyHasSessionForTime = checkIfDateInArrayOverlaps(
         user.bookedSessionTimes,
@@ -428,6 +437,20 @@ const BookingDataController = {
     try {
       let user = await UserModel.findById(userId).exec();
 
+      let nowInMS = Date.now();
+
+      slotsToBookTimesArray = removePastDatesFromArray(
+        slotsToBookTimesArray,
+        nowInMS
+      );
+
+      slotsToBookArray = removePastDates(slotsToBookArray, nowInMS);
+
+      if (!slotsToBookTimesArray.length || !slotsToBookArray.length) {
+        errors.AllToBookSessionsAreInThePast = true;
+        throw { errors: errors };
+      }
+
       slotsToBookTimesArray = removeOverlappingDatesFromArray(
         user.bookedSessionTimes,
         slotsToBookTimesArray
@@ -461,8 +484,7 @@ const BookingDataController = {
         response &&
         response.sessionsExist &&
         response.existingSessionsArray &&
-        response.existingSessionsArray.length &&
-        response.existingSessionsArray.length > 0
+        response.existingSessionsArray.length
       ) {
         // Check response
         console.log("@bookSessionSlot, sessions exist!", response);
@@ -517,30 +539,18 @@ const BookingDataController = {
         );
       }
 
-      if (
-        slotsWithNoFoundMatches &&
-        slotsWithNoFoundMatches.length &&
-        slotsWithNoFoundMatches.length > 0
-      ) {
+      if (slotsWithNoFoundMatches && slotsWithNoFoundMatches.length) {
         slotsWithNoFoundMatches.forEach((unmatchedSlot) => {
           finalUnmatchedSlots.push(unmatchedSlot);
         });
       }
 
-      if (
-        matchingResultLeftovers &&
-        matchingResultLeftovers.length &&
-        matchingResultLeftovers.length > 0
-      ) {
+      if (matchingResultLeftovers && matchingResultLeftovers.length) {
         matchingResultLeftovers.forEach((unmatchedSlot) => {
           finalUnmatchedSlots.push(unmatchedSlot);
         });
       }
-      if (
-        finalUnmatchedSlots &&
-        finalUnmatchedSlots.length &&
-        finalUnmatchedSlots.length > 0
-      ) {
+      if (finalUnmatchedSlots && finalUnmatchedSlots.length) {
         let userData = {
           userId,
           username,
@@ -566,25 +576,15 @@ const BookingDataController = {
       matchedBookedSessions &&
       unmatchedBookedSessions &&
       matchedBookedSessions.length &&
-      unmatchedBookedSessions.length &&
-      matchedBookedSessions.length > 0 &&
-      unmatchedBookedSessions.length > 0
+      unmatchedBookedSessions.length
     ) {
       // Some sessions were matched, some sessions were not and just booked
       // Merge array sessions ES6 style: https://stackoverflow.com/a/51240518/8010396
       returnData = [...unmatchedBookedSessions, ...matchedBookedSessions];
-    } else if (
-      unmatchedBookedSessions &&
-      unmatchedBookedSessions.length &&
-      unmatchedBookedSessions.length > 0
-    ) {
+    } else if (unmatchedBookedSessions && unmatchedBookedSessions.length) {
       // All sessions were unmatched but booked and none matched
       returnData = unmatchedBookedSessions;
-    } else if (
-      matchedBookedSessions &&
-      matchedBookedSessions.length &&
-      matchedBookedSessions.length > 0
-    ) {
+    } else if (matchedBookedSessions && matchedBookedSessions.length) {
       // All sessions were matched and none unmatched
       returnData = matchedBookedSessions;
     }
@@ -821,13 +821,6 @@ const BookingDataController = {
 
       session.eventroomId = eventroom._id;
 
-      //   console.log(
-      //     "Prepared Eventroom & Session for Cofocus",
-      //     eventroom,
-      //     session
-      //   );
-      // await eventroom.save();
-      // await session.save();
       Promise.all([eventroom.save(), session.save()]);
     } catch (error) {
       errors = prepareErrors(error, errors);

@@ -25,6 +25,7 @@ const state = {
 
   minimumTime: "00:00",
   maximumTime: "23:59",
+  // maximumTime: "24:30",
 
   fieldsToUpdate: [
     "dateTime",

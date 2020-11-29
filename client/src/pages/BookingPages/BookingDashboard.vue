@@ -33,6 +33,9 @@
             :nextSession="nextSession"
             :currentSession="currentSession"
             :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
+            :currentWeekStart="currentWeekStart"
+            :currentSelectedDay="currentSelectedDay"
+            :week="week"
             @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
           />
         </div>

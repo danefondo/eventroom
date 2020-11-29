@@ -1,39 +1,15 @@
 <template>
   <div :style="boxHeight" class="booked-container">
     <div class="booked-info">
-      <CancelSession
-        v-if="!userIsMatchedForSlot"
-        :user="user"
-        :slotData="slotData"
-        :boxHeight="boxHeight"
-        :quickCancel="true"
-        :sessionTime="sessionTime"
-        @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
-        parentName="UserSession"
-      />
       <span class="booked-time">{{ sessionTime }}</span>
-      <div v-if="userIsMatchedForSlot">
-        <span class="booked-title">{{ `${matchedPartnerName}` }}</span>
-        <router-link
-          :to="sessionLink"
-          v-if="nextSessionIsTenMinToStart && slotData.hasCurrentOrNextSession"
-          class="join-session"
-        >
-          Join
-        </router-link>
-        <div class="selected-close" @click="setIsCanceling">x</div>
-      </div>
-      <span v-else class="booked-title-unmatched">Not yet matched... </span>
+      <span class="booked-title">{{ `${matchedPartnerName}` }}</span>
     </div>
   </div>
 </template>
 
 <script>
-
-import CancelSession from "./CancelSession";
-
 export default {
-  name: "UserSession",
+  name: "PastSession",
   props: [
     "slotData",
     "boxHeight",
@@ -41,36 +17,11 @@ export default {
     "profileName",
     "sessionTime",
     "user",
-    "userIsMatchedForSlot",
-    "sessionLink",
     "matchedPartnerName",
-    "nextSessionIsTenMinToStart",
   ],
-  components: {
-    CancelSession,
-    // IconBase,
-    // IconProfile,
-  },
   methods: {
-    refreshNextOrCurrentSession() {
-      console.log("Init refresh from UserSession.vue")
-      this.$emit("refreshNextOrCurrentSession");
-    },
-
-    setIsCanceling() {
-      let slot = JSON.parse(JSON.stringify(this.slotData));
-
-      let updateData = {
-        targetSlot: slot,
-        newSlotState: true,
-        all: false,
-        field: 1,
-      };
-
-      this.$store.dispatch("calendar/updateCalendarSelectedSlots", updateData);
-
-      slot.isCanceling = true;
-      this.$store.dispatch("booking/setIsCanceling", slot);
+    selectSession() {
+      console.log("Old session has been selected!");
     },
   },
 };

@@ -1,7 +1,9 @@
 # elysiumbase
 
 # installation
-If using Windows, comment out 'postinstall' line in package.json 
+If using Windows, quit Windows.
+
+If you somehow managed to not quit, then comment out 'postinstall' line in package.json 
 npm install
 If using Windows, cd to client, then 
 npm install

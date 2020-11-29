@@ -2,8 +2,8 @@ const { validationResult } = require('express-validator');
 const JWT = require('jsonwebtoken');
 
 const { verifyToken, generateToken, hashPassword, userInJWT } = require('../utilities/Utils');
-const { verifyResetToken, addResetToken, deleteResetTokens } = require('../../../database/user/utilities/ResetPasswordUtilities');
-const { getUserByEmail } = require('../../../database/user/utilities/UserUtilities');
+const { verifyResetToken, addResetToken, deleteResetTokens } = require('../../../database/user/controllers/ResetPasswordController');
+const { getUserByEmail } = require('../../../database/user/controllers/UserDataController');
 
 const { loginWithTokens } = require('./AuthController');
 
@@ -35,7 +35,7 @@ const sendResetPassword = async function(email, link) {
   let user;
   try {
       user = await getUserByEmail(email);
-      if (user) {
+      if (user && user.verificationStatus) {
           await addResetToken(user._id.toString(), resetToken);
           token = JWT.sign({email: email, token: resetToken}, process.env.JWT_SECRET, {expiresIn:'30min'});
           link += token;
@@ -57,7 +57,7 @@ const PasswordResetController = {
         return res.status(200).send({ success: true });
     }
     
-    const link = `${req.protocol}://${req.body.hostname}/account/resetPassword/`;
+    const link = `${req.protocol}://${req.body.hostname}/account/resetpassword/`;
     sendResetPassword(req.body.email, link);
     return res.status(200).send({ success: true});
   },
@@ -77,9 +77,10 @@ const PasswordResetController = {
 
   resetPasswordRedirect(req, res) {
     const token = req.params.token;
-
+    console.log("@redirect", token)
     const decoded = verifyToken(token);
     if (decoded.success) {
+      console.log("success!!");
         return res.status(303)
             .cookie('redirect', token, { httpOnly: true })
             .send({ success: true });

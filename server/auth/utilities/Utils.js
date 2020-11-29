@@ -4,8 +4,8 @@ const JWT = require('jsonwebtoken');
 const Bcrypt = require('bcryptjs')
 const Dotenv = require('dotenv');
 
-const { createNewUserRefreshToken } = require('../../../database/user/utilities/UserRefreshTokenUtilities');
-const { getUserById } = require('../../../database/user/utilities/UserUtilities');
+const { createNewUserRefreshToken } = require('../../../database/user/controllers/RefreshTokenController');
+
 
 Dotenv.config();
 
@@ -24,71 +24,59 @@ const setup = () => {
     });
 };
 
-
-
 /*====== Data in JWT  ======*/
 
 const userInJWT = function(user) {
-    let profileImage = null;
-    if (user.profileImage && user.profileImage.fileUrl) {
-        profileImage = user.profileImage.fileUrl;
-    }
-    const returnUser = {
-        username: user.username,
-        _id: user._id,
-        isVerified: user.verifiedStatus,
-        displayName: user.displayName,
-        firstName: user.firstName || "NamelessFirst",
-        lastName: user.lastName || "NamelessLast",
-        profileImageUrl: profileImage || '',
-    };
+  const returnUser = {
+      username: user.username,
+      _id: user._id,
+      displayName: user.displayName,
+  };
 
-    return returnUser;
+  return returnUser;
 };
-
 /*====== Crypto helpers  ======*/
 
 const signToken = function(user){
-    return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'30min'});
+  return JWT.sign({data: user}, process.env.JWT_SECRET, {expiresIn:'30min'});
 };
 
 const verifyToken = function(token) {
-    try { 
-        const decoded = JWT.verify(token, process.env.JWT_SECRET);
-        decoded.success = true;
-        return decoded;
-    } catch (err) {
-        return {success: false, error: err};
-    }
+  try { 
+      const decoded = JWT.verify(token, process.env.JWT_SECRET);
+      decoded.success = true;
+      return decoded;
+  } catch (err) {
+      return {success: false, error: err};
+  }
 }
 
 const hashPassword = function(password) {
-    return new Promise((resolve, reject) => {
-        Bcrypt.genSalt(10, function(err, salt) {
-            Bcrypt.hash(password, salt, function(err, hash) {
-                return err ? reject(err) : resolve(hash);
-            });
-        });
-    });
+  return new Promise((resolve, reject) => {
+      Bcrypt.genSalt(10, function(err, salt) {
+          Bcrypt.hash(password, salt, function(err, hash) {
+              return err ? reject(err) : resolve(hash);
+          });
+      });
+  });
 };
 
 const generateToken = function() {
-    return new Promise(function(resolve, reject) {
-        Crypto.randomBytes(32, function(ex, buf) {
-            if (ex) {
-                reject();
-            }
-             const token = buf.toString('hex');
-             console.log("Generated token: ", token);
-             resolve(token);
-        })
-    })
+  return new Promise(function(resolve, reject) {
+      Crypto.randomBytes(32, function(ex, buf) {
+          if (ex) {
+              reject();
+          }
+           const token = buf.toString('hex');
+           console.log("Generated token: ", token);
+           resolve(token);
+      })
+  })
 };
 
 const verifyPassword = async (candidate, actual) => {
-    return await Bcrypt.compare(candidate, actual);
+  return await Bcrypt.compare(candidate, actual);
 };
-
 
 
 
@@ -106,22 +94,31 @@ const verifyPassword = async (candidate, actual) => {
  * @returns refreshtoken
  */
 const createRefreshToken = async function(userId) {
-    const clientId = 1;
-    const token = await generateToken();
-    try {
-        const success = await createNewUserRefreshToken(userId, token);
-        if (success) {
-            return token;
-        } 
-    } catch (err) {
-        console.log("@crt: error", err);
-        throw err;
-    }
-    return null;
-    
+  const clientId = 1;
+  const token = await generateToken();
+  try {
+      const success = await createNewUserRefreshToken(userId, token);
+      if (success) {
+          return token;
+      } 
+  } catch (err) {
+      console.log("@crt: error", err);
+      throw err;
+  }
+  return null;
+  
 };
 
 
 
-module.exports = { setup, signToken, verifyToken, hashPassword, 
-    generateToken, verifyPassword, userInJWT, createRefreshToken }; 
+
+module.exports = { 
+  setup, 
+  signToken, 
+  verifyToken, 
+  hashPassword, 
+  generateToken, 
+  verifyPassword,
+  userInJWT,
+  createRefreshToken,
+}; 

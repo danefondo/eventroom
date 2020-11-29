@@ -1,7 +1,7 @@
 const Passport = require('passport');
 const PassportGoogle = require('passport-google-oauth');
 
-const { getUserByProviderId, createUser } = require('../../../database/user/utilities/UserUtilities');
+const { getUserByProviderId, createUser } = require('../../../database/user/controllers/UserDataController');
 const { userInJWT } = require('../utilities/Utils');
 
 const GoogleStrategy = PassportGoogle.OAuth2Strategy
@@ -16,7 +16,7 @@ const strategy = () => {
   const verifyCallback = async (accessToken, refreshToken, profile, done) => {
     let user;
     try {
-      user = await getUserByProviderId(profile.id);
+      user = await getUserByProviderId("google", profile.id);
     } catch (err) {
       console.log("@gstrat err: ", err)
       return done(err, user);
@@ -26,7 +26,7 @@ const strategy = () => {
     }
 
     const verifiedEmail = profile.emails.find(email => email.verified) || profile.emails[0];
-
+    const googleUsername = "google"+String(profile.id);
     try {
       const createdUser = await createUser({
         provider: profile.provider,
@@ -34,7 +34,7 @@ const strategy = () => {
         firstName: profile.name.givenName,
         lastName: profile.name.familyName,
         displayName: profile.displayName,
-        username: profile.displayName,
+        username: googleUsername,
         email: verifiedEmail.value,
         password: null,
         verifiedStatus: true,

@@ -2,8 +2,8 @@
   <div class="auth">
     <div class="auth-container">
       <div class="auth-header">
-        <div class="auth-title">{{ $t("login.login-title") }}</div>
-        <div class="auth-subtitle">{{ $t("login.login-subtitle") }}</div>
+        <div class="auth-title">Welcome back!</div>
+        <div class="auth-subtitle">Log into your account</div>
       </div>
       <!-- <div class="external-auth fb-auth">
         <a class="fb-link" :href="facebookLoginLink">Sign in with FB</a>
@@ -17,7 +17,7 @@
           class="auth-input"
           name="username"
           type="text"
-          :placeholder="$t('login.username-email')"
+          placeholder="Username or email"
           autocomplete="off"
         />
         <input
@@ -25,7 +25,7 @@
           class="auth-input"
           name="password"
           type="password"
-          :placeholder="$t('login.login-pass')"
+          placeholder="Password"
           autocomplete="off"
         />
         <div v-if="error" class="inputErrorContainer">
@@ -40,23 +40,23 @@
           />
         </div>
       </form>
-      <div class="auth-helper-button" @click="toggleRefreshPassword">
-        {{ $t("login.forgot-pass") }}
+      <div class="auth-helper-button" @click="resetPassword = !resetPassword">
+        Forgot password?
       </div>
-      <div v-if="refreshPassword">
+      <div v-if="resetPassword">
         <p>Please enter your email</p>
-        <form @submit.prevent="sendRefreshPassword" method="POST">
+        <form @submit.prevent="sendResetPassword" method="POST">
           <input
-            v-model="refreshEmail"
-            name="refreshEmail"
+            v-model="resetEmail"
+            name="resetEmail"
             type="text"
             placeholder="enter email"
             autocomplete="off"
           />
           <div class="submit">
-            <input class="auth-button" type="submit" :value="refreshText" />
+            <input class="auth-button" type="submit" :value="resetText" />
           </div>
-          <div v-if="refreshPasswordSent">
+          <div v-if="resetPasswordSent">
             Please check your email. Make sure you wrote the correct email!
             Sometimes it might end up in your spam folder!
           </div>
@@ -64,25 +64,34 @@
       </div>
       <div class="auth-alt-buttons">
         <div v-if="success" class="successMessage">
-          {{ $t("login.pass-success") }}
+          Password has been successfully changed. Log in.
         </div>
-        <router-link class="auth-alt-button" to="/account/register">{{
-          $t("login.or-create-account")
-        }}</router-link>
+        <router-link class="auth-alt-button" :to="{name: 'RegisterPage'}">
+          Or create an account
+        </router-link>
       </div>
     </div>
+    {{random}}
+    <div v-if="randombool">
+      Random booled
+    </div>
+    <div v-else>
+      Not booled
+    </div>
+    <button @click="randombool=!randombool"> Click</button>
   </div>
 </template>
 
 <script>
 import { BASE_PATH } from "../../constants";
-import auth from "../../config/auth";
-import { requestWithoutAuthentication } from "../../config/api";
+import auth from "../../api/auth";
 
 export default {
   name: "LoginPage",
   data() {
     return {
+      random: "HAHAH this so random",
+      randombool: false,
       username: "",
       password: "",
       error: "",
@@ -90,14 +99,14 @@ export default {
       success: false,
       loginText: "Login",
 
-      refreshEmail: "",
-      refreshPassword: false,
+      resetEmail: "",
+      resetPassword: false,
       sending: false,
-      refreshPasswordSent: false,
-      refreshText: "Send email",
+      resetPasswordSent: false,
+      resetText: "Send email",
 
-      googleLoginLink: BASE_PATH + "/api/accounts/google",
-      facebookLoginLink: BASE_PATH + "/api/accounts/facebook",
+      googleLoginLink: BASE_PATH + "/api/auth/google",
+      facebookLoginLink: BASE_PATH + "/api/auth/facebook",
     };
   },
 
@@ -108,7 +117,7 @@ export default {
       try {
         const { username, password } = this;
 
-        await auth.login(username, password);
+        await auth.login( {username, password});
 
         this.error = "";
         this.$router.push("/");
@@ -127,26 +136,19 @@ export default {
         this.loginText = "Login";
       }
     },
-    getError(field) {
-      const error = this.errors.filter((each) => each.param === field)[0];
-      return error ? error.msg : "";
-    },
     toggleRefreshPassword() {
-      this.refreshPassword = !this.refreshPassword;
+      this.resetPasswordSent = !this.resetPasswordSent;
     },
-    async sendRefreshPassword() {
+    async sendResetPassword() {
       console.log("@clicked!");
       this.sending = true;
-      this.refreshText = "Sending...";
-
-      await requestWithoutAuthentication(
-        "post",
-        "/api/accounts/sendresetpasswordmail",
-        { email: this.refreshEmail, hostname: window.location.host }
-      );
-      this.refreshPasswordSent = true;
+      this.resetText = "Sending...";
+      
+      await auth.sendResetPasswordMail({ email: this.resetEmail, hostname: window.location.host });
+      
+      this.resetPasswordSent = true;
       this.sending = false;
-      this.refreshText = "Send email";
+      this.resetText = "Send email";
     },
   },
 };
@@ -167,7 +169,6 @@ export default {
 .auth-container {
   max-width: 350px;
   text-align: center;
-  margin-top: -156px;
 }
 .auth-form {
   display: flex;

@@ -1,5 +1,5 @@
 const { check, validationResult } = require('express-validator');
-const { checkIfUserWithValueExists } = require('../../../database/user/utilities/UserUtilities'); // TODO to remove
+const { checkIfUserExists } = require('../../../database/user/controllers/UserDataController'); // TODO to remove
 
 
 
@@ -9,7 +9,8 @@ module.exports = {
 		check('email').trim().escape().normalizeEmail()
 			.isEmail().withMessage("Please insert an email address")
 			.custom(value => {
-				return checkIfUserWithValueExists('email', value).then(exists => {
+				console.log("@email:", value)
+				return checkIfUserExists({"email": value}).then(exists => {
 					if (exists) {
 						return Promise.reject("Email already exists");
 					}
@@ -18,8 +19,9 @@ module.exports = {
 		check('username').trim().escape()
 			.not().isEmpty().withMessage('Username cannot be empty')
 			.not().isEmail().withMessage('Username cannot be an email address')
+			.customSanitizer(value => {console.log(value); return value.toLowerCase();})
 			.custom(value => {
-				return checkIfUserWithValueExists('username', value).then(exists => {
+				return checkIfUserExists({"username": value}).then(exists => {
 					if (exists) {
 						return Promise.reject("Username already exists");
 					}
@@ -66,6 +68,7 @@ module.exports = {
   check_username: [
 		check('username').not().isEmpty()
 			.withMessage('Username cannot be empty.')
+			.customSanitizer(value => value.toLowerCase())
 			.custom(value => {
 				return checkIfUserWithValueExists('username', value).then(exists => {
 					if (exists) {

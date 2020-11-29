@@ -12,20 +12,34 @@ const UserSchema = new Schema({
   },
 
   // Personal
+  displayName: String,
   firstName: String,
   lastName: String,
   businessName: String,
-  displayName: String,
+  
 
-  // Provider
-  providerId: String,
-  provider: String,
-
-  // Verification
-  verificationToken: String,
-  verifiedStatus: Boolean,
+  // External providers
+  googleId: String,
+  fbId: String,
 
   // Date
+  createdAt: {
+    type: Date,
+    default: Date.now()
+  },
+
+  lastLogin: Date,
+
+  verificationStatus: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: String,
+  verificationTokenExpiry: Date,
+  
+  // Reset
+  resetToken: String,
+  //Date
   dateCreated: Date,
   lastLogin: Date,
 

@@ -122,6 +122,13 @@ var io = require("socket.io").listen(server);
 
 /* ====== SOCKET.IO FUNCTIONS ====== */
 
+
+let INSTANT_MATCH_NSP = io.of("/instant_match");
+INSTANT_MATCH_NSP.on("connection", function (socket) {
+  require("./socket/InstantMatch")(INSTANT_MATCH_NSP, socket);
+});
+
+
 io.on("connection", function (socket) {
   console.log("this user is connected");
   // io.emit('test', 'lsdkfja');

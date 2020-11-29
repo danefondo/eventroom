@@ -5,16 +5,17 @@ const PasswordResetController = require('../../server/auth/controllers/PasswordR
 const AccountController = require('../../server/account/controllers/AccountController');
 const ConfigurationController = require('../../server/account/controllers/ConfigurationController');
 const TempUserController = require('../../server/event/controllers/TempUserController');
+const VerificationController = require("../../server/auth/controllers/VerificationController");
 
 const AccountUtilities =  require('../../server/account/utilities/AccountUtilities');
-const DataValidator = require('../../server/auth/validators/DataValidator');
+const DataValidator = require('../../server/auth/utilities/DataValidator');
 
 const router = Express.Router();
 
 // Verification
-router.get('/verify/:verificationToken', AccountController.verifyToken);
+router.get('/verify/:verificationToken', VerificationController.verifyToken);
 
-router.post('/resendemailverification', AccountController.resendEmailVerification);
+router.post('/resendemailverification', VerificationController.resendEmailVerification);
 
 // Authentication
 router.get('/authenticate', AuthController.authenticationHandler);

@@ -21,7 +21,7 @@ const comparePreferences = function(user1Data, user1Preferences, user2Data, user
  *  data: the data against which other users can compare their preferences 
  * }} user
  */
-const requestInstantMatch = function(socket, user) {
+export const requestInstantMatch = function(socket, user) {
   return new Promise ((resolve, reject) => {
     if (!socket) {
       reject("no socket")
@@ -33,17 +33,20 @@ const requestInstantMatch = function(socket, user) {
     console.log("personale event: ", personalEvent);
 
     socket.on("INSTANT_MATCH_WAITLIST", (secondUser) => {
-      console.log("@waitlist...", secondUser)
-      const result = comparePreferences(user.data, user.preferences, secondUser.data, secondUser.preferences);
-      if (result) {
-        const sendData = {
-          user1_ID: user.ID,
-          user2_ID: secondUser.ID
-        };
-        console.log("Sending data: ", sendData);
-        socket.emit("INSTANT_MATCH", sendData);
+      if (secondUser.ID != user.ID) {
+        console.log("@waitlist...", secondUser)
+        const result = comparePreferences(user.data, user.preferences, secondUser.data, secondUser.preferences);
+        if (result) {
+          const sendData = {
+            user1_ID: user.ID,
+            user2_ID: secondUser.ID
+          };
+          console.log("Sending data: ", sendData);
+          socket.emit("INSTANT_MATCH", sendData);
+        }
       }
     });
+
 
     socket.on("disconnect", (reason) => {
       console.log("disconnected", reason);
@@ -52,6 +55,7 @@ const requestInstantMatch = function(socket, user) {
 
     socket.once(personalEvent, (sessionData) => {
       console.log("received personalEvent!", sessionData);
+      socket.removeAllListeners("INSTANT_MATCH_WAITLIST");
       if (validateSessionData(sessionData)) {
         console.log("resolveD!!!")
         resolve(sessionData);
@@ -60,44 +64,14 @@ const requestInstantMatch = function(socket, user) {
         reject("Session data didnt pass validation"); 
       }
     });
-
+    console.log("socket: ", socket);
     
   })
 }
 
-/**
- * https://stackoverflow.com/questions/21485545/is-there-a-way-to-tell-if-an-es6-promise-is-fulfilled-rejected-resolved
- * @param {Promise} promise -- the promise that RequestInstantMatch returns.
- * 
- * NB! unnecessary within components, but may be useful outside. Within components, you can just do 
- * Promise.then(res => this.data).catch(err => this.error) and check whether error or data exists.
- * 
- * TODO: Move to utilities
- */
-const makeRequestQuerable = function(promise) {
-  if (promise.isResolved) return promise
-  let isResolved = false;
-  let isRejected = false;
-  let result = promise.then( res => {
-    isResolved = true;
-    return res;
-  }).catch(error => {
-    console.log("reached here")
-    isRejected = true;
-    throw error;
-  });
-
-  result.isPending = () => { return (!isResolved && !isRejected); }
-  result.isResolved = () => isResolved;
-  result.isRejected = () => isRejected; 
-  return result;
+export const cancelRequest = function(socket, user) {
+  socket.emit("USER_DISCONNECT", user.ID);
 }
 
-const out = {
-  makeRequestQuerable,
-  requestInstantMatch,
-}
-
-export default out;
 
 /* eslint-enable no-unused-vars */

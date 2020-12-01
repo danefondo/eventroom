@@ -36,11 +36,20 @@ module.exports = function(IMP, socket) {
     const event1 = "INSTANT_MATCH_"+data.user1_ID;
     const event2 = "INSTANT_MATCH_"+data.user2_ID;
     console.log("these are events: ", event1, event2);
-    const sessionData = "BLAH";
+    const sessionData = {
+      user1: data.user1_ID,
+      user2: data.user2_ID
+    };
     console.log("This is sessionData: ", sessionData);
     IMP.emit(event1, sessionData);
     IMP.emit(event2, sessionData);
   });
 
-  
+
+  socket.on("PRINT_REDIS", data => {
+    InstantMatchController.printRedis();
+  })
+  socket.on("DELETE_REDIS", data => {
+    InstantMatchController.delAll();
+  })
 }

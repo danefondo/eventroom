@@ -1,0 +1,31 @@
+INSTANT MATCH WITH BUBBLES
+
+
+***************************************************************************************************
+PROTOCOL
+
+1. User1 client emits to event "REQUEST_INSTANT_MATCH"
+	data: user1_id, user1_preferences, user1_data
+2. Server adds user1 to Redis table 
+2. User1 client subscribes to "INSTANT_MATCH_WAITLIST"
+3. User1 client subscribes to "INSTANT_MATCH_{USER1_ID}"
+3. Server broadcasts to event "INSTANT_MATCH_WAITLIST"
+	data: user1_id, random_room_string, user1_preferences, user1_data
+4. Clients in "INSTANT_MATCH_WAITLIST" process the request
+	user2: compare user1_preferences with user2_data and user2_preferences with user1_data
+	user3: compare user1_preferences with user3_data and user3_preferences with user1_data
+5. If matched, clients emit to event "INSTANT_MATCH"
+	data: user1_id, matched_user_id (e.g. user1_id, user2_id, if the client was user2)
+6. Checks if user1_id in Redis,
+	if yes, then remove matched_user_id
+	if not, then waits. 
+7. Server creates a new session
+	participants: user1, user2 (or whoever was faster)
+8. Server emits to "INSTANT_MATCH_{USER1_ID}", "INSTANT_MATCH_{USER2_ID}" (or whoever was faster)
+	data: session_data
+9. User1 and user2 can now join the session.
+10. For every 
+11. User1 unsubscribes from "INSTANT_MATCH_WAITLIST", "INSTANT_MATCH_{USER1_ID}"
+12. User2 unsubscribes from "INSTANT_MATCH_WAITLIST", "INSTANT_MATCH_{USER2_ID}"
+
+***************************************************************************************************

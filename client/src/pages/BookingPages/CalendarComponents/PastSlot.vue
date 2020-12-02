@@ -1,8 +1,9 @@
 <template>
-  <div class="past-container tooltip">
-    <!-- <span id="tooltip-span"> This hour has passed. </span> -->
-    <div @mousemove="showIsPast" class="past-inner tooltip">
-      <span id="tooltip-span"> This hour has passed. </span>
+  <div class="relative">
+    <div class="past-container">
+      <div @mousemove="showIsPast" class="past-inner tooltip">
+        <span id="tooltip-span"> This hour has passed. </span>
+      </div>
     </div>
   </div>
 </template>
@@ -26,6 +27,10 @@ export default {
 };
 </script>
 <style scoped>
+.relative {
+  position: relative;
+}
+
 .past-container {
   /* display: flex;
   align-items: center;

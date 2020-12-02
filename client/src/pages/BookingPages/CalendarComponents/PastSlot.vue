@@ -1,10 +1,8 @@
 <template>
-  <div>
-    <div class="past-container tooltip">
-      <!-- <span id="tooltip-span"> This hour has passed. </span> -->
-      <div @mousemove="showIsPast" class="past-inner tooltip">
-        <span id="tooltip-span"> This hour has passed. </span>
-      </div>
+  <div class="past-container tooltip">
+    <!-- <span id="tooltip-span"> This hour has passed. </span> -->
+    <div @mousemove="showIsPast" class="past-inner tooltip">
+      <span id="tooltip-span"> This hour has passed. </span>
     </div>
   </div>
 </template>

@@ -1,46 +1,47 @@
 <template>
-  <div>
+  <div class="opaque">
     <div v-if="!requestPending">
-      <div v-if="!requestSuccessful&&!requestFailed">
-        <button @click="requestInstantMatch">Request Instant Match </button>
+      <div v-if="!requestSuccessful && !requestFailed">
+        <button @click="requestInstantMatch">Request Instant Match</button>
       </div>
       <div v-if="requestSuccessful">
-        Your request was successful. Please click the button below to join a match with person X (data should be loaded)
+        Your request was successful. Please click the button below to join a
+        match with person X (data should be loaded)
         <button @click="joinRoom">Join session</button>
-        {{randomtext}}
+        {{ randomtext }}
       </div>
       <div v-if="requestFailed">
         Your request was not successful. Please click the button below to retry
-        <button @click="requestInstantMatch">Request Instant Match </button>
+        <button @click="requestInstantMatch">Request Instant Match</button>
       </div>
     </div>
     <div v-else>
       Your request is pending...
       <button @click="cancelRequest">Cancel</button>
     </div>
-    <button @click="increaseID">{{tempUser.ID}}</button>
+    <button @click="increaseID">{{ tempUser.ID }}</button>
     <div v-if="sessionFound">
-      FOUND A SESSION: user1: {{sessionData.user1}} with {{sessionData.user2}}
+      FOUND A SESSION: user1: {{ sessionData.user1 }} with
+      {{ sessionData.user2 }}
     </div>
 
     <button @click="printredis">print redis</button>
-    <button @click="delRedis">DO NOT PRESS THIS BUTTON </button>
+    <button @click="delRedis">DO NOT PRESS THIS BUTTON</button>
   </div>
 </template>
 
 <script>
-import io from 'socket.io-client';
+import io from "socket.io-client";
 
 import { BASE_PATH } from "../constants";
 import { requestInstantMatch, cancelRequest } from "./InstantMatchUtilities";
 
-const namespace = BASE_PATH+"/instant_match";
+const namespace = BASE_PATH + "/instant_match";
 let socket = io(namespace);
-
 
 export default {
   name: "InstantMatch",
-  data () {
+  data() {
     return {
       requestSuccessful: false,
       requestPending: false,
@@ -54,15 +55,15 @@ export default {
         ID: 0,
         data: {
           best: "definitely",
-          iq: "genius"
+          iq: "genius",
         },
         preferences: {
           money: "yes",
           webdev: "no",
-        }
+        },
       },
-      randomtext: ""
-    }
+      randomtext: "",
+    };
   },
   beforeRouteLeave(to, from, next) {
     if (this.requestPending) {
@@ -85,21 +86,23 @@ export default {
       }
       this.requestPending = true;
       this.requestCancelled = false;
-      requestInstantMatch(socket, this.tempUser)    // TODO to change to real user
-        .then(result => {
+      requestInstantMatch(socket, this.tempUser) // TODO to change to real user
+        .then((result) => {
           this.sessionData = result;
           this.requestSuccessful = true;
           this.requestPending = false;
           this.sessionFound = true;
-        }).catch(error => { // eslint-disable-line no-unused-vars
+        })
+        .catch((error) => {
+          // eslint-disable-line no-unused-vars
+          console.log(error);
           this.requestFailed = true;
           this.requestPending = false;
         });
-
     },
 
     joinRoom() {
-      this.randomtext = "HAHA no logic for this yet"
+      this.randomtext = "HAHA no logic for this yet";
     },
     cancelRequest() {
       cancelRequest(socket, this.tempUser);
@@ -116,7 +119,13 @@ export default {
     },
     delRedis() {
       socket.emit("DELETE_REDIS", "haha");
-    }
-  }
-}
+    },
+  },
+};
 </script>
+
+<style scoped>
+.opaque {
+  opacity: 0%;
+}
+</style>

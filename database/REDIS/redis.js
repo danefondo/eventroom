@@ -1,20 +1,28 @@
-const redis = require('redis');
+const redis = require("redis");
 
-const client = redis.createClient({
-  host: "localhost",
-  port: 6379,
-  // password: <password> and advanced options like via tls 
-});
+// var scope allows creating var inside if block
 
-client.on('ready',function() {
+if (process.env.REDISGREEN_URL) {
+  var client = redis.createClient(process.env.REDISGREEN_URL);
+} else {
+  var client = redis.createClient({
+    host: "localhost",
+    port: 6379,
+    // password: <password> and advanced options like via tls
+  });
+}
+
+client.on("ready", function () {
   console.log("Redis is ready");
 });
-client.on("error", error => {
+client.on("error", (error) => {
   console.log("REDIS ERROR", error);
 });
 
 const REDIS = {
-  InstantMatchController: require("./controllers/InstantMatchController")(client)
-}
+  InstantMatchController: require("./controllers/InstantMatchController")(
+    client
+  ),
+};
 
 module.exports = REDIS;

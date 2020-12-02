@@ -118,12 +118,18 @@ export default {
 
         let nextSession = response.data.result;
         if (response.data.result.NoSessionsThisWeek) {
+          this.changeState("firstBookingForWeek", true);
+          this.changeState("currentlyRefreshingNextSession", false);
+          if (this.refreshTimerQueue.length) {
+            this.handleRefreshQueue();
+          }
           return console.log("@getUserNextSession: No sessions found.");
         }
 
         // if (!nextSession) throw new Error("Failed to fetch next session.");
 
         if (response.data.success) {
+          this.changeState("firstBookingForWeek", false);
           this.changeState("gettingNextSession", false);
           this.checkIfSameElseSetNew(nextSession);
         }
@@ -131,6 +137,10 @@ export default {
         console.log("@gettingNextSession Error: ", error);
         this.changeState("gettingNextSession", false);
         this.changeState("gettingNextSessionError", true);
+        this.changeState("currentlyRefreshingNextSession", false);
+        if (this.refreshTimerQueue.length) {
+          this.handleRefreshQueue();
+        }
       }
     },
 

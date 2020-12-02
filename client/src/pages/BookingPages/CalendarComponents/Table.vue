@@ -86,7 +86,6 @@
               :user="user"
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
             />
-            <!-- Must only show if not selected -->
             <UnmatchedPerson
               v-else-if="
                 unmatchedBookedPeopleExist(eachHourRow, i) &&
@@ -299,8 +298,7 @@ export default {
 
       if (
         slot.hasCurrentOrNextSession ||
-        slot.isSelected ||
-        !slot.isAvailableForSelecting
+        slot.isSelected
       ) {
         isPastHour = false;
       }

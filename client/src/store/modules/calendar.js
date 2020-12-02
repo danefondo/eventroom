@@ -365,16 +365,20 @@ const mutations = {
         let fifteenBefore = slotStartInMS - FIFTEEN_MINUTES;
         let thirtyBefore = slotStartInMS - FIFTEEN_MINUTES * 2;
         let fortyFiveBefore = slotStartInMS - FIFTEEN_MINUTES * 3;
-        let fifteenAfter = slotStartInMS + FIFTEEN_MINUTES;
+        // let fifteenAfter = slotStartInMS + FIFTEEN_MINUTES;
 
         // Technically, this only calculates current session
+        // however currently past hour is decided based on
+        // whether 'hasCurrentOrNextSession' is true or not
+        // if a particular slot has the 'next' session in the
+        // next slot, then it will evaluate wrong for booked
+        // sessions.
 
         if (
           sessionStartInMS == slotStartInMS ||
           sessionStartInMS == fifteenBefore ||
           sessionStartInMS == thirtyBefore ||
-          sessionStartInMS == fortyFiveBefore ||
-          sessionStartInMS == fifteenAfter
+          sessionStartInMS == fortyFiveBefore 
         ) {
           slot.hasCurrentOrNextSession = true;
         } else {

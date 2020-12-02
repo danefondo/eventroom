@@ -151,6 +151,8 @@ export default {
       refreshTimerQueue: (state) => state.cofocus.refreshTimerQueue,
       currentlyRefreshingNextSession: (state) =>
         state.cofocus.currentlyRefreshingNextSession,
+
+      firstBookingForWeek: (state) => state.cofocus.firstBookingForWeek,
     }),
   },
   components: {
@@ -210,6 +212,9 @@ export default {
       } else if (this.timerManagerHasMounted && this.initialFinalizeCompleted) {
         console.log("Let's refresh IN BOOKING.");
         await this.$refs.timer.getUserNextSession();
+      } else if (this.firstBookingForWeek) {
+        // Bypass case of timer not having mounted yet
+        await this.$refs.timer.getUserNextSession();
       }
     },
 
@@ -234,15 +239,12 @@ export default {
           userId: this.user._id,
         };
 
-        this.$store.dispatch(
-          "calendar/updateCalendarAfterReceive",
-          updateData
-        );
+        this.$store.dispatch("calendar/updateCalendarAfterReceive", updateData);
       }
 
       // this.$nextTick(() => {
-        console.log("Update calendar availability.");
-        this.updateCalendarAvailability();
+      console.log("Update calendar availability.");
+      this.updateCalendarAvailability();
       // });
     },
 
@@ -277,7 +279,7 @@ export default {
         if (!allBookedSessions)
           throw new Error("Failed to fetch general sessions.");
 
-        // console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
+        console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
 
         if (response.data.success) {
           this.gettingAllBookedSessions = false;

@@ -45,6 +45,9 @@ const getDefaultState = () => {
 
     refreshTimerQueue: [],
     currentlyRefreshingNextSession: false,
+
+    // Purpose is to make an exception for Timer & next session getting
+    firstBookingForWeek: false,
   };
 };
 

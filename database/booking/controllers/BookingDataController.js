@@ -45,7 +45,7 @@ const BookingDataController = {
     try {
       bookedSessionsThisWeek = await SessionModel.find(query).exec();
       console.log("bookedSessionsThisWeek: ", bookedSessionsThisWeek);
-      if (bookedSessionsThisWeek) {
+      if (bookedSessionsThisWeek && bookedSessionsThisWeek.length) {
         nextUserSession = getNextSession(bookedSessionsThisWeek);
       } else {
         nextUserSession = {

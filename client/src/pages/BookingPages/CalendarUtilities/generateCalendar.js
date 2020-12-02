@@ -172,6 +172,9 @@ function createDayObjectForTimeRow(
     isAvailableForBooking: true,
     isAvailableForSelecting: true,
 
+
+    // isBooked: false,
+
     // If there is an active or current session, to make sure
     // ongoing sessions are being shown and to optimize
     // showing the 'Join' button for next and ongoing sessions

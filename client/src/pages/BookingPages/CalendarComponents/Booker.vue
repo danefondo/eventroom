@@ -15,6 +15,9 @@
           </div>
         </div>
       </div>
+      <div v-if="!userHasUpcomingSessions">
+        You haven't booked any sessions this week. Would you like to book some?
+      </div>
       <form>
         <input
           class="booking-input"
@@ -69,6 +72,7 @@ export default {
     "selectedInterval",
     "selectedSlotDateString",
     "selectedSlotStartTime",
+    "allUserSessions",
   ],
   computed: {
     slotName: {
@@ -105,6 +109,28 @@ export default {
         bookText = "Book session";
       }
       return bookText;
+    },
+
+    userHasUpcomingSessions() {
+      let userUpcomingSessions = false;
+      if (this.allUserSessions && this.allUserSessions.length) {
+        console.log("um.");
+        console.log("sessions", this.allUserSessions);
+        for (var i = 0; i < this.allUserSessions; i++) {
+          console.log("e?");
+          let session = this.allUserSessions[i];
+          let sessionStartInMS = new Date(session.dateTime).valueOf();
+          let now = Date.now();
+          console.log("start", sessionStartInMS);
+          console.log("now", now);
+          if (sessionStartInMS > now) {
+            console.log("true");
+            userUpcomingSessions = true;
+            break;
+          }
+        }
+      }
+      return userUpcomingSessions;
     },
   },
   methods: {

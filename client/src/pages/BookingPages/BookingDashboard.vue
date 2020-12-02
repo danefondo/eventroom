@@ -43,6 +43,7 @@
           <TimerManager ref="timer" parentName="booking" />
           <Booker
             :user="user"
+            :allUserSessions="allUserSessions"
             :selectedInterval="selectedInterval"
             :selectedToBook="selectedToBook"
             :currentlyBooking="currentlyBooking"
@@ -243,7 +244,6 @@ export default {
       }
 
       // this.$nextTick(() => {
-      console.log("Update calendar availability.");
       this.updateCalendarAvailability();
       // });
     },
@@ -323,9 +323,7 @@ export default {
 
       this.$store.dispatch("calendar/hardRefreshCalendarSessions", updateData);
 
-      this.$nextTick(() => {
-        this.updateCalendarAvailability();
-      });
+      this.updateCalendarStates();
     },
 
     /* ====== ITERATIVE DATABASE SYNCING ====== */
@@ -341,9 +339,7 @@ export default {
         updateData
       );
 
-      this.$nextTick(() => {
-        this.updateCalendarAvailability();
-      });
+      this.updateCalendarStates();
     },
 
     /* ====== CALENDAR RENDERING ====== */
@@ -367,6 +363,7 @@ export default {
       console.log("Update calendar availability.");
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
+      // this.$store.dispatch("calendar/setCalendarPastSessions");
 
       this.refreshNextOrCurrentSession();
     },
@@ -381,17 +378,13 @@ export default {
       } else {
         await this.getAllBookedUsersForSpecificWeek(true, true);
       }
-      this.removeSelectionsInThePast();
-      this.renderSavedSelectionsIfAny();
-      this.$nextTick(() => {
-        this.updateCalendarAvailability();
-      });
+      this.updateCalendarStates();
     },
 
     async updateDayViewData() {
       this.renderCalendar();
       await this.getAllBookedUsersForSpecificWeek(false, true);
-      this.renderSavedSelectionsIfAny();
+      this.updateCalendarStates();
     },
 
     async initWeekCalendar() {
@@ -401,10 +394,7 @@ export default {
       this.$store.dispatch("calendar/setCalendarWeekDates", dates);
       this.renderCalendar();
       await this.getAllBookedUsersForSpecificWeek();
-      this.renderSavedSelectionsIfAny();
-      this.$nextTick(function () {
-        this.updateCalendarAvailability();
-      });
+      this.updateCalendarStates();
     },
 
     async initDayCalendar() {
@@ -413,10 +403,7 @@ export default {
       this.$store.dispatch("calendar/setCalendarDayDate", dates);
       this.renderCalendar();
       await this.getAllBookedUsersForSpecificWeek(false, true);
-      this.renderSavedSelectionsIfAny();
-      this.$nextTick(() => {
-        this.updateCalendarAvailability();
-      });
+      this.updateCalendarStates();
     },
 
     renderSavedSelectionsIfAny() {
@@ -437,6 +424,15 @@ export default {
           );
         });
       }
+    },
+
+    updateCalendarStates() {
+      this.removeSelectionsInThePast();
+      this.renderSavedSelectionsIfAny();
+
+      this.$nextTick(() => {
+        this.updateCalendarAvailability();
+      });
     },
 
     /* ====== CALENDAR NAVIGATION ====== */

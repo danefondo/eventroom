@@ -280,11 +280,25 @@ const mutations = {
   },
 
   removeSelectionsInThePast(state) {
+    let now = Date.now(); // update by same standard
+
     for (var i = state.selectedToBook.length - 1; i > -1; i--) {
       let slotData = state.selectedToBook[i];
       let slotStartTimeInMS = new Date(slotData.dateTime).valueOf();
-      if (Date.now() > slotStartTimeInMS) {
+      if (now > slotStartTimeInMS) {
         state.selectedToBook.splice(i, 1);
+      }
+    }
+
+    for (var z = 0; z < state.calendarData.length; z++) {
+      const hourRow = state.calendarData[z];
+      const hourRowDays = hourRow.hourRowDays;
+      for (let x = 0; x < hourRowDays.length; x++) {
+        let slot = hourRowDays[x];
+        const slotStartInMS = new Date(slot.dateTime).valueOf();
+        if (now > slotStartInMS) {
+          slot.isSelected = false;
+        }
       }
     }
   },
@@ -378,7 +392,7 @@ const mutations = {
           sessionStartInMS == slotStartInMS ||
           sessionStartInMS == fifteenBefore ||
           sessionStartInMS == thirtyBefore ||
-          sessionStartInMS == fortyFiveBefore 
+          sessionStartInMS == fortyFiveBefore
         ) {
           slot.hasCurrentOrNextSession = true;
         } else {
@@ -388,35 +402,34 @@ const mutations = {
     });
   },
 
-  // setCalendarPastMatchedSessions(state, sessions) {
-  //   // 1. for user sessions
-  //   // 2. if past && had matched
-  //   // 3. set true && show
+  // FUNCTION NOT IN USE CURRENTLY
+  setCalendarPastSessions(state) {
+    // if slot in past
+    // && slot has user session
+    // && slot user session has both partners
+    // => set slot has past session
 
-  //   // let sessionStartInMS = new Date(session.dateTime).valueOf();
-  //   // let FIFTEEN_MINUTES = 900000; // milliseconds
-
-  //   // state.calendarData.forEach((hourRow) => {
-  //   //   hourRow.hourRowDays.forEach((slot) => {
-  //   //     let slotStartInMS = new Date(slot.dateTime).valueOf();
-
-  //   //     let fifteenBefore = slotStartInMS - FIFTEEN_MINUTES;
-  //   //     let thirtyBefore = slotStartInMS - FIFTEEN_MINUTES * 2;
-  //   //     let fortyFiveBefore = slotStartInMS - FIFTEEN_MINUTES * 3;
-
-  //   //     if (
-  //   //       sessionStartInMS == slotStartInMS ||
-  //   //       sessionStartInMS == fifteenBefore ||
-  //   //       sessionStartInMS == thirtyBefore ||
-  //   //       sessionStartInMS == fortyFiveBefore
-  //   //     ) {
-  //   //       slot.hasPastMatchedSession = true;
-  //   //     } else {
-  //   //       slot.hasPastMatchedSession = false;
-  //   //     }
-  //   //   });
-  //   // });
-  // },
+    for (var i = 0; i < state.calendarData.length; i++) {
+      const hourRow = state.calendarData[i];
+      const hourRowDays = hourRow.hourRowDays;
+      for (let x = 0; x < hourRowDays.length; x++) {
+        let slot = hourRowDays[x];
+        const slotStartInMS = new Date(slot.dateTime).valueOf();
+        const userSessions = slot.userSessionsForSlot;
+        if (
+          slotStartInMS < Date.now() &&
+          userSessions &&
+          userSessions.length &&
+          userSessions[0].firstPartnerId &&
+          userSessions[0].secondPartnerId
+        ) {
+          slot.hasPastSession = true;
+        } else {
+          slot.hasPastSession = false;
+        }
+      }
+    }
+  },
 
   /* ====== ADDING SESSIONS TO DATA  ====== */
 
@@ -965,6 +978,10 @@ const actions = {
 
   updateCalendarAfterReceive(state, updateData) {
     state.commit("updateCalendarAfterReceive", updateData);
+  },
+
+  setCalendarPastSessions(state) {
+    state.commit("setCalendarPastSessions");
   },
 };
 

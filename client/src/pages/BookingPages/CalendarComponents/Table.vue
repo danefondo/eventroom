@@ -35,10 +35,10 @@
           :class="isPastHour(eachHourRow, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
+          <!-- TODO: Set 'attendedSuccessful/not in here too, to display 'MISSED' if necessary -->
           <PastSession
             v-if="
               isPastHour(eachHourRow, i) &&
-              !eachHourRow.hourRowDays[i].hasPastSession &&
               userHadMatchedSessionForSlot(eachHourRow, i)
             "
             :boxHeight="getBoxHeights"
@@ -49,13 +49,7 @@
             :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
             :user="user"
           />
-          <PastSlot
-            v-if="
-              isPastHour(eachHourRow, i) &&
-              !eachHourRow.hourRowDays[i].hasPastSession &&
-              !userHadMatchedSessionForSlot(eachHourRow, i)
-            "
-          />
+          <PastSlot v-if="isPastHour(eachHourRow, i)" />
           <div
             class="general-container"
             v-else-if="!isPastHour(eachHourRow, i)"
@@ -296,10 +290,7 @@ export default {
       // need to check if session currently happening in slot / sessions nearby?
       // then show
 
-      if (
-        slot.hasCurrentOrNextSession ||
-        slot.isSelected
-      ) {
+      if (slot.hasCurrentOrNextSession || slot.isSelected) {
         isPastHour = false;
       }
 

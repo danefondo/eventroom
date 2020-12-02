@@ -1,5 +1,5 @@
 <template>
-  <div :style="boxHeight" class="booked-container">
+  <div @click="selectSession" :style="boxHeight" class="booked-container">
     <div class="booked-info">
       <span class="booked-time">{{ sessionTime }}</span>
       <span class="booked-title">{{ `${matchedPartnerName}` }}</span>

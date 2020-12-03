@@ -26,6 +26,7 @@ export const requestInstantMatch = function(socket, user) {
     if (!socket) {
       reject("no socket")
     }
+    socket.removeAllListeners("INSTANT_MATCH_WAITLIST");  // safety I guess
     console.log("emitting request...")
     socket.emit("REQUEST_INSTANT_MATCH", user);
     console.log("request emitted: ", user);

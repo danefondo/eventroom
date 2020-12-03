@@ -13,7 +13,8 @@ const DatabaseConfig = require("./database/config/DatabaseConfig");
 const Cors = require("cors");
 const initialiseAuthentication = require("./server/auth/configs/index")
   .initialiseAuthentication;
-/* ====== DATABASE SETUP ====== */
+const mongo = require("./database/mongo");
+  /* ====== DATABASE SETUP ====== */
 
 /* 
 //- Mongoose test database setup
@@ -21,6 +22,17 @@ var TEST_DB_URI = 'mongodb://127.0.0.1/test-db';
 Mongoose.connect(TEST_DB_URI, { useNewUrlParser: true });
 */
 
+async function start() {
+  console.log("initializing....")
+  await mongo.init();
+  console.log("initialized!")
+  const { UpcomingSessionsController } = require("./database/mongo");
+}
+start();
+
+
+
+console.log("HERE?")
 //- Mongoose production database setup
 Mongoose.connect(DatabaseConfig.DB_URI, {
   useNewUrlParser: true,
@@ -123,11 +135,15 @@ var io = require("socket.io").listen(server);
 /* ====== SOCKET.IO FUNCTIONS ====== */
 
 
-let INSTANT_MATCH_NSP = io.of("/instant_match");
-INSTANT_MATCH_NSP.on("connection", function (socket) {
-  require("./socket/InstantMatch")(INSTANT_MATCH_NSP, socket);
+let INSTANT_MATCH_NAMESPACE = io.of("/instant_match");
+INSTANT_MATCH_NAMESPACE.on("connection", function (socket) {
+  require("./socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
 });
 
+let CALENDAR_MATCH_NAMESPACE = io.of("/calendar_match");
+CALENDAR_MATCH_NAMESPACE.on("connection", function(socket) {
+  require("./socket/CalendarMatch")(CALENDAR_MATCH_NAMESPACE, socket);
+})
 
 io.on("connection", function (socket) {
   console.log("this user is connected");
@@ -381,3 +397,31 @@ io.on("connection", function (socket) {
     socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data);
   });
 });
+
+
+console.log("REDIS TESTING GROUND!");
+
+const { InstantMatchController, CalendarMatchController } = require("./database/REDIS/redis");
+
+const test = async function() {
+  const n = 10
+  for (let i=0; i<n; i++) {
+    let date = new Date(Date.UTC(2020, 11, 3, i))
+    await CalendarMatchController.setBooking(date, i);
+    // console.log("set booking nr ", i);
+  }
+  // await InstantMatchController.printRedis();
+
+  const date = new Date(Date.UTC(2020, 11, 3, 4, 3, 4));
+  console.log("GETTING ALL BOOKINGS FOR DATE: ", date);
+  await CalendarMatchController.getAllBookingsForDay(date);
+
+  console.log("GETTING ALL BOOKINGS FOR DATES: ")
+  date2 = new Date(Date.UTC(2020, 11, 3, 11, 30, 2));
+  await CalendarMatchController.getBookingsRange(date, date2);
+  await InstantMatchController.delAll();
+  // console.log("Check after deletion: ");
+  // await InstantMatchController.printRedis();
+  console.log("DONE");
+}
+test();

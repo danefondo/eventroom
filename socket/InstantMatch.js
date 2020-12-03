@@ -2,10 +2,10 @@ const { InstantMatchController } = require("../database/REDIS/redis");
 
 /**
  * Handles instant match socket connections
- * @param {Namespace} IMP -- INSTANT_MATCH_NAMESPACE, prefix "/instant_match"
+ * @param {Namespace} INSTANT_MATCH_NAMESPACE -- INSTANT_MATCH_NAMESPACE, prefix "/instant_match"
  * @param {Socket} socket 
  */
-module.exports = function(IMP, socket) {
+module.exports = function(INSTANT_MATCH_NAMESPACE, socket) {
   console.log("instant_match connection");
 
   socket.on("disconnect", (reason) => {
@@ -41,8 +41,8 @@ module.exports = function(IMP, socket) {
       user2: data.user2_ID
     };
     console.log("This is sessionData: ", sessionData);
-    IMP.emit(event1, sessionData);
-    IMP.emit(event2, sessionData);
+    INSTANT_MATCH_NAMESPACE.emit(event1, sessionData);
+    INSTANT_MATCH_NAMESPACE.emit(event2, sessionData);
   });
 
 

@@ -14,7 +14,8 @@ client.on("error", error => {
 });
 
 const REDIS = {
-  InstantMatchController: require("./controllers/InstantMatchController")(client)
+  InstantMatchController: require("./controllers/InstantMatchController")(client),
+  CalendarMatchController: require("./controllers/CalendarMatchController")(client)
 }
 
 module.exports = REDIS;

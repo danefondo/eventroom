@@ -21,19 +21,6 @@ module.exports = function(redisClient) {
     })
   } 
 
-  module.checkWaitlistUser = function(userID) {
-    const key = IDENTIFIER+userID;
-    redisClient.exists(key, (err, reply) => {
-      if (!err) {
-        if (reply == 1) {
-          console.log(key, " exists");
-        } else {
-          console.log("does not exist:", reply, reply===0);
-        }
-      }
-    })
-  }
-
   module.delWaitlistUser = function(userID) {
     const key = IDENTIFIER+userID;
     redisClient.del(key, (err, reply) => {
@@ -42,6 +29,23 @@ module.exports = function(redisClient) {
           console.log("key deleted");
         } else {
           console.log("key does not exist ", reply, reply === 0)
+        }
+      }
+    })
+  }
+
+  /* Functions below this line are atm UNUSED 
+     Feel free to delete them
+  */
+
+  module.checkWaitlistUser = function(userID) {
+    const key = IDENTIFIER+userID;
+    redisClient.exists(key, (err, reply) => {
+      if (!err) {
+        if (reply == 1) {
+          console.log(key, " exists");
+        } else {
+          console.log("does not exist:", reply, reply===0);
         }
       }
     })

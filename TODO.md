@@ -6,7 +6,7 @@
 - [ ] Replace all specific 15-30-45m comparison loops with range loops wherever possible
 
 ## Sanitization-cleanliness todo
-- [ ]
+- [ ] Get rid of junk piled up
 
 # Server-side
 

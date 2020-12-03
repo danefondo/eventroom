@@ -19,6 +19,8 @@ const getDefaultState = () => {
     selectedInterval: 50,
 
     currentlyBooking: false,
+
+    closedBookSome: false,
   };
 };
 
@@ -87,6 +89,10 @@ const mutations = {
   setCurrentlyBooking(state, newState) {
     state.currentlyBooking = newState;
   },
+
+  setClosedBookSome(state) {
+    state.closedBookSome = true;
+  }
 };
 
 // Asynchronous
@@ -129,6 +135,10 @@ const actions = {
 
   setCurrentlyBooking(state, newState) {
     state.commit("setCurrentlyBooking", newState);
+  },
+
+  setClosedBookSome(state) {
+    state.commit("setClosedBookSome");
   },
 };
 

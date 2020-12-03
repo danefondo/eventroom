@@ -39,6 +39,7 @@ export default {
       if (this.currentlyBooking) return;
       if (this.selectedToBook.length < 1) return;
       try {
+        this.$store.dispatch("calendar/removeSelectionsInThePast");
         this.$store.dispatch("booking/setCurrentlyBooking", true);
         let sendData = {
           sessionInterval: this.selectedInterval,

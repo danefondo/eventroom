@@ -15,10 +15,19 @@
           </div>
         </div>
       </div>
-      <div v-if="!userHasUpcomingSessions">
-        You haven't booked any sessions this week. Would you like to book some?
+      <div
+        v-if="
+          !userHasUpcomingSessions ||
+          !allUserSessions ||
+          !allUserSessions.length
+        "
+      >
+        <p>
+          You haven't booked any sessions this week. Book some to kickstart your
+          productivity!
+        </p>
       </div>
-      <form>
+      <form v-if="selectedToBook && selectedToBook.length">
         <input
           class="booking-input"
           autocomplete="off"
@@ -43,15 +52,20 @@
         /><br />
         <div class="all-users"></div>
       </form>
-      <button
-        class="bookSession"
-        :class="currentlyBooking ? 'not-allowed' : ''"
-        :disabled="currentlyBooking == true"
-        @click="bookManySessions"
+      <div
+        class="booking-buttons"
+        v-if="selectedToBook && selectedToBook.length"
       >
-        {{ returnBookButtonText }}
-      </button>
-      <div class="cancelBooking" @click="cancelBooking">Cancel</div>
+        <button
+          class="bookSession"
+          :class="currentlyBooking ? 'not-allowed' : ''"
+          :disabled="currentlyBooking == true"
+          @click="bookManySessions"
+        >
+          {{ returnBookButtonText }}
+        </button>
+        <div class="cancelBooking" @click="cancelBooking">Cancel</div>
+      </div>
     </div>
   </div>
 </template>
@@ -74,6 +88,11 @@ export default {
     "selectedSlotStartTime",
     "allUserSessions",
   ],
+  data() {
+    return {
+      hasMounted: false,
+    };
+  },
   computed: {
     slotName: {
       get() {
@@ -116,9 +135,7 @@ export default {
       if (this.allUserSessions && this.allUserSessions.length) {
         console.log("um.");
         console.log("sessions", this.allUserSessions);
-        for (var i = 0; i < this.allUserSessions; i++) {
-          console.log("e?");
-          let session = this.allUserSessions[i];
+        this.allUserSessions.forEach((session) => {
           let sessionStartInMS = new Date(session.dateTime).valueOf();
           let now = Date.now();
           console.log("start", sessionStartInMS);
@@ -126,9 +143,9 @@ export default {
           if (sessionStartInMS > now) {
             console.log("true");
             userUpcomingSessions = true;
-            break;
+            return;
           }
-        }
+        });
       }
       return userUpcomingSessions;
     },
@@ -139,6 +156,7 @@ export default {
       if (this.currentlyBooking) return;
       if (this.selectedToBook.length < 1) return;
       try {
+        this.$store.dispatch("calendar/removeSelectionsInThePast");
         this.$store.dispatch("booking/setCurrentlyBooking", true);
 
         let sessionsToBook = [];
@@ -243,6 +261,12 @@ export default {
       this.$nextTick(function () {
         this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
       });
+    },
+  },
+  watch: {
+    // Ensure doesn't show div before loaded
+    allUserSessions() {
+      this.hasMounted = true;
     },
   },
 };

@@ -367,8 +367,20 @@ const mutations = {
     }
   },
 
+  /* ====== hasCurrentOrNextSession  ====== */
+
+  resetCalendarCurrentSessionSlot(state) {
+    for (var i = 0; i < state.calendarData.length; i++) {
+      const hourRow = state.calendarData[i];
+      const hourRowDays = hourRow.hourRowDays;
+      for (let x = 0; x < hourRowDays.length; x++) {
+        let slot = hourRowDays[x];
+        slot.hasCurrentOrNextSession = false;
+      }
+    }
+  },
+
   updateCalendarCurrentSessionSlot(state, session) {
-    console.log("I AM HERE. AS I SHOULD BE. SO PROBLEM IS WITH ME.");
     let sessionStartInMS = new Date(session.dateTime).valueOf();
     let FIFTEEN_MINUTES = 900000; // milliseconds
 
@@ -835,6 +847,12 @@ const actions = {
     };
 
     state.commit("updateCalendarSlotAvailability", updateData);
+  },
+
+  /* ====== hasCurrentOrNextSession  ====== */
+
+  resetCalendarCurrentSessionSlot(state) {
+    state.commit("resetCalendarCurrentSessionSlot");
   },
 
   updateCalendarCurrentSessionSlot(state, sessionData) {

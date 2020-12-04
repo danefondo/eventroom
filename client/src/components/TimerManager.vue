@@ -118,11 +118,7 @@ export default {
 
         let nextSession = response.data.result;
         if (response.data.result.NoSessionsThisWeek) {
-          this.changeState("firstBookingForWeek", true);
-          this.changeState("currentlyRefreshingNextSession", false);
-          if (this.refreshTimerQueue.length) {
-            this.handleRefreshQueue();
-          }
+          this.updateWhenNoNextSessionOrRefreshNotNeeded(true);
           return console.log("@getUserNextSession: No sessions found.");
         }
 
@@ -197,18 +193,7 @@ export default {
           // to false, and refreshQueue to empty array.
           else {
             console.log("@TimerManager: No refresh needed.");
-            this.changeState("currentlyRefreshingNextSession", false);
-
-            // This is here in case a full re-render happens
-            // to the calendar data, which removes 'hasCurrentOrNextSession'
-            // from calendar data, but does not reset the timer
-            this.$store.dispatch(
-              "calendar/updateCalendarCurrentSessionSlot",
-              this.nextSession
-            );
-            if (this.refreshTimerQueue.length) {
-              this.handleRefreshQueue();
-            }
+            this.updateWhenNoNextSessionOrRefreshNotNeeded();
           }
         } else {
           this.resetSessionAndTimer();
@@ -323,7 +308,6 @@ export default {
     setInitialChecksAsComplete() {
       this.changeState("doneLoadingTimes", true);
       this.changeState("initialFinalizeCompleted", true);
-
       this.changeState("timerManagerHasMounted", true);
     },
 
@@ -364,6 +348,31 @@ export default {
       };
 
       return weekData;
+    },
+
+    /* ====== 
+    Cover cases when execution flow stops before reaching end
+    ====== */
+    updateWhenNoNextSessionOrRefreshNotNeeded(noSessions = false) {
+      if (noSessions) {
+        this.changeState("firstBookingForWeek", true);
+        // Remove hasCurrentOrNextSession from all slots
+        this.$store.dispatch("calendar/resetCalendarCurrentSessionSlot");
+      } else {
+        // This is here in case a full re-render happens
+        // to the calendar data, which removes 'hasCurrentOrNextSession'
+        // from calendar data, but does not reset the timer
+        this.$store.dispatch(
+          "calendar/updateCalendarCurrentSessionSlot",
+          this.nextSession
+        );
+      }
+
+      this.changeState("currentlyRefreshingNextSession", false);
+
+      if (this.refreshTimerQueue.length) {
+        this.handleRefreshQueue();
+      }
     },
 
     changeState(field, newValue) {

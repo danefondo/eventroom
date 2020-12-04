@@ -26,6 +26,9 @@ export default {
       this.$store.dispatch("calendar/selectSlot", slot);
       this.$nextTick(function () {
         this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
+
+        // In case user tried to selected slot in the past
+        this.$store.dispatch("calendar/removeSelectionsInThePast");
       });
     },
   },

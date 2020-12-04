@@ -135,7 +135,7 @@
 </template>
 
 <script>
-import { isBefore, format, addMinutes } from "date-fns";
+import { format, addMinutes } from "date-fns";
 
 import BookSession from "./BookSession";
 import CancelSession from "./CancelSession";
@@ -283,12 +283,7 @@ export default {
     isPastHour(eachHourRow, i) {
       let slot = eachHourRow.hourRowDays[i];
 
-      let now = new Date();
-      let isPastHour = isBefore(slot.dateTime, now);
-
-      // slot start is before this moment
-      // need to check if session currently happening in slot / sessions nearby?
-      // then show
+      let isPastHour = Date.now() > new Date(slot.dateTime).valueOf();
 
       if (slot.hasCurrentOrNextSession || slot.isSelected) {
         isPastHour = false;

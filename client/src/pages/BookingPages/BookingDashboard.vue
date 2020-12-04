@@ -250,9 +250,9 @@ export default {
         this.$store.dispatch("calendar/updateCalendarAfterReceive", updateData);
       }
 
-      // this.$nextTick(() => {
-      this.updateCalendarAvailability();
-      // });
+      this.$nextTick(() => {
+        this.updateCalendarAvailability();
+      });
     },
 
     async getAllBookedUsersForSpecificWeek(refresh = false, day = false) {
@@ -372,7 +372,6 @@ export default {
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
       // this.$store.dispatch("calendar/setCalendarPastSessions");
 
-      console.log("hello.");
       this.refreshNextOrCurrentSession();
     },
 

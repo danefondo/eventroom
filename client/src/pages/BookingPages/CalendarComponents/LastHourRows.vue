@@ -31,28 +31,9 @@ export default {
       lastRowHours: ["00:00", "00:15", "00:30"],
     };
   },
-  props: [
-    "rowNumberForWeekOrDay",
-    "boxHeight",
-    "week",
-    "currentWeekStart",
-    "currentSelectedDay",
-  ],
+  props: ["rowNumberForWeekOrDay", "boxHeight", "week", "currentWeekStart", "currentSelectedDay"],
   components: {
     PastSlot,
-  },
-  computed: {
-    isItToday() {
-      let date = new Date(this.currentWeekStart); // current selected week start
-
-      let isItToday = false;
-
-      if (isToday(date)) {
-        isItToday = true;
-      }
-
-      return isItToday;
-    },
   },
   methods: {
     isPastLastHour(hour, i) {
@@ -68,8 +49,7 @@ export default {
 
         date = new Date(this.currentWeekStart); // current selected week start
         date = setDay(date, i, { weekStartsOn: 1 });
-        if (!this.isItToday()) {
-          // if (!isToday(date)) {
+        if (!isToday(date)) {
           date = addDays(date, 1); // add date to go to next day
         }
       } else {

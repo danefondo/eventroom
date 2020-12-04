@@ -6,9 +6,11 @@
         :user="user"
         :slotData="slotData"
         :boxHeight="boxHeight"
+        :nextSession="nextSession"
         :quickCancel="true"
         :sessionTime="sessionTime"
         @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+        @hardRefreshTimerAndNextSession="hardRefreshTimerAndNextSession"
         parentName="UserSession"
       />
       <span class="booked-time">{{ sessionTime }}</span>
@@ -29,7 +31,6 @@
 </template>
 
 <script>
-
 import CancelSession from "./CancelSession";
 
 export default {
@@ -45,6 +46,7 @@ export default {
     "sessionLink",
     "matchedPartnerName",
     "nextSessionIsTenMinToStart",
+    "nextSession",
   ],
   components: {
     CancelSession,
@@ -53,8 +55,12 @@ export default {
   },
   methods: {
     refreshNextOrCurrentSession() {
-      console.log("Init refresh from UserSession.vue")
+      console.log("Init refresh from UserSession.vue");
       this.$emit("refreshNextOrCurrentSession");
+    },
+
+    hardRefreshTimerAndNextSession() {
+      this.$emit("hardRefreshTimerAndNextSession");
     },
 
     setIsCanceling() {

@@ -191,14 +191,21 @@ export default {
             this.resetSessionAndTimer();
             this.setNextOrCurrentSession(session);
           }
-          // This was a mad to find case, stay aware of this
-          // rewrote entire logic only to discover that in
-          // the case that nothing needs changing, the
+
+          // In the case nothing needs changing, the
           // currentlRefreshingNextSession needs to be set
           // to false, and refreshQueue to empty array.
           else {
             console.log("@TimerManager: No refresh needed.");
             this.changeState("currentlyRefreshingNextSession", false);
+
+            // This is here in case a full re-render happens
+            // to the calendar data, which removes 'hasCurrentOrNextSession'
+            // from calendar data, but does not reset the timer
+            this.$store.dispatch(
+              "calendar/updateCalendarCurrentSessionSlot",
+              this.nextSession
+            );
             if (this.refreshTimerQueue.length) {
               this.handleRefreshQueue();
             }
@@ -334,6 +341,11 @@ export default {
       } else if (this.$route.meta.calendar) {
         this.$refs.sessiontimer.resetSessionAndTimer();
       }
+    },
+
+    async hardRefreshTimerAndNextSession() {
+      this.resetSessionAndTimer();
+      await this.getUserNextSession();
     },
 
     prepEndOfWeekData() {

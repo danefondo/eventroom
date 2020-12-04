@@ -78,7 +78,9 @@
               :sessionLink="joinSessionLink(eachHourRow, i)"
               :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
               :user="user"
+              :nextSession="nextSession"
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+              @hardRefreshTimerAndNextSession="hardRefreshTimerAndNextSession"
             />
             <UnmatchedPerson
               v-else-if="
@@ -111,8 +113,10 @@
             />
             <CancelSession
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+              @hardRefreshTimerAndNextSession="hardRefreshTimerAndNextSession"
               v-if="eachHourRow.hourRowDays[i].isCanceling"
               :user="user"
+              :nextSession="nextSession"
               :slotData="eachHourRow.hourRowDays[i]"
               :boxHeight="getBoxHeights"
               :quickCancel="false"
@@ -207,6 +211,10 @@ export default {
   methods: {
     refreshNextOrCurrentSession() {
       this.$emit("refreshNextOrCurrentSession");
+    },
+
+    hardRefreshTimerAndNextSession() {
+      this.$emit("hardRefreshTimerAndNextSession");
     },
 
     isFullHour(time) {

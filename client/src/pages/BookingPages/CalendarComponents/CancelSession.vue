@@ -26,6 +26,7 @@ export default {
     "slotData",
     "boxHeight",
     "sessionTime",
+    "nextSession"
   ],
   methods: {
     async cancelSession() {
@@ -62,7 +63,7 @@ export default {
     // If had a partner, add to people sessions
 
     handleSuccessfulCancel(session, localSession) {
-      this.$emit("refreshNextOrCurrentSession");
+      this.updateTimerAfterCancel(localSession);
 
       // For cancel receiver to quickly filter to the right session
       let sessionIsEmpty = false;
@@ -150,6 +151,20 @@ export default {
       };
       // console.log("Pushing canceled sessions to others");
       this.$socket.emit("pushCanceledSessionsToOthers", sessionInfo);
+    },
+
+    updateTimerAfterCancel(localSession) {
+      // If the canceled session was the next or current session
+      // then the timer has to be hard reset
+      let canceledSessionStart = new Date(localSession.dateTime);
+      let nextSessionStart = new Date(this.nextSession.dateTime);
+
+      if (canceledSessionStart.valueOf() == nextSessionStart.valueOf()) {
+        console.log("IS NEXT, HARD REFRESH TIMER.");
+        this.$emit("hardRefreshTimerAndNextSession");
+      } else {
+        this.$emit("refreshNextOrCurrentSession");
+      }
     },
   },
 };

@@ -37,6 +37,7 @@
             :currentSelectedDay="currentSelectedDay"
             :week="week"
             @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+            @hardRefreshTimerAndNextSession="hardRefreshTimerAndNextSession"
           />
         </div>
         <div class="sidebar">
@@ -219,6 +220,12 @@ export default {
       }
     },
 
+    // Mainly used after canceling a session
+    // that is the current or next session
+    async hardRefreshTimerAndNextSession() {
+      await this.$refs.timer.hardRefreshTimerAndNextSession();
+    },
+
     startReceivingBookedSessions() {
       this.sockets.subscribe("receiveBookedSessions", (sessions) => {
         console.log("received", sessions);
@@ -365,6 +372,7 @@ export default {
       this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
       // this.$store.dispatch("calendar/setCalendarPastSessions");
 
+      console.log("hello.");
       this.refreshNextOrCurrentSession();
     },
 

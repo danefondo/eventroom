@@ -1,4 +1,4 @@
-const { InstantMatchController } = require("../database/REDIS/redis");
+const { InstantMatchDataController } = require("../database/REDIS/redis");
 
 /**
  * Handles instant match socket connections
@@ -14,24 +14,24 @@ module.exports = function(INSTANT_MATCH_NAMESPACE, socket) {
 
   socket.on("USER_DISCONNECT", (userID) => {
     console.log("User with following ID disconnected", userID);
-    InstantMatchController.delWaitlistUser(userID);
+    InstantMatchDataController.delWaitlistUser(userID);
   })
 
   socket.on("REQUEST_INSTANT_MATCH", (data) => {
     console.log("REQUEST_INSANT_MATCH: ", data);
     
     // add to redis
-    InstantMatchController.setWaitlistUser(data.ID, socket.id);
+    InstantMatchDataController.setWaitlistUser(data.ID, socket.id);
     console.log("Broadcasting to waitlist");
     socket.broadcast.emit("INSTANT_MATCH_WAITLIST", data);
   });
 
   socket.on("INSTANT_MATCH", data => {
     console.log("found instant match: ", data);
-    
+    // BUG 
     // remove users from redis 
-    InstantMatchController.delWaitlistUser(data.user1_ID);
-    InstantMatchController.delWaitlistUser(data.user2_ID);
+    InstantMatchDataController.delWaitlistUser(data.user1_ID);
+    InstantMatchDataController.delWaitlistUser(data.user2_ID);
     // create new session TODO
     const event1 = "INSTANT_MATCH_"+data.user1_ID;
     const event2 = "INSTANT_MATCH_"+data.user2_ID;
@@ -47,9 +47,9 @@ module.exports = function(INSTANT_MATCH_NAMESPACE, socket) {
 
 
   socket.on("PRINT_REDIS", data => {
-    InstantMatchController.printRedis();
+    InstantMatchDataController.printRedis();
   })
   socket.on("DELETE_REDIS", data => {
-    InstantMatchController.delAll();
+    InstantMatchDataController.delAll();
   })
 }

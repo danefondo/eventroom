@@ -23,6 +23,7 @@ const {
 const { prepareErrors } = require("../../../utilities/errorHandlers");
 
 const BookingDataController = {
+  /* USED */
   async getUserNextSession(userData) {
     // let query = { userId: userData.userId };
     let userId = userData.userId;
@@ -59,6 +60,7 @@ const BookingDataController = {
     return nextUserSession;
   },
 
+  /* USED */
   async getBookedSessionsForOneDay(dayData) {
     let userId = dayData.userId;
     let startOfDay = new Date(dayData.startOfDay);
@@ -93,6 +95,7 @@ const BookingDataController = {
     return allBookedSessions;
   },
 
+  /* UNUSED */
   async getUserBookedSessionsForThisWeek(userData) {
     // let query = { userId: userData.userId };
     let userId = userData.userId;
@@ -111,6 +114,7 @@ const BookingDataController = {
     return bookedSessions;
   },
 
+  /* USED */
   async getAllBookedUsersForSpecificWeek(weekData) {
     let startOfWeekDate = new Date(weekData.startOfWeekDate);
     let hourInMS = 60 * 60 * 1000;
@@ -149,6 +153,7 @@ const BookingDataController = {
     return allBookedSessions;
   },
 
+  /* USED */
   async cancelSession(sessionData) {
     // find session
     // remove user id
@@ -236,6 +241,7 @@ const BookingDataController = {
   // Rather than updating each user individually
   // manage a single central source of truth file
   // for each session, and update data there
+  /* USED */
   async bookSessionSlot(sessionData) {
     let userId = sessionData.userId;
     let username = sessionData.username;
@@ -412,6 +418,7 @@ const BookingDataController = {
     return returnSession;
   },
 
+  /* USED */
   async bookManySessionSlots(requestData) {
     let userId = requestData.userId;
     let username = requestData.username;
@@ -594,6 +601,7 @@ const BookingDataController = {
     return returnData;
   },
 
+  /* USED */
   async matchManySessions(matchingData) {
     let returnData = {};
     let errors = {};
@@ -707,6 +715,7 @@ const BookingDataController = {
     return returnData;
   },
 
+  /* USED */
   async matchWithExistingSession(matchingData) {
     let returnSession = null;
     let errors = {};
@@ -773,6 +782,7 @@ const BookingDataController = {
     return returnSession;
   },
 
+  /* USED */
   async createAndBookSessionAndRoom(sessionData) {
     let errors = {};
     let session = null;
@@ -840,6 +850,7 @@ const BookingDataController = {
     return session;
   },
 
+  /* USED */
   async createAndBookManySessions(unmatchedSlots, userData) {
     let errors = {};
     let unmatchedBookedSessions = [];
@@ -906,6 +917,7 @@ const BookingDataController = {
     return unmatchedBookedSessions;
   },
 
+  /* UNUSED */
   async checkIfAlreadyHaveSessionAtTime(sessionData) {
     let userId = sessionData.userId;
 
@@ -932,6 +944,7 @@ const BookingDataController = {
     return existingSessions;
   },
 
+  /* USED */
   async findSessionsForSlots(slotsQuery) {
     let responseData = { sessionsExist: false };
     let errors = {};

@@ -18,6 +18,7 @@ router.post("/cancelCalendarSlot", BookingController.cancelCalendarSlot);
 router.post("/cancelSession", BookingController.cancelSession);
 
 /* Get all user's booked sessions */
+/* UNUSED */
 router.post(
   "/getUserBookedSessionsForThisWeek",
   BookingController.getUserBookedSessionsForThisWeek

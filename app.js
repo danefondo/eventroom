@@ -26,7 +26,16 @@ async function start() {
   console.log("initializing....")
   await mongo.init();
   console.log("initialized!")
-  const { UpcomingSessionsController } = require("./database/mongo");
+  const USC = await mongo.UpcomingSessionsController;
+  console.log("USC: ", USC)
+  const sessionData = {
+    user1_ID: 1,
+    datetime: Date.now(),
+    user2_ID: 2,
+  }
+  console.log("sessionData: ", sessionData);
+  USC.createCalendarSession(sessionData);
+  
 }
 start();
 
@@ -140,9 +149,9 @@ INSTANT_MATCH_NAMESPACE.on("connection", function (socket) {
   require("./socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
 });
 
-let CALENDAR_MATCH_NAMESPACE = io.of("/calendar_match");
-CALENDAR_MATCH_NAMESPACE.on("connection", function(socket) {
-  require("./socket/CalendarMatch")(CALENDAR_MATCH_NAMESPACE, socket);
+let CALENDAR_NAMESPACE = io.of("/calendar");
+CALENDAR_NAMESPACE.on("connection", function(socket) {
+  require("./socket/CalendarSocketController")(CALENDAR_NAMESPACE, socket);
 })
 
 io.on("connection", function (socket) {
@@ -400,28 +409,37 @@ io.on("connection", function (socket) {
 
 
 console.log("REDIS TESTING GROUND!");
-
-const { InstantMatchController, CalendarMatchController } = require("./database/REDIS/redis");
+/*
+const { InstantMatchDataController, CalendarMatchDataController } = require("./database/REDIS/redis");
 
 const test = async function() {
   const n = 10
   for (let i=0; i<n; i++) {
     let date = new Date(Date.UTC(2020, 11, 3, i))
-    await CalendarMatchController.setBooking(date, i);
+    await CalendarMatchDataController.setBooking(date, i);
     // console.log("set booking nr ", i);
   }
   // await InstantMatchController.printRedis();
 
   const date = new Date(Date.UTC(2020, 11, 3, 4, 3, 4));
-  console.log("GETTING ALL BOOKINGS FOR DATE: ", date);
-  await CalendarMatchController.getAllBookingsForDay(date);
+
+  for (let i=0; i<n; i++) {
+    let date = new Date(Date.UTC(2020, 11, 3, i));
+    let date2 = new Date(Date.UTC(2020,11,3,i+1));
+    let a = await CalendarMatchDataController.delAtSlot(date, i);
+    console.log("Result: ", a)
+    let b = await CalendarMatchDataController.delAtSlot(date, i);
+    console.log("result 2: ", b);
+  }
+
 
   console.log("GETTING ALL BOOKINGS FOR DATES: ")
   date2 = new Date(Date.UTC(2020, 11, 3, 11, 30, 2));
-  await CalendarMatchController.getBookingsRange(date, date2);
-  await InstantMatchController.delAll();
+  await CalendarMatchDataController.getBookingsRange(date, date2);
+  await CalendarMatchDataController.delAll();
   // console.log("Check after deletion: ");
   // await InstantMatchController.printRedis();
   console.log("DONE");
 }
 test();
+*/

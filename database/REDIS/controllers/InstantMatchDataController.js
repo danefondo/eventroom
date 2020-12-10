@@ -23,13 +23,14 @@ module.exports = function(redisClient) {
 
   module.delWaitlistUser = function(userID) {
     const key = IDENTIFIER+userID;
-    redisClient.del(key, (err, reply) => {
+    return redisClient.del(key, (err, reply) => {
       if (!err) {
         if (reply == 1) {
           console.log("key deleted");
         } else {
           console.log("key does not exist ", reply, reply === 0)
         }
+        return reply;
       }
     })
   }

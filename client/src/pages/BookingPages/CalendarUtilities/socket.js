@@ -6,7 +6,7 @@ import io from 'socket.io-client';
 
 import { BASE_PATH } from "../constants";
 
-const CALENDAR_MATCH_NAMESPACE = BASE_PATH+"/calendar_match";
+const CALENDAR_MATCH_NAMESPACE = BASE_PATH+"/calendar";
 let socket = null;
 
 const initializeSocket = async function() {

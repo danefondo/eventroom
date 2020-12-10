@@ -1,5 +1,5 @@
 /**
- * MUST BE EXPORTED JUST ONCE from mongo.js 
+ * MUST BE EXPORTED JUST ONCE from mongo.js AND FROM NOWHERE ELSE
  * 
  * 
  * This file contains definition and initialization for UpcomingSessions collection. 
@@ -41,32 +41,13 @@ const SCHEMA = {
     customTitle: String,
   },
 
-  user1Attendance: {
-    joinedOnce: Boolean, 
-    joinedDuringSession: Boolean,
-    wasLate: Boolean,
-    wasEarly: Boolean,
-    latenessInMS: Number,
-    earlinessInMS: Number,
-    attendanceSuccessful: Number, 
-  },
-
-  user2Attendance: {
-    joinedOnce: Boolean, 
-    joinedDuringSession: Boolean,
-    wasLate: Boolean,
-    wasEarly: Boolean,
-    latenessInMS: Number,
-    earlinessInMS: Number,
-    attendanceSuccessful: Number, 
-  },
-
+  user1Timestamps: Array,
+  user2Timestamps: Array,
 }
 
-const INDEXED_KEYS = [["datetime",1], ["user1_ID",1], ["user2_ID",1]]
-const INDEX_OPTIONS = {
-  unique: true
-}
+const INDEXED_KEYS = [["datetime",1], ["user1_ID",1], ["user2_ID",1]];
+const INDEX_OPTIONS = [{ unique: true }, { unique: true }, { unique: true }];
+
 class UpcomingSessions {
   constructor (db) {
     this.collection = db.collection("upcomingsessions");
@@ -78,10 +59,13 @@ class UpcomingSessions {
     return new Promise( async (resolve, reject) => {
       try {
         const indexes = await self.collection.indexes();
-        // console.log("indexes before:", indexes);
+        console.log("indexes before:", indexes);
         if (indexes.length <= 1) {
           console.log("creating indexes....")
-          await self.collection.createIndex(INDEXED_KEYS, INDEX_OPTIONS);
+          for (let i=0; i<INDEXED_KEYS.length; i++) {
+            console.log("indexing: ", INDEXED_KEYS[i], INDEX_OPTIONS[i]);
+            await self.collection.createIndex([INDEXED_KEYS[i]], INDEX_OPTIONS[i]);
+          }
         }
         // const newIndexes = await this.collection.indexes();
         // console.log("indexes after: ", newIndexes);

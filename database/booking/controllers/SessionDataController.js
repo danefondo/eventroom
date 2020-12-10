@@ -20,6 +20,7 @@ const SessionDataController = {
     // update field: sessionHasBeenRematched
   },
 
+  /* USED */
   async getSessionById(sessionId) {
     let errors = {};
     let session = null;
@@ -34,6 +35,7 @@ const SessionDataController = {
     return session;
   },
 
+  /* UNUSED */
   async getLastTwentyUserSessions(userId) {
     let errors = {};
     let sessions = null;
@@ -51,11 +53,13 @@ const SessionDataController = {
     return sessions;
   },
 
+  /* UNUSED */
   async getLatestSessionData(sessionData) {
     // Used to check if session still exists
     // Used to check if both partners still exist && current next session is still same as one running in timer
   },
 
+  /* UNUSED */
   async updateSessionMeta(sessionData) {
     let fieldsToUpdate = sessionData.fieldsToUpdate;
     fieldsToUpdate.forEach((fieldObject) => {
@@ -94,7 +98,7 @@ const SessionDataController = {
   },
 
   /* ====== TIMESTAMP LOGGING ======*/
-
+  /* USED */
   async registerJoinTimestamp(joinTimestamp) {
     console.log("WO I JOINED! MADE THIS FAR!");
     let sessionId = joinTimestamp.sessionId;
@@ -113,6 +117,7 @@ const SessionDataController = {
     return session;
   },
 
+  /* USED */
   async registerLeaveTimestamp(leaveTimestamp) {
     let sessionId = leaveTimestamp.sessionId;
     let userId = leaveTimestamp.participantId;
@@ -132,6 +137,7 @@ const SessionDataController = {
     return session;
   },
 
+  /* UNUSED */
   async getUserNextSession(userData) {
     // let query = { userId: userData.userId };
     let userId = userData.userId;
@@ -169,6 +175,7 @@ const SessionDataController = {
   },
 
   /* ====== AFTER SESSION HAS ENDED ======*/
+  /* UNUSED */
   async computeSessionConclusion(sessionData) {
     let sessionId = sessionData.sessionId;
     let userId = sessionData.userId;

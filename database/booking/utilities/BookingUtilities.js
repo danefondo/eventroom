@@ -1,3 +1,4 @@
+/* USED */
 function removeOwnSessionsFromArray(sessionsArray, userId) {
   /* ===== 
     ENSURE USER IS NOT IN THE ARRAY OF AVAILABLE SESSIONS 
@@ -37,6 +38,7 @@ function removeOwnSessionsFromArray(sessionsArray, userId) {
   return sessionsArray;
 }
 
+/* USED */
 function filterAvailableSessions(existingSessionsArray) {
   let availableSessions = [];
 
@@ -155,6 +157,7 @@ function getBestRandomMatch(
 
 // Iterate over all sessions and see if
 // any match slot time
+/* USED */
 function filterAvailableSessionsForSlot(availableSessions, slot) {
   let filteredAvailableSessions = [];
   availableSessions.forEach((session) => {

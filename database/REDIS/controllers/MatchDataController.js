@@ -3,7 +3,7 @@ const { promisify } = require('util');
 const IDENTIFIER = "cal:";
 const IDENTIFIER_LENGTH = IDENTIFIER.length;
 
-const DATE_ACCURACY = 120;    // in minutes. 
+const DATE_ACCURACY = 15;    // in minutes. 
 
 // TODO: change parseDate to handle millisecond string
 
@@ -36,8 +36,17 @@ module.exports = function(redisClient) {
   const hsetAsync = promisify(redisClient.hset).bind(redisClient);
 
 
-  module.setOneBooking = function(userID, datetime, matchedStatus) {
-    return hsetAsync(parseDate(datetime, userID, matchedStatus));
+  module.setOneBooking = async function(userID, datetime, matchedStatus, allowOverwrite=false) {
+    console.log("@setonebooking: ", userID, datetime, matchedStatus, allowOverwrite);
+    if (!allowOverwrite && matchedStatus === 0) {
+      console.log("setting @setonebooking");
+      const check = await hgetAsync(parseDate(datetime), userID);
+      if (check === "1") {
+        console.log("already booked at this time");
+        return null;
+      }
+    }
+    return hsetAsync(parseDate(datetime), userID, matchedStatus);
   }
   /**
    * @param {String} userID -- user who booked for this Date
@@ -45,24 +54,63 @@ module.exports = function(redisClient) {
    * @param {Number} matchedStatus -- 1 if matched, 0 if unmatched
    * @return {Promise.allSettled} promise which waits for all insertions to complete (whether successfully or not)
    */
-  module.setManyBookings = function(userID, datetimeArray, matchedStatus) {
-    const requestArray = [];
-    for (let i=0; i<datetimeArray.length; i++) {
-      requestArray.push(hsetAsync(parseDate(datetimeArray[i]), userID, matchedStatus))
+  module.setManyBookings = async function(userID, datetimeArray, matchedStatus, allowOverwrite=false) {
+    let requestArray = [];
+    if (!allowOverwrite && matchedStatus === 0) {
+      let checkArray = [];
+      for (let i=0; i<datetimeArray.length; i++) {
+        checkArray.push(hgetAsync(parseDate(datetimeArray[i]), userID));
+      }
+      const checkResults = await Promise.all(checkArray);
+      console.log("checkresults: ", checkResults);
+      for (let i=0; i<datetimeArray.length; i++) {
+        console.log("setting many bookings: ", parseDate(datetimeArray[i]), userID, matchedStatus);
+        if (checkResults[i] === "1") {
+          console.log("cannot book since matched at this time");
+          continue;
+        }
+        requestArray.push(hsetAsync(parseDate(datetimeArray[i]), userID, matchedStatus))
+      }
+    } else {
+      console.log("no checks needed");
+      for (let i=0; i<datetimeArray.length; i++) {
+        console.log("setting many bookings: ", parseDate(datetimeArray[i]), userID, matchedStatus);
+        requestArray.push(hsetAsync(parseDate(datetimeArray[i]), userID, matchedStatus))
+      }
     }
-    return Promise.allSettled(requestArray);
+    return Promise.all(requestArray);
   }
 
   /**
    * @param {String} userID -- user who deleted these sessions
    * @param {[Date]} datetimeArray -- an array of JS Date objects. Slot time when then bookings got cancelled
+   * @return checkArray -- array, in which in i-th position the element is for the corresponding datetime
+   *  - null, if the booking did not change (either forbidden, or was not there)
+   *  - original booking value (matched status), if the key was deleted
    */
-  module.delManySlots = function(userID, datetimeArray) {
-    const requestArray = [];
+  module.delManyBookings = async function(userID, datetimeArray, allowOverwrite=false) {
+    let checkArray = [];
     for (let i=0; i<datetimeArray.length; i++) {
+      checkArray.push(hgetAsync(parseDate(datetimeArray[i]), userID));
+    }
+    const checkResults = await Promise.all(checkArray);
+    console.log("@delmanybookings checkresults: ", checkResults);
+    let requestArray = [];
+    for (let i=0; i<datetimeArray.length; i++) {
+      console.log("deleting booking: ", parseDate(datetimeArray[i]), userID);
+      if (!allowOverwrite && checkResults[i] === "1") {
+        console.log("overwrite forbidden");
+        checkResults[i] = null;
+        continue;
+      }
       requestArray.push(hdelAsync(parseDate(datetimeArray[i]), userID));
     }
-    return Promise.all(requestArray);
+    try {
+      await Promise.all(requestArray); 
+    } catch (error) {
+      console.log("error at del many bookings: ", error);
+    }
+    return checkResults;
   }
 
   module.delAtSlot = async function(userID, datetime) {

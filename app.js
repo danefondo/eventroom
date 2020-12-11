@@ -26,420 +26,420 @@ async function start() {
   console.log("initializing....")
   await mongo.init();
   console.log("initialized!")
-  const USC = await mongo.UpcomingSessionsController;
-  console.log("USC: ", USC)
-  const sessionData = {
-    user1_ID: 1,
-    datetime: Date.now(),
-    user2_ID: 2,
-  }
-  console.log("sessionData: ", sessionData);
-  USC.createCalendarSession(sessionData);
+  // const USC = await mongo.UpcomingSessionsController;
+  // console.log("USC: ", USC)
+  // const sessionData = {
+  //   user1_ID: 1,
+  //   datetime: Date.now(),
+  //   user2_ID: 2,
+  // }
+  // console.log("sessionData: ", sessionData);
+  // USC.createOneCalendarSession(sessionData);
   
+
+
+
+  console.log("HERE?")
+  //- Mongoose production database setup
+  Mongoose.connect(DatabaseConfig.DB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  });
+  Mongoose.set("useFindAndModify", false);
+
+  //- Get default Mongoose connection
+  let DB = Mongoose.connection;
+
+  //- Log Mongoose connection upon connected
+  DB.once("open", function () {
+    console.log("Connected to MongoDB.");
+  });
+
+  //- Log Mongoose errors
+  DB.on("error", function (err) {
+    console.log("Mongoose error: ", err);
+  });
+
+  /* ====== APP SETUP ====== */
+
+  const app = Express();
+
+  //- Force all routes to HTTPS
+  if (process.env.NODE_ENV === "production") {
+    app.use(Enforce.HTTPS({ trustProtoHeader: true }));
+  }
+
+  //- Body parser middleware
+  app.use(BodyParser.urlencoded({ extended: false }));
+  app.use(BodyParser.json());
+
+  //. Cookie parser middleware
+  app.use(CookieParser());
+
+  //- note:: to be removed
+  app.use(Cors({ origin: "http://localhost:8080", credentials: true }));
+
+  //- Set public folder
+  app.use(Express.static(Path.join(__dirname, "client/dist/")));
+
+  /* ====== AUTHENTICATION SETUP ====== */
+
+  //- Passport config
+  //require("./config/PassportConfig")(Passport);
+
+  //- Passport middleware
+  app.use(Passport.initialize());
+  initialiseAuthentication(app);
+
+  let twilio = require("twilio")(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+
+  /* ====== ROUTES SETUP ====== */
+  const AccountRoutes = require("./routes/API/AccountRoutes");
+  const AccountSettings = require("./routes/API/AccountSettingsRoutes");
+  const ProfileRoutes = require("./routes/API/ProfileRoutes");
+  const EventRoutes = require("./routes/API/EventRoutes");
+  const UserActionRoutes = require("./routes/API/UserActionRoutes");
+  const EventroomRoutes = require("./routes/API/EventroomRoutes");
+  const BookingRoutes = require("./routes/API/BookingRoutes");
+  const SessionRoutes = require("./routes/API/SessionRoutes");
+  app.use("/api/accounts", AccountRoutes);
+  app.use("/api/settings", AccountSettings);
+  app.use("/api/profiles", ProfileRoutes);
+  app.use("/api/events", EventRoutes);
+  app.use("/api/userActions", UserActionRoutes);
+  app.use("/api/eventroom", EventroomRoutes);
+  app.use("/api/booking", BookingRoutes);
+  app.use("/api/session", SessionRoutes);
+
+  /* ====== REQUESTS HANDLING ====== */
+
+  app.get("*", function (req, res) {
+    res.sendFile(Path.join(__dirname, "client/dist/index.html"));
+  });
+
+  // SessionModel.deleteMany({}).exec();
+
+
+  /* ====== SERVER SETUP ====== */
+
+  let port = process.env.PORT;
+  if (port == null || port == "") {
+    port = 3000;
+  }
+
+  /* ====== START SERVER SETUP ====== */
+  let server = app.listen(port, function () {
+    console.log("Server started on port " + port);
+  });
+
+  /* ====== SOCKET.IO SETUP ====== */
+  var io = require("socket.io").listen(server);
+
+  /* ====== SOCKET.IO FUNCTIONS ====== */
+
+
+  let INSTANT_MATCH_NAMESPACE = io.of("/instant_match");
+  INSTANT_MATCH_NAMESPACE.on("connection", function (socket) {
+    require("./socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
+  });
+
+  let CALENDAR_NAMESPACE = io.of("/calendar");
+  CALENDAR_NAMESPACE.on("connection", function(socket) {
+    require("./socket/CalendarSocketController")(CALENDAR_NAMESPACE, socket);
+  })
+
+  io.on("connection", function (socket) {
+    console.log("this user is connected");
+    // io.emit('test', 'lsdkfja');
+    // socket.broadcast.emit("message", "whadaaaaap");
+    // socket.on('message', function(msg){
+    //   io.emit('message', msg);
+    // });
+    socket.on("joinRoom", function (data) {
+      console.log("roomId: ", data.roomId);
+      socket.join(data.roomId);
+    });
+
+    // socket.on("message", function (data) {
+    //   console.log('news data', data);
+    //   var message = data + " world";
+    //   io.emit("test", message);
+    // });
+
+    socket.on("play", function (data) {
+      console.log("yo made here", data);
+      socket.broadcast.to(data.room_id).emit("playVideo", data);
+    });
+
+    socket.on("pause", function (data) {
+      console.log("yo made pause");
+      socket.broadcast.to(data.room_id).emit("pauseVideo", "pause");
+    });
+
+    socket.on("reset", function (data) {
+      console.log("yo made reset");
+      socket.broadcast.to(data.room_id).emit("resetVideo", "reset");
+    });
+
+    socket.on("setTime", function (data) {
+      console.log("yo made time", data);
+      socket.broadcast.to(data.room_id).emit("setVideoTime", data);
+    });
+
+    // socket.on("buffering", function (data) {
+    //   console.log("yo made buffer");
+    //   socket.broadcast.emit("bufferingVideo", "buffer");
+    // });
+
+    socket.on("updateUrl", function (data) {
+      console.log("yo made updatevid");
+      socket.broadcast.to(data.room_id).emit("reloadVideo", "reload");
+    });
+
+    socket.on("emitTag", function (data) {
+      console.log("data from vonage");
+      //- Update data in database and when done, emit signal back to session
+      let freshBakedFromDatabase;
+      socket.broadcast
+        .to(data.room_id)
+        .emit("updateStuff", freshBakedFromDatabase);
+    });
+
+    // socket.on("ended", function (data) {
+    //   console.log("yo made ended");
+    //   socket.broadcast.emit("endedVideo", "end");
+    // });
+
+    // When a client tries to join a room, only allow them if they are first or
+    // second in the room. Otherwise it is full.
+    socket.on("join", function (room) {
+      console.log("A client joined");
+      var clients = io.sockets.adapter.rooms[room];
+      var numClients = typeof clients !== "undefined" ? clients.length : 0;
+      if (numClients == 0) {
+        socket.join(room);
+      } else if (numClients == 1) {
+        socket.join(room);
+        // When the client is second to join the room, both clients are ready.
+        console.log("Broadcasting ready message");
+        socket.emit("ready", room);
+        socket.broadcast.emit("ready", room);
+      } else {
+        socket.emit("full", room);
+      }
+    });
+
+    // Relay candidate messages
+    socket.on("peerJoin", function () {
+      console.log("Received candidate. Broadcasting...");
+      let peer = "peer";
+      socket.broadcast.emit("peerJoined", peer);
+    });
+
+    // When receiving the token message, use the Twilio REST API to request an
+    // token to get ephemeral credentials to use the TURN server.
+    socket.on("token", function () {
+      console.log("Received token request");
+      twilio.tokens.create(function (err, response) {
+        if (err) {
+          console.log(err);
+        } else {
+          // Return the token to the browser.
+          console.log("Token generated. Returning it to the client");
+          socket.emit("token", response);
+        }
+      });
+    });
+
+    socket.on("tokenAgain", function () {
+      console.log("Received token request");
+      twilio.tokens.create(function (err, response) {
+        if (err) {
+          console.log(err);
+        } else {
+          // Return the token to the browser.
+          console.log("Token generated. Returning it to the client");
+          socket.emit("tokenAgain", response);
+        }
+      });
+    });
+
+    // Relay candidate messages
+    socket.on("candidate", function (candidate) {
+      console.log("Received candidate. Broadcasting...");
+      socket.broadcast.emit("candidate", candidate);
+    });
+
+    // Relay offers
+    socket.on("offer", function (offer) {
+      console.log("Received offer. Broadcasting...");
+      socket.broadcast.emit("offer", offer);
+    });
+
+    // Relay answers
+    socket.on("answer", function (answer) {
+      console.log("Received answer. Broadcasting...");
+      socket.broadcast.emit("answer", answer);
+    });
+
+    // Relay answers
+    socket.on("newEventroomName", function (eventroomName) {
+      console.log("Received new Eventroom name. Broadcasting...");
+      socket.broadcast.emit("eventroomNameChange", eventroomName);
+    });
+
+    socket.on("joinChat", function (data) {
+      let eventroomId = data.eventroomId;
+      if (!eventroomId) {
+        let response = "EventroomId missing, cannot join chat.";
+        return socket.emit("joinChatFail", response);
+      }
+
+      socket.join(eventroomId);
+      console.log("User joined Eventroom with id: ", eventroomId);
+      io.to(eventroomId).emit("userJoinedChat", data);
+    });
+
+    socket.on("sendChatMessage", function (data) {
+      if (!data || !data.eventroomId || !data.userId) {
+        let response = "Message data missing";
+        return socket.emit("messageSendFailed", response);
+      }
+      console.log("User sent message", data);
+      // io.in(data.eventroomId).emit("messageReceived", data);
+      socket.to(data.eventroomId).emit("messageReceived", data);
+      // io.removeAllListeners();
+    });
+
+    socket.on("leaveChat", function (eventroomId) {
+      // socket.removeAllListeners(true);
+      // socket.disconnect();
+      // io.removeAllListeners();
+      // socket.removeListener(eventroomId);
+      // socket.leave(eventroomId);
+
+      console.log("LEAVING THE FUCKING CHAT", eventroomId);
+
+      io.of("/").adapter.clients((err, clients) => {
+        console.log(clients); // an array containing all connected socket ids
+      });
+      // socket.removeAllListeners();
+
+      // socket.removeAllListeners(eventroomId);
+      socket.leave(eventroomId);
+
+      // socket.disconnect();
+
+      // socket.leave(roomId, () => {
+      //   io.to('room 237').emit(`user ${socket.id} has left the room`);
+      // });
+    });
+
+    // socket.on("disconnect", function () {
+    //   socket.removeAllListeners();
+    // });
+
+    /** COFOCUS */
+    socket.on("joinCofocusCalendar", function (data) {
+      console.log("User joined room type: ", data);
+      socket.join(data);
+    });
+
+    socket.on("pushSessionsToOthers", function (data) {
+      if (!data || !data.userId || !data.roomType || !data.sessions) {
+        // let response = "Session data missing";
+        return;
+        // return socket.emit("messageSendFailed", response);
+      }
+      // console.log("Session:", data.session);
+      console.log("APP SIDE SESSIONS", data.sessions);
+      socket.to(data.roomType).emit("receiveBookedSessions", data.sessions);
+      // io.removeAllListeners();
+    });
+
+    socket.on("pushCanceledSessionsToOthers", function (data) {
+      if (!data || !data.userId || !data.roomType || !data.sessions) {
+        // let response = "Session data missing";
+        return;
+        // return socket.emit("messageSendFailed", response);
+      }
+      socket.to(data.roomType).emit("receiveCanceledSessions", data.sessions);
+    });
+
+    socket.on("resetTimer", function (roomId) {
+      if (!roomId) {
+        // let response = "Session data missing";
+        return;
+      }
+      socket.to(roomId).emit("receiveResetTimer");
+    });
+
+    socket.on("pauseTimer", function (roomId) {
+      if (!roomId) {
+        // let response = "Session data missing";
+        return;
+      }
+      console.log("YO PAUSE DUDE");
+      socket.to(roomId).emit("receivePauseTimer");
+    });
+
+    socket.on("resumeTimer", function (roomId) {
+      if (!roomId) {
+        // let response = "Session data missing";
+        return;
+      }
+      socket.to(roomId).emit("receiveResumeTimer");
+    });
+
+    socket.on("setAndStartTimerCustom", function (data) {
+      if (!data.roomId || !data.time) {
+        // let response = "Session data missing";
+        return console.log("FUCKER", data);
+      }
+      console.log("TIME", data.time);
+      socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data);
+    });
+  });
+
+
+  console.log("REDIS TESTING GROUND!");
+  /*
+  const { InstantMatchDataController, CalendarMatchDataController } = require("./database/REDIS/redis");
+
+  const test = async function() {
+    const n = 10
+    for (let i=0; i<n; i++) {
+      let date = new Date(Date.UTC(2020, 11, 3, i))
+      await CalendarMatchDataController.setBooking(date, i);
+      // console.log("set booking nr ", i);
+    }
+    // await InstantMatchController.printRedis();
+
+    const date = new Date(Date.UTC(2020, 11, 3, 4, 3, 4));
+
+    for (let i=0; i<n; i++) {
+      let date = new Date(Date.UTC(2020, 11, 3, i));
+      let date2 = new Date(Date.UTC(2020,11,3,i+1));
+      let a = await CalendarMatchDataController.delAtSlot(date, i);
+      console.log("Result: ", a)
+      let b = await CalendarMatchDataController.delAtSlot(date, i);
+      console.log("result 2: ", b);
+    }
+
+
+    console.log("GETTING ALL BOOKINGS FOR DATES: ")
+    date2 = new Date(Date.UTC(2020, 11, 3, 11, 30, 2));
+    await CalendarMatchDataController.getBookingsRange(date, date2);
+    await CalendarMatchDataController.delAll();
+    // console.log("Check after deletion: ");
+    // await InstantMatchController.printRedis();
+    console.log("DONE");
+  }
+  test();
+  */
 }
 start();
-
-
-
-console.log("HERE?")
-//- Mongoose production database setup
-Mongoose.connect(DatabaseConfig.DB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  useCreateIndex: true,
-});
-Mongoose.set("useFindAndModify", false);
-
-//- Get default Mongoose connection
-let DB = Mongoose.connection;
-
-//- Log Mongoose connection upon connected
-DB.once("open", function () {
-  console.log("Connected to MongoDB.");
-});
-
-//- Log Mongoose errors
-DB.on("error", function (err) {
-  console.log("Mongoose error: ", err);
-});
-
-/* ====== APP SETUP ====== */
-
-const app = Express();
-
-//- Force all routes to HTTPS
-if (process.env.NODE_ENV === "production") {
-  app.use(Enforce.HTTPS({ trustProtoHeader: true }));
-}
-
-//- Body parser middleware
-app.use(BodyParser.urlencoded({ extended: false }));
-app.use(BodyParser.json());
-
-//. Cookie parser middleware
-app.use(CookieParser());
-
-//- note:: to be removed
-app.use(Cors({ origin: "http://localhost:8080", credentials: true }));
-
-//- Set public folder
-app.use(Express.static(Path.join(__dirname, "client/dist/")));
-
-/* ====== AUTHENTICATION SETUP ====== */
-
-//- Passport config
-//require("./config/PassportConfig")(Passport);
-
-//- Passport middleware
-app.use(Passport.initialize());
-initialiseAuthentication(app);
-
-let twilio = require("twilio")(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
-
-/* ====== ROUTES SETUP ====== */
-const AccountRoutes = require("./routes/API/AccountRoutes");
-const AccountSettings = require("./routes/API/AccountSettingsRoutes");
-const ProfileRoutes = require("./routes/API/ProfileRoutes");
-const EventRoutes = require("./routes/API/EventRoutes");
-const UserActionRoutes = require("./routes/API/UserActionRoutes");
-const EventroomRoutes = require("./routes/API/EventroomRoutes");
-const BookingRoutes = require("./routes/API/BookingRoutes");
-const SessionRoutes = require("./routes/API/SessionRoutes");
-app.use("/api/accounts", AccountRoutes);
-app.use("/api/settings", AccountSettings);
-app.use("/api/profiles", ProfileRoutes);
-app.use("/api/events", EventRoutes);
-app.use("/api/userActions", UserActionRoutes);
-app.use("/api/eventroom", EventroomRoutes);
-app.use("/api/booking", BookingRoutes);
-app.use("/api/session", SessionRoutes);
-
-/* ====== REQUESTS HANDLING ====== */
-
-app.get("*", function (req, res) {
-  res.sendFile(Path.join(__dirname, "client/dist/index.html"));
-});
-
-// SessionModel.deleteMany({}).exec();
-
-
-/* ====== SERVER SETUP ====== */
-
-let port = process.env.PORT;
-if (port == null || port == "") {
-  port = 3000;
-}
-
-/* ====== START SERVER SETUP ====== */
-let server = app.listen(port, function () {
-  console.log("Server started on port " + port);
-});
-
-/* ====== SOCKET.IO SETUP ====== */
-var io = require("socket.io").listen(server);
-
-/* ====== SOCKET.IO FUNCTIONS ====== */
-
-
-let INSTANT_MATCH_NAMESPACE = io.of("/instant_match");
-INSTANT_MATCH_NAMESPACE.on("connection", function (socket) {
-  require("./socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
-});
-
-let CALENDAR_NAMESPACE = io.of("/calendar");
-CALENDAR_NAMESPACE.on("connection", function(socket) {
-  require("./socket/CalendarSocketController")(CALENDAR_NAMESPACE, socket);
-})
-
-io.on("connection", function (socket) {
-  console.log("this user is connected");
-  // io.emit('test', 'lsdkfja');
-  // socket.broadcast.emit("message", "whadaaaaap");
-  // socket.on('message', function(msg){
-  //   io.emit('message', msg);
-  // });
-  socket.on("joinRoom", function (data) {
-    console.log("roomId: ", data.roomId);
-    socket.join(data.roomId);
-  });
-
-  // socket.on("message", function (data) {
-  //   console.log('news data', data);
-  //   var message = data + " world";
-  //   io.emit("test", message);
-  // });
-
-  socket.on("play", function (data) {
-    console.log("yo made here", data);
-    socket.broadcast.to(data.room_id).emit("playVideo", data);
-  });
-
-  socket.on("pause", function (data) {
-    console.log("yo made pause");
-    socket.broadcast.to(data.room_id).emit("pauseVideo", "pause");
-  });
-
-  socket.on("reset", function (data) {
-    console.log("yo made reset");
-    socket.broadcast.to(data.room_id).emit("resetVideo", "reset");
-  });
-
-  socket.on("setTime", function (data) {
-    console.log("yo made time", data);
-    socket.broadcast.to(data.room_id).emit("setVideoTime", data);
-  });
-
-  // socket.on("buffering", function (data) {
-  //   console.log("yo made buffer");
-  //   socket.broadcast.emit("bufferingVideo", "buffer");
-  // });
-
-  socket.on("updateUrl", function (data) {
-    console.log("yo made updatevid");
-    socket.broadcast.to(data.room_id).emit("reloadVideo", "reload");
-  });
-
-  socket.on("emitTag", function (data) {
-    console.log("data from vonage");
-    //- Update data in database and when done, emit signal back to session
-    let freshBakedFromDatabase;
-    socket.broadcast
-      .to(data.room_id)
-      .emit("updateStuff", freshBakedFromDatabase);
-  });
-
-  // socket.on("ended", function (data) {
-  //   console.log("yo made ended");
-  //   socket.broadcast.emit("endedVideo", "end");
-  // });
-
-  // When a client tries to join a room, only allow them if they are first or
-  // second in the room. Otherwise it is full.
-  socket.on("join", function (room) {
-    console.log("A client joined");
-    var clients = io.sockets.adapter.rooms[room];
-    var numClients = typeof clients !== "undefined" ? clients.length : 0;
-    if (numClients == 0) {
-      socket.join(room);
-    } else if (numClients == 1) {
-      socket.join(room);
-      // When the client is second to join the room, both clients are ready.
-      console.log("Broadcasting ready message");
-      socket.emit("ready", room);
-      socket.broadcast.emit("ready", room);
-    } else {
-      socket.emit("full", room);
-    }
-  });
-
-  // Relay candidate messages
-  socket.on("peerJoin", function () {
-    console.log("Received candidate. Broadcasting...");
-    let peer = "peer";
-    socket.broadcast.emit("peerJoined", peer);
-  });
-
-  // When receiving the token message, use the Twilio REST API to request an
-  // token to get ephemeral credentials to use the TURN server.
-  socket.on("token", function () {
-    console.log("Received token request");
-    twilio.tokens.create(function (err, response) {
-      if (err) {
-        console.log(err);
-      } else {
-        // Return the token to the browser.
-        console.log("Token generated. Returning it to the client");
-        socket.emit("token", response);
-      }
-    });
-  });
-
-  socket.on("tokenAgain", function () {
-    console.log("Received token request");
-    twilio.tokens.create(function (err, response) {
-      if (err) {
-        console.log(err);
-      } else {
-        // Return the token to the browser.
-        console.log("Token generated. Returning it to the client");
-        socket.emit("tokenAgain", response);
-      }
-    });
-  });
-
-  // Relay candidate messages
-  socket.on("candidate", function (candidate) {
-    console.log("Received candidate. Broadcasting...");
-    socket.broadcast.emit("candidate", candidate);
-  });
-
-  // Relay offers
-  socket.on("offer", function (offer) {
-    console.log("Received offer. Broadcasting...");
-    socket.broadcast.emit("offer", offer);
-  });
-
-  // Relay answers
-  socket.on("answer", function (answer) {
-    console.log("Received answer. Broadcasting...");
-    socket.broadcast.emit("answer", answer);
-  });
-
-  // Relay answers
-  socket.on("newEventroomName", function (eventroomName) {
-    console.log("Received new Eventroom name. Broadcasting...");
-    socket.broadcast.emit("eventroomNameChange", eventroomName);
-  });
-
-  socket.on("joinChat", function (data) {
-    let eventroomId = data.eventroomId;
-    if (!eventroomId) {
-      let response = "EventroomId missing, cannot join chat.";
-      return socket.emit("joinChatFail", response);
-    }
-
-    socket.join(eventroomId);
-    console.log("User joined Eventroom with id: ", eventroomId);
-    io.to(eventroomId).emit("userJoinedChat", data);
-  });
-
-  socket.on("sendChatMessage", function (data) {
-    if (!data || !data.eventroomId || !data.userId) {
-      let response = "Message data missing";
-      return socket.emit("messageSendFailed", response);
-    }
-    console.log("User sent message", data);
-    // io.in(data.eventroomId).emit("messageReceived", data);
-    socket.to(data.eventroomId).emit("messageReceived", data);
-    // io.removeAllListeners();
-  });
-
-  socket.on("leaveChat", function (eventroomId) {
-    // socket.removeAllListeners(true);
-    // socket.disconnect();
-    // io.removeAllListeners();
-    // socket.removeListener(eventroomId);
-    // socket.leave(eventroomId);
-
-    console.log("LEAVING THE FUCKING CHAT", eventroomId);
-
-    io.of("/").adapter.clients((err, clients) => {
-      console.log(clients); // an array containing all connected socket ids
-    });
-    // socket.removeAllListeners();
-
-    // socket.removeAllListeners(eventroomId);
-    socket.leave(eventroomId);
-
-    // socket.disconnect();
-
-    // socket.leave(roomId, () => {
-    //   io.to('room 237').emit(`user ${socket.id} has left the room`);
-    // });
-  });
-
-  // socket.on("disconnect", function () {
-  //   socket.removeAllListeners();
-  // });
-
-  /** COFOCUS */
-  socket.on("joinCofocusCalendar", function (data) {
-    console.log("User joined room type: ", data);
-    socket.join(data);
-  });
-
-  socket.on("pushSessionsToOthers", function (data) {
-    if (!data || !data.userId || !data.roomType || !data.sessions) {
-      // let response = "Session data missing";
-      return;
-      // return socket.emit("messageSendFailed", response);
-    }
-    // console.log("Session:", data.session);
-    console.log("APP SIDE SESSIONS", data.sessions);
-    socket.to(data.roomType).emit("receiveBookedSessions", data.sessions);
-    // io.removeAllListeners();
-  });
-
-  socket.on("pushCanceledSessionsToOthers", function (data) {
-    if (!data || !data.userId || !data.roomType || !data.sessions) {
-      // let response = "Session data missing";
-      return;
-      // return socket.emit("messageSendFailed", response);
-    }
-    socket.to(data.roomType).emit("receiveCanceledSessions", data.sessions);
-  });
-
-  socket.on("resetTimer", function (roomId) {
-    if (!roomId) {
-      // let response = "Session data missing";
-      return;
-    }
-    socket.to(roomId).emit("receiveResetTimer");
-  });
-
-  socket.on("pauseTimer", function (roomId) {
-    if (!roomId) {
-      // let response = "Session data missing";
-      return;
-    }
-    console.log("YO PAUSE DUDE");
-    socket.to(roomId).emit("receivePauseTimer");
-  });
-
-  socket.on("resumeTimer", function (roomId) {
-    if (!roomId) {
-      // let response = "Session data missing";
-      return;
-    }
-    socket.to(roomId).emit("receiveResumeTimer");
-  });
-
-  socket.on("setAndStartTimerCustom", function (data) {
-    if (!data.roomId || !data.time) {
-      // let response = "Session data missing";
-      return console.log("FUCKER", data);
-    }
-    console.log("TIME", data.time);
-    socket.to(data.roomId).emit("receiveSetAndStartTimerCustom", data);
-  });
-});
-
-
-console.log("REDIS TESTING GROUND!");
-/*
-const { InstantMatchDataController, CalendarMatchDataController } = require("./database/REDIS/redis");
-
-const test = async function() {
-  const n = 10
-  for (let i=0; i<n; i++) {
-    let date = new Date(Date.UTC(2020, 11, 3, i))
-    await CalendarMatchDataController.setBooking(date, i);
-    // console.log("set booking nr ", i);
-  }
-  // await InstantMatchController.printRedis();
-
-  const date = new Date(Date.UTC(2020, 11, 3, 4, 3, 4));
-
-  for (let i=0; i<n; i++) {
-    let date = new Date(Date.UTC(2020, 11, 3, i));
-    let date2 = new Date(Date.UTC(2020,11,3,i+1));
-    let a = await CalendarMatchDataController.delAtSlot(date, i);
-    console.log("Result: ", a)
-    let b = await CalendarMatchDataController.delAtSlot(date, i);
-    console.log("result 2: ", b);
-  }
-
-
-  console.log("GETTING ALL BOOKINGS FOR DATES: ")
-  date2 = new Date(Date.UTC(2020, 11, 3, 11, 30, 2));
-  await CalendarMatchDataController.getBookingsRange(date, date2);
-  await CalendarMatchDataController.delAll();
-  // console.log("Check after deletion: ");
-  // await InstantMatchController.printRedis();
-  console.log("DONE");
-}
-test();
-*/

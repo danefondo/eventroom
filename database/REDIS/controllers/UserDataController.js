@@ -40,7 +40,7 @@ const unParseUser = function(result) {
 
 // TODO get user pref etc data from mongo
 
-module.exports = async function(redisClient) {
+module.exports = function(redisClient) {
   let module = {};
 
   const hgetAsync = promisify(redisClient.hget).bind(redisClient);
@@ -60,8 +60,9 @@ module.exports = async function(redisClient) {
   };
 
   module.getUser = async function(userID) {
+    
     const key = parseToKey(userID);
-
+    console.log("@getuser: ", userID, key);
     try {
       const data = await hgetallAsync(key);
       if (data && data.length != 0) {
@@ -74,6 +75,7 @@ module.exports = async function(redisClient) {
     } catch (error) {
       console.log("error at getuser", error);
     }
+    return null;
   };
 
   module.removeUser = async function(userID) {

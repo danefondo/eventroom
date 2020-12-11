@@ -18,6 +18,7 @@ const REDIS = {
   MatchDataController: require("./controllers/MatchDataController")(client),
   ConnectedUsersController: require("./controllers/ConnectedUsersController")(client),
   UserDataController: require("./controllers/UserDataController")(client),
+  client, // only for testing
 }
 
 module.exports = REDIS;

@@ -29,7 +29,7 @@ const dateToRedis = JSdate => String(JSdate.valueOf());
  */
 const checkExistenceInRange = async function(userID, startDatetime, endDatetime) {
   try {
-    const result = await PastSessions.findOne({
+    const result = await UpcomingSessions.findOne({
       datetime: {$gte: startDatetime, $lt: endDatetime},
       $or: [{user1_ID: userID}, {user2_ID: userID}]
     });
@@ -76,7 +76,8 @@ const checkSessionValidity = async function(sessionData) {
       checkExistenceInRange(sessionData.user1_ID, forbiddenStart, forbiddenEnd),
       checkExistenceInRange(sessionData.user2_ID, forbiddenStart, forbiddenEnd),
     ]);
-    if (result) {
+    console.log("validation overlap result: ", result);
+    if (result[0] || result[1]) {
       return {
         error: "overlap",
         success: false,
@@ -105,13 +106,18 @@ const UpcomingSessionsController = {
    * } sessionData 
    */
   async createOneCalendarSession(sessionData) {
-    console.log("@ccs", sessionData);
+    console.log("@createOneCalendarSession", sessionData);
     // validate sessionData
     const validationResult = await checkSessionValidity(sessionData);
+    console.log("@createOneCalendarSession validationresult: ", validationResult);
     if (validationResult.success) {
-      console.log("@ccs validation successful");
+      console.log("@createOneCalendarSession validation successful");
       try {
-        const result = await UpcomingSessions.insertOne(sessionData);
+        const result = await UpcomingSessions.insertOne({
+          user1_ID: sessionData.user1_ID,
+          user2_ID: sessionData.user2_ID,
+          datetime: sessionData.datetime
+        });
         // if insertion into Mongo successful, create entry to Redis
         if (result.insertedCount == 1) {
           sessionData._id = result.insertedId;
@@ -121,11 +127,13 @@ const UpcomingSessionsController = {
             UserDataController.getUser(sessionData.user1_ID),
             UserDataController.getUser(sessionData.user2_ID)
           ]);
+          console.log("createOneCalendarSession redis results", redisInsertionResult);
         } 
       } catch (error) {
-        printError("@createCalendarSession: ", error);
+        printError("@createOneCalendarSession: ", error);
       }
     }
+    console.log("@createOneCalendarSession returning data: ", sessionData);
     return sessionData;
   },
 
@@ -133,28 +141,32 @@ const UpcomingSessionsController = {
    * Removes matchedUserID from Mongo and returns the created session if it got created
    * @param {
     *  datetime -- JS Date object
-    *  userID -- ID of the user who did not have a session at the time (the user who requested the match) 
-    *  matchedUserID -- ID of the user who *did* have a session at the datetime 
+    *  user1_ID -- ID of the user who did not have a session at the time (the user who requested the match) 
+    *  user2_ID -- ID of the user who *did* have a session at the datetime 
     * } sessionData 
     */
   async replaceOneCalendarSession(sessionData) {
+    console.log("@replaceOnceCalendarSession: data: ", sessionData);
     let matchingSuccessful = false;
     try {
       const removedSession = await UpcomingSessionsController.removeOneSession_datetime_userID(
-        sessionData.datetime, sessionData.matchedUserID);
+        sessionData.datetime, sessionData.user2_ID);
+      console.log("@replaceOnceCalendarSession removed session: ", removedSession);
       if (removedSession) {
         let cancelledUserID;
-        if (removedSession.user1_ID == sessionData.matchedUserID) {
+        if (removedSession.user1_ID == sessionData.user2_ID) {
           cancelledUserID = removedSession.user2_ID;
-        } else if (removedSession.user2_ID == sessionData.matchedUserID) {
+        } else if (removedSession.user2_ID == sessionData.user2_ID) {
           cancelledUserID = removedSession.user1_ID;
         } else {
           // app broke
+          console.log("BROKE");
           matchingSuccessful = false;
         }
         if (cancelledUserID) {
+          console.log("@replaceOnceCalendarSession cancelled user id: ", cancelledUserID);
           // can be asynchronous
-          MatchDataController.setOneBooking(cancelledUserID, dateToRedis(sessionData.datetime), 0);
+          MatchDataController.setOneBooking(cancelledUserID, dateToRedis(sessionData.datetime), 0, true);
           matchingSuccessful = true;
         }
       } else {
@@ -167,49 +179,29 @@ const UpcomingSessionsController = {
     }
     if (matchingSuccessful) {
       // create and return a new session
-      const insertSessionData = {
-        user1_ID: sessionData.userID,
-        datetime: sessionData.datetime,
-        user2_ID: sessionData.matchedUserID,
-      }
-      
-      return UpcomingSessionsController(insertSessionData);
+      console.log("@replaceOnceCalendarSession successful, going on to creation", sessionData);
+      return UpcomingSessionsController.createOneCalendarSession(sessionData);
     } else {
       // just add to Redis as unmatched
-      MatchDataController.setOneBooking(sessionData.userID, dateToRedis(sessionData.datetime), 0);
+      console.log("@replaceOnceCalendarSession unsuccessful");
+      MatchDataController.setOneBooking(sessionData.user1_ID, dateToRedis(sessionData.datetime), 0, true);
       return sessionData;
     }
   },
 
-  /**
-   * UNUSED atm
-   * Does not insert data into Redis
-   * @param {Object} sessionData 
-   */
-  async createInstantSession(sessionData) {
-    const validationResult = await checkSessionValidity(sessionData);
-    if (validationResult.success) {
-      try {
-        const result = await UpcomingSessions.insertOne(sessionData);
-        if (result.insertedCount == 1) {
-          sessionData._id = result.insertedId;
-          return inserted;
-        }
-        console.log("didnt insert?")
-      } catch (error) {
-        printError("at addSession: ", error);
-        sessionData.success = false;
-      }
-    }
-    return sessionData;
-  },
-
   async removeOneSession_datetime_userID(datetime, userID) {
     try {
+      // const res = await UpcomingSessions.find({
+      //   datetime: datetime, 
+      //   $or: [{user1_ID: userID}, {user2_ID: userID}]
+      // }).toArray();
+      // console.log("@removeOneSession: res: ", res);
       const { value } = await UpcomingSessions.findOneAndDelete({
         datetime: datetime, 
         $or: [{user1_ID: userID}, {user2_ID: userID}]
       });
+      console.log("@removeOneSession: userID datetime ", userID, typeof userID, datetime);
+      console.log("@removeOneSession: result: ", value);
       if (value) {
         return value;
       }

@@ -46,7 +46,7 @@ const SCHEMA = {
 }
 
 const INDEXED_KEYS = [["datetime",1], ["user1_ID",1], ["user2_ID",1]];
-const INDEX_OPTIONS = [{ unique: true }, { unique: true }, { unique: true }];
+const INDEX_OPTIONS = [{ unique: false }, { unique: false }, { unique: false }];
 
 class UpcomingSessions {
   constructor (db) {
@@ -59,7 +59,7 @@ class UpcomingSessions {
     return new Promise( async (resolve, reject) => {
       try {
         const indexes = await self.collection.indexes();
-        console.log("indexes before:", indexes);
+        // console.log("indexes before:", indexes);
         if (indexes.length <= 1) {
           console.log("creating indexes....")
           for (let i=0; i<INDEXED_KEYS.length; i++) {

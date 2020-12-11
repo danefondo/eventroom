@@ -2,7 +2,7 @@
   <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
     <Nav v-if="!$route.meta.hideNavigation" />
     <!-- Do not show this timer in Calendar & Session pages -->
-    <!-- <InstantMatch /> -->
+    <carel-is-testing />
 
     <!-- <TimerManager parentName="app" v-if="user && isAuthenticated && !$route.meta.customTimer" /> -->
     <div
@@ -18,7 +18,7 @@
 <script>
 import { mapState } from "vuex";
 import Nav from "./components/Nav";
-// import CarelIsTesting from "./components/CarelIsTesting";
+import CarelIsTesting from './components/CarelIsTesting.vue';
 // import InstantMatch from "./matching/InstantMatch.vue";
 // import TimerManager from "./components/TimerManager";
 
@@ -26,7 +26,7 @@ export default {
   name: "App",
   components: {
     Nav,
-    // CarelIsTesting,
+    CarelIsTesting,
     // InstantMatch,
     // TimerManager,
   },

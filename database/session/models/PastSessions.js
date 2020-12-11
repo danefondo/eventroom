@@ -66,7 +66,7 @@ const SCHEMA = {
 
 
 const INDEXED_KEYS = [["datetime",1], ["user1_ID",1], ["user2_ID",1]];
-const INDEX_OPTIONS = [{ unique: true }, { unique: true }, { unique: true }];
+const INDEX_OPTIONS = [{ unique: false }, { unique: false }, { unique: false }];
 class PastSessions {
   constructor (db) {
     this.collection = db.collection("pastsessions");

@@ -1,63 +1,79 @@
-/**
- * Methods:
- * initializeSocket() -- has to be called *just once*
- */
 import io from 'socket.io-client';
 
-import { BASE_PATH } from "../constants";
+import { BASE_PATH } from "../../../constants";
 
 const CALENDAR_MATCH_NAMESPACE = BASE_PATH+"/calendar";
-let socket = null;
 
-const initializeSocket = async function() {
+let socket = null;
+let reinitialize = false; 
+
+/**
+ * Removes all listeners, called when disconnected
+ */
+const destroyEvents = function() {
   if (socket) {
-    socket.removeAllListeners("MATCH"); // safety probs
+    console.log("@CALENDAR SOCKET destroying events!");
+    socket.off("disconnect");
+    socket.off("NEW_BOOKINGS");
+    socket.off("BOOKINGS_CANCELLED");
+    socket.off("MATCH");
+    reinitialize = true;
+  }
+}
+
+/**
+ * If socket is not yet created, creates the socket.
+ * Adds all event listeners.
+ */
+export const initializeSocket = async function() {
+  console.log("@CALENDAR SOCKET INITIALIZING SOCKET! ", reinitialize);
+
+  if (!socket) {
+    /* If socket has not been created, create the socket */
+    console.log("@CALENDAR SOCKET creating socket and connect event handler")
+    socket = io(CALENDAR_MATCH_NAMESPACE);
+
+    socket.on("connect", () => {
+      console.log("@CALENDAR SOCKET matching socket connected");
+      if (reinitialize) {
+        console.log("@CALENDAR SOCKET socket reinitialized");
+        /* Socket was disconnected and now reconnected, so add all listeners again */ 
+        initializeSocket();
+        reinitialize = false;
+      }
+    });
+  } else {
     if (!socket.connected) {
+      console.log("@CALENDAR SOCKET socket was not connected, opened manually")
       socket.open();
     }
   }
+  /* add all listeners */
 
-  socket = io(CALENDAR_MATCH_NAMESPACE);
-
-  socket.on("connect", () => {
-    console.log("matching socket connected");
-  });
-
-  socket.on("disconnect", () => {
-    console.log("matching socket disconnected");
+  socket.on("disconnect", (reason) => {
+    console.log("@CALENDAR SOCKET matching socket disconnected, reason:", reason);
+    destroyEvents();
   });
 
   socket.on("MATCH", (matchData) => {
-    console.log("match found!");  // TODO
+    console.log("@CALENDAR SOCKET RECEIVED MATCH", matchData);  // TODO
   });
 
-  socket.on("NEW_BOOKING_SLOT", (userData) => {
-    console.log("process new data -- compare against preferences etc, then put to vuex")
-  })
+  socket.on("NEW_BOOKINGS", (userData) => {
+    console.log("@CALENDAR SOCKET RECEIVED NEW_BOOKINGS", userData)
+  });
+
+  socket.on("BOOKINGS_CANCELLED", (cancelledData) => {
+    console.log("@CALENDAR SOCKET RECEIVED BOOKINGS_CANCELLED: ", cancelledData);
+  });
   return true; 
 }
 
 /**
- * 
- * @param { Object. Fields:
- *  ID -- userId 
- *  preferences -- preferences Object
- *  data -- user data Object to compare against another user's preferences object 
- * } userData -- data to pass in the event 
- * @param {Date} sessionTimeData -- session time in whatever format works the best 
+ * Called when left the page
  */
-const bookSession = async function(userData, sessionTimeData) {
-  if (!socket) {
-    throw new Error("No socket. Please initialize socket before use") // TODO
+export const closeSocket = function() {
+  if (socket) {
+    socket.close();
   }
-
-  socket.emit("BOOK_SESSION", userData); // TODO add callbacks and checks
-}
-
-const cancelSession = async function (userData, sessionTimeData) {
-  if (!socket) {
-    throw new Error("No socket. Please initialize socket before use") // TODO
-  }
-
-  socket.emit("CANCEL_SESSION", userData);
 }

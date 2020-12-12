@@ -97,6 +97,11 @@ import {
   startOfDay,
 } from "date-fns";
 
+import { 
+  initializeSocket,
+  closeSocket,
+} from "./CalendarUtilities/calendarSocketController";
+
 export default {
   name: "BookingDashboard",
   data() {
@@ -162,6 +167,9 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
   },
+  created () {
+    initializeSocket();
+  },
   async mounted() {
     // console.log("@Step 1: Render calendar structure.");
     await this.initWeekCalendar();
@@ -191,7 +199,7 @@ export default {
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       this.sockets.unsubscribe("receivePushedSessions");
       this.sockets.unsubscribe("receiveCanceledSessions");
-
+      closeSocket();
       // this.resetData();
       clearInterval(this.databaseSyncTimer);
       if (fromBeforeLeave && next !== null) {

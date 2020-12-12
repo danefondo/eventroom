@@ -35,7 +35,13 @@ module.exports = function(redisClient) {
   const hgetallAsync = promisify(redisClient.hgetall).bind(redisClient);
   const hsetAsync = promisify(redisClient.hset).bind(redisClient);
 
-
+  /**
+   * Sets user to match pool for one sessiontime.
+   * @param {String} userID 
+   * @param {String/Number} datetime -- in ms from Unix epoch (in string or number)
+   * @param {String/Number} matchedStatus -- 0 or 1
+   * @param {Boolean} allowOverwrite -- whether to overwrite matched to unmatched
+   */
   module.setOneBooking = async function(userID, datetime, matchedStatus, allowOverwrite=false) {
     console.log("@setonebooking: ", userID, datetime, matchedStatus, allowOverwrite);
     if (!allowOverwrite && matchedStatus === 0) {
@@ -48,15 +54,24 @@ module.exports = function(redisClient) {
     }
     return hsetAsync(parseDate(datetime), userID, matchedStatus);
   }
+
   /**
+   * This function sets one user into match pool for several dates. 
+   * If the person is matched and allowOverwrite == false and new match status would be false, it will not overwrite 
+   * existing match status. 
+   * 
+   * Complexity -- 2n if allowOverwrite == false, n otherwise. 
+   *  
    * @param {String} userID -- user who booked for this Date
    * @param {[Date]} datetimeArray -- an array of JS Date objects. Slot time when then booking must happen
    * @param {Number} matchedStatus -- 1 if matched, 0 if unmatched
-   * @return {Promise.allSettled} promise which waits for all insertions to complete (whether successfully or not)
+   * @param {Boolean} allowOverwrite -- whether to allow replacing 1 with 0 or not
+   * @return {Promise} promise which waits for all insertions to complete (whether successfully or not)
    */
   module.setManyBookings = async function(userID, datetimeArray, matchedStatus, allowOverwrite=false) {
     let requestArray = [];
-    if (!allowOverwrite && matchedStatus === 0) {
+    if (!allowOverwrite && matchedStatus == 0) {
+      // check, whether matched or unmatched 
       let checkArray = [];
       for (let i=0; i<datetimeArray.length; i++) {
         checkArray.push(hgetAsync(parseDate(datetimeArray[i]), userID));
@@ -65,6 +80,7 @@ module.exports = function(redisClient) {
       console.log("checkresults: ", checkResults);
       for (let i=0; i<datetimeArray.length; i++) {
         console.log("setting many bookings: ", parseDate(datetimeArray[i]), userID, matchedStatus);
+        // if matched, do not set new status 
         if (checkResults[i] === "1") {
           console.log("cannot book since matched at this time");
           continue;
@@ -72,6 +88,7 @@ module.exports = function(redisClient) {
         requestArray.push(hsetAsync(parseDate(datetimeArray[i]), userID, matchedStatus))
       }
     } else {
+      // if overwriting is allowed, just set all to new values
       console.log("no checks needed");
       for (let i=0; i<datetimeArray.length; i++) {
         console.log("setting many bookings: ", parseDate(datetimeArray[i]), userID, matchedStatus);
@@ -82,6 +99,7 @@ module.exports = function(redisClient) {
   }
 
   /**
+   * Deletes given user from match pool at several session times. 
    * @param {String} userID -- user who deleted these sessions
    * @param {[Date]} datetimeArray -- an array of JS Date objects. Slot time when then bookings got cancelled
    * @return checkArray -- array, in which in i-th position the element is for the corresponding datetime
@@ -90,6 +108,7 @@ module.exports = function(redisClient) {
    */
   module.delManyBookings = async function(userID, datetimeArray, allowOverwrite=false) {
     let checkArray = [];
+    // retrieve original values for rollback if necessary
     for (let i=0; i<datetimeArray.length; i++) {
       checkArray.push(hgetAsync(parseDate(datetimeArray[i]), userID));
     }
@@ -99,6 +118,7 @@ module.exports = function(redisClient) {
     for (let i=0; i<datetimeArray.length; i++) {
       console.log("deleting booking: ", parseDate(datetimeArray[i]), userID);
       if (!allowOverwrite && checkResults[i] === "1") {
+        // if overwrite not allowed, do not overwrite 
         console.log("overwrite forbidden");
         checkResults[i] = null;
         continue;
@@ -113,6 +133,11 @@ module.exports = function(redisClient) {
     return checkResults;
   }
 
+  /**
+   * Retrieves the value and returns 
+   * @param {String} userID 
+   * @param {String/Number} datetime -- date in ms from Unix epoch
+   */
   module.delAtSlot = async function(userID, datetime) {
     const key = parseDate(datetime);
     const result = await hgetAsync(key, userID);
@@ -123,8 +148,8 @@ module.exports = function(redisClient) {
       if (deletionResult) {
         return {
           success: true,
-          ID: userID,
-          result: result
+          ID: userID, 
+          result: result  // 1 if deleted
         }
       }
     }

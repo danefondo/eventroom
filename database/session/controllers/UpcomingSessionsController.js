@@ -150,7 +150,8 @@ const UpcomingSessionsController = {
     let matchingSuccessful = false;
     try {
       const removedSession = await UpcomingSessionsController.removeOneSession_datetime_userID(
-        sessionData.datetime, sessionData.user2_ID);
+        sessionData.datetime, sessionData.user2_ID
+      );
       console.log("@replaceOnceCalendarSession removed session: ", removedSession);
       if (removedSession) {
         let cancelledUserID;
@@ -182,13 +183,20 @@ const UpcomingSessionsController = {
       console.log("@replaceOnceCalendarSession successful, going on to creation", sessionData);
       return UpcomingSessionsController.createOneCalendarSession(sessionData);
     } else {
-      // just add to Redis as unmatched
+      // just add to Redis as unmatched -- is not needed I think. It should be handled at request during rollback
       console.log("@replaceOnceCalendarSession unsuccessful");
-      MatchDataController.setOneBooking(sessionData.user1_ID, dateToRedis(sessionData.datetime), 0, true);
+      // MatchDataController.setOneBooking(sessionData.user1_ID, dateToRedis(sessionData.datetime), 0, true); 
       return sessionData;
     }
   },
 
+  /**
+   * Removes a session from Mongo
+   * NB! does *not* handle Redis, i.e. readding the other user to the match pool 
+   *  must happen where this function is called.
+   * @param {Date} datetime 
+   * @param {String} userID 
+   */
   async removeOneSession_datetime_userID(datetime, userID) {
     try {
       // const res = await UpcomingSessions.find({

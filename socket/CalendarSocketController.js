@@ -70,12 +70,13 @@ module.exports = function(CALENDAR_NAMESPACE, socket) {
     console.log("received REQUEST_MATCHES, data: ", data);
     try {
       let deletedArray = [];
-      for (let i=0; i<data.matchIDs.length; i++) {
+      /* Delete all from Redis so that others cannot match */
+      for (let i=data.matchIDs.length; i>=0; i--) {
+        /* cannot match with yourself */
         if (data.matchIDs[i] == data.ID) {
           // sry i did a bad thing
           data.matchIDs.splice(i, 1);
           data.datetimes.splice(i, 1);
-          i--;
           continue;
         }
         console.log("removing from match pool: ", data.matchIDs[i], data.datetimes[i])
@@ -84,16 +85,15 @@ module.exports = function(CALENDAR_NAMESPACE, socket) {
       console.log("REMOVING ITSELF")
       deletedArray.push(MatchDataController.delManyBookings(data.ID, data.datetimes, true));
 
+      /* wait for deletion to complete */
       const deletionResults = await Promise.all(deletedArray);
       const original = deletionResults.splice(deletionResults.length-1, 1)[0];
 
       console.log("deletionResults: ", deletionResults);
       console.log("original: ", original);
       let promiseArray = [];
-      // console.log("upcoming sessions controller: ", UpcomingSessionsController);
       for (let i=0; i<deletionResults.length; i++) {
         console.log("datetime: ", data.datetimes[i], "matched id: ", data.matchIDs[i]);
-        console.log("deletionResults: ")
         let pushed = false;
         const sessionData = {
           user1_ID: data.ID,
@@ -103,23 +103,23 @@ module.exports = function(CALENDAR_NAMESPACE, socket) {
         }
         if (deletionResults[i].success) {
           if (deletionResults[i].result === "0") {
-            console.log("deletion was successful with result ", 0)
-            // previously unmatched 
+            /* if partner was previously unmatched, just create a new session */
             console.log("creating new session: ", sessionData);
             promiseArray.push(UpcomingSessionsController.createOneCalendarSession(sessionData));
             pushed = true;
           } else if (deletionResults[i].result === "1") {
-            console.log("deletion was successful with result", 1);
-            // previously matched
+            /* if partner was previously matched, replace their session with yours */
             console.log("replacing a session session: ", sessionData);
             promiseArray.push(UpcomingSessionsController.replaceOneCalendarSession(sessionData));
             pushed = true;
           }
         } else {
+          /* if deletion was not successful, just add to match pool as unmatched */ 
           MatchDataController.setOneBooking(data.ID, data.datetimes[i], 0);
           console.log("somebody was faster");
         }
         if (!pushed) {
+          /* add to results for rollback */
           promiseArray.push(new Promise((resolve, reject) => {
             resolve(sessionData);
           }));
@@ -127,6 +127,7 @@ module.exports = function(CALENDAR_NAMESPACE, socket) {
       }
 
       const createdSessions = await Promise.all(promiseArray);
+      
       /* RESTORE REDIS IF DID NOT SUCCEED and have a massive fkn headache */ 
 
       for (let i=createdSessions.length-1; i >= 0; i--) {

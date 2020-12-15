@@ -20,16 +20,9 @@
             :user="user"
             :selectedToBook="selectedToBook"
             :currentlyBooking="currentlyBooking"
-            :selectedInterval="selectedInterval"
-            :selectedSlotDateTime="selectedSlotDateTime"
-            :selectedSlotStartTime="selectedSlotStartTime"
-            :selectedSlotDateString="selectedSlotDateString"
             :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
             :weekDates="weekDates"
-            :minimumTime="minimumTime"
-            :maximumTime="maximumTime"
             :calendarData="calendarData"
-            :allUserSessions="allUserSessions"
             :nextSession="nextSession"
             :currentSession="currentSession"
             :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
@@ -43,12 +36,9 @@
           <TimerManager ref="timer" parentName="booking" />
           <Booker
             :user="user"
-            :selectedInterval="selectedInterval"
             :selectedToBook="selectedToBook"
             :currentlyBooking="currentlyBooking"
             :selectedSlotName="selectedSlotName"
-            :selectedSlotStartTime="selectedSlotStartTime"
-            :selectedSlotDateString="selectedSlotDateString"
             @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
           />
         </div>
@@ -97,10 +87,10 @@ import {
   startOfDay,
 } from "date-fns";
 
-import { 
-  initializeSocket,
-  closeSocket,
-} from "./CalendarUtilities/calendarSocketHandlers";
+// import { 
+//   initializeSocket,
+//   closeSocket,
+// } from "./CalendarUtilities/calendarSocketHandlers";
 
 export default {
   name: "BookingDashboard",
@@ -123,28 +113,26 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
-      calendarData: (state) => state.calendar.calendarData,
-      allUserSessions: (state) => state.calendar.allUserSessions,
-      weekDates: (state) => state.calendar.weekDates,
-      weekStartDay: (state) => state.calendar.weekStartDay,
-      weekEndDay: (state) => state.calendar.weekEndDay,
-      currentSelectedDay: (state) => state.calendar.currentSelectedDay,
-      currentWeekStart: (state) => state.calendar.currentWeekStart,
-      rowNumberForWeekOrDay: (state) => state.calendar.rowNumberForWeekOrDay,
+
+      calendarData: (state) => state.calendar.calendarData,                     // cleaned
+      weekDates: (state) => state.calendar.weekDates,                           // cleaned
+      weekStartDay: (state) => state.calendar.weekStartDay,                     // cleaned
+      weekEndDay: (state) => state.calendar.weekEndDay,                         // cleaned
+      currentSelectedDay: (state) => state.calendar.currentSelectedDay,         // cleaned
+      currentWeekStart: (state) => state.calendar.currentWeekStart,             // cleaned
+      rowNumberForWeekOrDay: (state) => state.calendar.rowNumberForWeekOrDay,   // cleaned ish
       week: (state) => state.calendar.week,
 
-      selectedInterval: (state) => state.booking.selectedInterval,
       currentlyBooking: (state) => state.booking.currentlyBooking,
-      selectedToBook: (state) => state.calendar.selectedToBook,
+      selectedToBook: (state) => state.booking.selectedToBook,                 // cleaned
 
       selectedSlotName: (state) => state.booking.selectedSlotName,
-      selectedSlotDateTime: (state) => state.booking.selectedSlotDateTime,
-      selectedSlotStartTime: (state) => state.booking.selectedSlotStartTime,
-      selectedSlotDateString: (state) => state.booking.selectedSlotDateString,
 
-      minimumTime: (state) => state.calendar.minimumTime,
-      maximumTime: (state) => state.calendar.maximumTime,
+      // constants
+      // minimumTime: (state) => state.calendar.minimumTime,                       // unsure
+      // maximumTime: (state) => state.calendar.maximumTime,                       // unsure
 
+      // cofocus 
       nextSession: (state) => state.cofocus.nextSession,
       currentSession: (state) => state.cofocus.currentSession,
       nextSessionIsTenMinToStart: (state) =>
@@ -167,20 +155,9 @@ export default {
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
   },
-  created () {
-    initializeSocket();
-  },
-  async mounted() {
+  created() {
     // console.log("@Step 1: Render calendar structure.");
-    await this.initWeekCalendar();
-
-    // console.log("@Step 2: Join Cofocus socket port.");
-    this.$socket.emit("joinCofocusCalendar", "cofocus");
-
-    // console.log("@Step 3: Start listening to pushes and cancels.");
-    this.startReceivingBookedSessions();
-    this.startReceivingCanceledSessions();
-    // Consider also listening to 'rematches'.
+    this.initWeekCalendar();
 
     // console.log("@Step 4: Setup cleaning for when you leave.");
     let globalThis = this;
@@ -199,7 +176,7 @@ export default {
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       this.sockets.unsubscribe("receivePushedSessions");
       this.sockets.unsubscribe("receiveCanceledSessions");
-      closeSocket();
+      // closeSocket();
       // this.resetData();
       clearInterval(this.databaseSyncTimer);
       if (fromBeforeLeave && next !== null) {
@@ -219,39 +196,6 @@ export default {
         console.log("Let's refresh IN BOOKING.");
         await this.$refs.timer.getUserNextSession();
       }
-    },
-
-    startReceivingBookedSessions() {
-      this.sockets.subscribe("receiveBookedSessions", (sessions) => {
-        console.log("received", sessions);
-        this.updateCalendarPostReceive(sessions);
-      });
-    },
-
-    startReceivingCanceledSessions() {
-      this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
-        console.log("received canceled", sessions);
-        this.updateCalendarPostReceive(sessions);
-      });
-    },
-
-    updateCalendarPostReceive(sessions) {
-      if (sessions.length) {
-        let updateData = {
-          sessions,
-          userId: this.user._id,
-        };
-
-        this.$store.dispatch(
-          "calendar/updateCalendarAfterReceive",
-          updateData
-        );
-      }
-
-      // this.$nextTick(() => {
-        console.log("Update calendar availability.");
-        this.updateCalendarAvailability();
-      // });
     },
 
     async getAllBookedUsersForSpecificWeek(refresh = false, day = false) {
@@ -294,14 +238,15 @@ export default {
           if (refresh) {
             this.iterativeRefreshCalendarSessions(allBookedSessions);
           } else {
-            let updateData = {
-              sessions: allBookedSessions,
-              userId: this.user._id,
-            };
-            this.$store.dispatch(
-              "calendar/pushManyCalendarSessions",
-              updateData
-            );
+            console.log("response successful")
+            // let updateData = {
+            //   sessions: allBookedSessions,
+            //   userId: this.user._id,
+            // };
+            // this.$store.dispatch(
+            //   "calendar/pushManyCalendarSessions",
+            //   updateData
+            // );
           }
         }
       } catch (error) {
@@ -311,28 +256,10 @@ export default {
       }
     },
 
-    // exitAllCanceling() {
-    //    this.selectedToBook.forEach((slotData) => {
-    //     this.updateCalendarSelectedSlots(slotData, false, true, 0);
-    //   });
-
-    //   this.$store.dispatch("booking/clearAllCanceling");
-    // },
 
     /* ====== DATABASE SYNCING -- HARD REFRESH SWAP OLD DATA WITH NEW ====== */
 
-    hardRefreshCalendarSessions(sessions) {
-      let updateData = {
-        sessions,
-        userId: this.user._id,
-      };
-
-      this.$store.dispatch("calendar/hardRefreshCalendarSessions", updateData);
-
-      this.$nextTick(() => {
-        this.updateCalendarAvailability();
-      });
-    },
+    // removed
 
     /* ====== ITERATIVE DATABASE SYNCING ====== */
 
@@ -356,14 +283,15 @@ export default {
 
     renderCalendar() {
       let configData = {
-        maximumTime: this.maximumTime,
-        minimumTime: this.minimumTime,
+        maximumTime: "23:59",
+        minimumTime: "00:00",
         interval: this.interval,
         week: this.week,
         currentWeekStart: this.currentWeekStart,
         currentSelectedDay: this.currentSelectedDay,
       };
-      configData = JSON.parse(JSON.stringify(configData));
+      console.log("@renderCalendar: config: ", configData);
+      // configData = JSON.parse(JSON.stringify(configData)); // unnecessary since copy anyway
       let calendarData = generateCalendarData(configData);
       // + nextTick
       this.$store.dispatch("calendar/setCalendarData", calendarData);
@@ -378,7 +306,7 @@ export default {
     },
 
     removeSelectionsInThePast() {
-      this.$store.dispatch("calendar/removeSelectionsInThePast");
+      this.$store.dispatch("booking/removeSelectionsInThePast");
     },
 
     async syncCalendarWithDatabase() {
@@ -404,7 +332,11 @@ export default {
       let startOfPeriod = this.currentWeekStart;
       let newStartOfWeek = new Date(startOfPeriod.valueOf());
       let dates = getWeekDates(newStartOfWeek);
+      console.log("@initweekCalendar: thiscurrentWeekStart", startOfPeriod);
+      console.log("@initweekCalendar: newStartOfWeek", newStartOfWeek);
+      console.log("@initweekCalendar: dates", dates);
       this.$store.dispatch("calendar/setCalendarWeekDates", dates);
+      // TODO await both or smth
       this.renderCalendar();
       await this.getAllBookedUsersForSpecificWeek();
       this.renderSavedSelectionsIfAny();
@@ -414,9 +346,11 @@ export default {
     },
 
     async initDayCalendar() {
+      // TODO cleanup
       let currentSelectedDay = new Date(this.currentSelectedDay.valueOf());
       let dates = getDayDate(currentSelectedDay);
       this.$store.dispatch("calendar/setCalendarDayDate", dates);
+
       this.renderCalendar();
       await this.getAllBookedUsersForSpecificWeek(false, true);
       this.renderSavedSelectionsIfAny();
@@ -426,23 +360,12 @@ export default {
     },
 
     renderSavedSelectionsIfAny() {
-      if (this.selectedToBook.length) {
-        this.selectedToBook.forEach((slotData) => {
-          let slot = JSON.parse(JSON.stringify(slotData));
-
-          let updateData = {
-            targetSlot: slot,
-            newSlotState: true,
-            all: false,
-            field: 0,
-          };
-
-          this.$store.dispatch(
-            "calendar/updateCalendarSelectedSlots",
-            updateData
-          );
-        });
+      const updateData = {
+        slotDateTimeArray: this.selectedToBook,
+        newSlotState: true,
+        field: "isSelected",
       }
+      this.$store.dispatch("calendar/updateManySlotsByDateTime", updateData);
     },
 
     /* ====== CALENDAR NAVIGATION ====== */

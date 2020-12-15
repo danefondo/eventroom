@@ -25,13 +25,32 @@ module.exports = function(CALENDAR_NAMESPACE, socket) {
    *  data -- user data 
    *  preferences -- user preferences
    * }
+   * @param {function} callback -- send acknowledgement to client
    */
-  socket.on("BOOK_SLOTS", async (data) => {
+  socket.on("BOOK_SLOTS", async (data, callback) => {
     // happens asynchronously atm
     console.log("received BOOK_SLOTS, data: ", data);
-    MatchDataController.setManyBookings(data.ID, data.datetimes, 0, false);
+    let sessions = [];
+    let returnData = {};
+    try {
+      const result = await MatchDataController.setManyBookings(data.ID, data.datetimes, 0, false);
+      for (let i=0; i<result.length; i++) {
+        if (result == "1") {
+          sessions.push({
+            datetime: data.datetimes[i],
+            user1_ID: data.ID,
+          });
+        }
+      }
+      socket.emit("NEW_BOOKINGS", sessions);
+      returnData.success = true;
+    } catch (error) {
+      console.log("@BOOK_SLOTS error: ", error);
+      returnData.success = false;
+    }
+    returnData.sessions = sessions;
 
-    socket.emit("NEW_BOOKINGS", data);
+    callback(returnData);
   });
 
   /**

@@ -83,6 +83,7 @@ module.exports = function(redisClient) {
         // if matched, do not set new status 
         if (checkResults[i] === "1") {
           console.log("cannot book since matched at this time");
+          requestArray.push(new Promise(resolve => true));
           continue;
         }
         requestArray.push(hsetAsync(parseDate(datetimeArray[i]), userID, matchedStatus))

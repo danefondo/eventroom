@@ -55,6 +55,8 @@
 
 <script>
 import { requestWithAuthentication } from "../../../config/api";
+import { bookManySlots } from "../CalendarUtilities/calendarSocketHandlers";
+import { convertBooker } from "../CalendarUtilities/dataconverter";
 
 export default {
   name: "Booker",
@@ -108,6 +110,61 @@ export default {
     },
   },
   methods: {
+    async bookManySessionsCarel() { // eslint-disable-line no-unused-vars
+      let errors = {};
+      if (this.currentlyBooking) return;
+      if (this.selectedToBook.length < 1) return;
+      try {
+        this.$store.dispatch("booking/setCurrentlyBooking", true);
+        
+        let datetimes = []
+        // Prepare selected to book data
+        for (let i=0; i<this.selectedToBook.length; i++) {
+          datetimes.push((new Date(this.selectedToBook[i].dateTime).valueOf()));
+        }
+        const sendData = {
+          ID: this.user._id,
+          datetimes,
+          preferences: null,
+          preferenceData: null,
+          metaData: {
+            profileImageUrl: this.user.profileImageUrl,
+            username: this.user.username,
+            displayName: this.user.displayName,
+          }
+        }
+        
+        const sessions = await bookManySlots(sendData);
+
+        if (!sessions) {
+          errors.FailedToBookSession = true;
+          throw { errors: errors };
+        } else {
+          const pushSessions = convertBooker(sessions, this.user);
+          const pushData = {
+            sessions: pushSessions,
+            userId: this.user._id,
+          };
+          // console.log("@PUSHDATA FROM RESPONSE", pushData);
+          /* ====== ADD TO CALENDAR AFTER BOOKING ====== */
+          this.$store.dispatch("calendar/pushManyCalendarSessions", pushData);
+
+          this.$emit("refreshNextOrCurrentSession");
+
+          this.$store.dispatch("booking/setCurrentlyBooking", false);
+
+          this.$nextTick(function () {
+            this.pushBookingUpdateToOthers(sessions); // TODO to remove since unnecessary and handled already
+            this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
+            this.cancelBooking();
+          });
+        }
+      } catch (error) {
+        console.log("errorBooking", error);
+        this.$store.dispatch("booking/setCurrentlyBooking", false);
+      }
+    },
+
     async bookManySessions() {
       let errors = {};
       if (this.currentlyBooking) return;

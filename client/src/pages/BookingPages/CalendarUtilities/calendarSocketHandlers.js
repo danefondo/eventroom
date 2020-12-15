@@ -66,7 +66,7 @@ export const initializeSocket = async function() {
   socket.on("BOOKINGS_CANCELLED", (cancelledData) => {
     console.log("@CALENDAR SOCKET RECEIVED BOOKINGS_CANCELLED: ", cancelledData);
   });
-  return true; 
+  return new Promise(() => true); 
 }
 
 /**
@@ -76,4 +76,38 @@ export const closeSocket = function() {
   if (socket) {
     socket.close();
   }
+}
+
+export const bookSlots = async function(sendData) {
+  // TODO access vuex and get the best matches as default matches and emit REQUEST_MATCHES
+  if (!socket || !socket.connected) {
+    await initializeSocket();
+  }
+
+  return new Promise((resolve, reject) => {
+    socket.emit("BOOK_SLOTS", sendData, function(result) {
+      if (result.success) {
+        resolve(result.sessions);
+      } 
+      // TODO 
+      reject(result);
+    });
+  });
+}
+
+export const bookManySlots = async function(sendData) {
+  if (!socket || !socket.connected) {
+    await initializeSocket();
+  }
+
+  return new Promise((resolve, reject) => {
+    // TODO access vuex and get the best matches as default matches and emit REQUEST_MATCHES
+    socket.emit("BOOK_SLOTS", sendData, function(result) {
+      if (result.success) {
+        resolve(result.sessions);
+      }
+      // TODO 
+      reject(result);
+    })
+  })
 }

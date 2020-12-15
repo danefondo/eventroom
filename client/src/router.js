@@ -44,6 +44,16 @@ const routes = [
     },
   },
 
+  {
+    path: "/dashboard/booking2",
+    component: () => import("./pages/BookingPages2/BookingDashboard"),
+    name: "BookingDashboard",
+    meta: {
+      requireAuthentication: true,
+      customTimer: true,
+      calendar: true,
+    },
+  },
   /* ====== COFOCUS SESSION ROUTES ====== */
 
   {

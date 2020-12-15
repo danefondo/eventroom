@@ -12,7 +12,6 @@
 </template>
 
 <script>
-import { requestWithAuthentication } from "../../../config/api";
 import { bookSlots } from "../CalendarUtilities/calendarSocketHandlers";
 import { convertBookSession } from "../CalendarUtilities/dataconverter";
 
@@ -22,20 +21,14 @@ export default {
     "slotHasPerson",
     "slotPerson",
     "user",
-    "slotData",
+    "slotDateTime",
     "boxHeight",
     "selectedToBook",
     "currentlyBooking",
-    "selectedInterval",
-    "selectedSlotDateTime",
-    "selectedSlotStartTime",
-    "selectedSlotDateString",
-    "allUserSessions",
-    "calendarData",
   ],
 
   methods: {
-    async bookSessionCarel() { // eslint-disable-line no-unused-vars
+    async bookSession() { // eslint-disable-line no-unused-vars
       let errors = {};
       console.log("@carel", this.currentlyBooking, this.selectedToBook.length);
       if (this.currentlyBooking) return;
@@ -44,7 +37,7 @@ export default {
         this.$store.dispatch("booking/setCurrentlyBooking", true);
         console.log("here");
         const sendData = {
-          datetimes: [this.selectedSlotDateTime.valueOf()],
+          datetimes: this.slotDateTime.valueOf(),
           ID: this.user._id,
           preferences: null,
           preferenceData: null,
@@ -65,50 +58,6 @@ export default {
           console.log("@booksession invalid response: ", sessions);
           errors.FailedToBookSession = true;
           throw { errors: errors };
-        }
-      } catch (error) {
-        console.log("errorBooking", error);
-        this.$store.dispatch("booking/setCurrentlyBooking", false);
-      }
-    },
-
-    /* Book single session */
-    async bookSession() {
-      console.log("***********************")
-      // await this.bookSessionCarel();
-      console.log("***********************")
-      let errors = {};
-      if (this.currentlyBooking) return;
-      if (this.selectedToBook.length < 1) return;
-      try {
-        this.$store.dispatch("booking/setCurrentlyBooking", true);
-        let sendData = {
-          sessionInterval: this.selectedInterval,
-          dateTime: this.selectedSlotDateTime,
-        };
-        sendData.userId = this.user._id;
-        sendData.username = this.user.username;
-        sendData.firstName = this.user.firstName;
-        sendData.lastName = this.user.lastName;
-        sendData.displayName = this.user.displayName;
-        sendData.profileImageUrl = this.user.profileImageUrl;
-        console.log("@bookSession, sendData: ", sendData);
-        console.log("@bookSession user: ", this.user);
-        const response = await requestWithAuthentication(
-          `post`,
-          `api/booking/bookSessionSlot`,
-          sendData
-        );
-        console.log("@bookSession, response: ", response);
-        let session = response.data.result;
-        if (!session) {
-          errors.FailedToBookSession = true;
-          throw { errors: errors };
-        }
-        // console.log("@SESSION FROM RESPONSE", session);
-
-        if (response.data.success) {
-          this.handleSuccessfulBooking(session);
         }
       } catch (error) {
         console.log("errorBooking", error);
@@ -154,22 +103,17 @@ export default {
 
     /* Clear single selection */
     cancelSlot() {
-      let slot = JSON.parse(JSON.stringify(this.slotData));
-
-      let updateData = {
-        targetSlot: slot,
+      const updateData = {
+        slotDateTime: this.slotDateTime,
         newSlotState: false,
-        all: false,
-        field: 0,
-      };
-
-      this.$store.dispatch("calendar/updateCalendarSelectedSlots", updateData);
-
-      slot.isSelected = false;
+        field: "isSelected",
+      }
+      
+      this.$store.dispatch("calendar/updateOneSlotByDateTime", updateData);
 
       this.$nextTick(function () {
         // Must be last or component is destroyed before
-        this.$store.dispatch("calendar/cancelSlot", slot);
+        this.$store.dispatch("booking/cancelSlot", this.slotDateTime);
         this.$store.dispatch("calendar/updateCalendarSlotAvailability", 1);
       });
     },

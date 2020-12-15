@@ -13,9 +13,9 @@ import mediastates from "./modules/mediastates";
 import participants from "./modules/participants";
 import chat from "./modules/chat";
 import preferences from "./modules/preferences";
-import booking from "./modules/booking";
+import booking from "./modules/booking2";
 import cofocus from "./modules/cofocus";
-import calendar from "./modules/calendar";
+import calendar from "./modules/calendar2";
 
 Vue.use(Vuex);
 

@@ -50,6 +50,9 @@ $link-color: #111;
 $visited-color: #111;
 $button-color: #493eff;
 $button-hover-color: #493effd1;
+.selected-close { 
+z-index: 100
+}
 
 .messageTextLink {
   color: #1f3058;

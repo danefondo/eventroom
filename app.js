@@ -407,6 +407,9 @@ async function start() {
 
 
   console.log("REDIS TESTING GROUND!");
+
+  const CSC = require("./socket/CalendarSocketController");
+  CSC.tests();
   /*
   const { InstantMatchDataController, CalendarMatchDataController } = require("./database/REDIS/redis");
 

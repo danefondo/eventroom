@@ -35,6 +35,28 @@ async function printMatchPool() {
   }
 }
 
+async function printUsers() {
+  try {
+    const userKeys = keysAsync("user:*");
+    console.log("*******************************************")
+    console.log("PRINTING REDIS USERS");
+
+    let userValues = [];
+    for (let i=0; i<userKeys.length; i++) {
+      userValues.push(await hgetallAsync(userKeys[i]));
+    }
+    for (let i=0; i<userKeys.length; i++) {
+      console.log("Key: ", userKeys[i], " parsed: ", unparseMatched(userKeys[i]));
+      console.log("Value: ", userValues[i]);
+    }
+
+    console.log("REDIS PRINTED");
+    console.log("*******************************************")
+  } catch (error) {
+    console.log("@printusers, error:", error);
+  }
+}
+
 async function deleteRedis() {
   try {
     const keys = await keysAsync("*")
@@ -49,5 +71,6 @@ async function deleteRedis() {
 }
 module.exports = {
   printMatchPool,
-  deleteRedis
+  deleteRedis,
+  printUsers
 }

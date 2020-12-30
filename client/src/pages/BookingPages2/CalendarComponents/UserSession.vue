@@ -4,6 +4,7 @@
       <CancelSession
         v-if="!userIsMatchedForSlot"
         :user="user"
+        :currentUserData="currentUserData"
         :slotDateTime="slotDateTime"
         :boxHeight="boxHeight"
         :quickCancel="true"
@@ -42,6 +43,7 @@ export default {
     "profileName",
     "sessionTime",
     "user",
+    "currentUserData",
     "userIsMatchedForSlot",
     "sessionLink",
     "matchedPartnerName",
@@ -49,7 +51,7 @@ export default {
   ],
   computed: {
     slotHasCurrentOrNextSession() {
-      return this.$store.getters.getHasCurrentSessionForDateTime(this.slotDateTime);
+      return this.$store.getters["calendar/getHasCurrentSessionForDateTime"](this.slotDateTime);
     }
   },
   components: {

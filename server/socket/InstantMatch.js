@@ -1,4 +1,4 @@
-const { InstantMatchDataController } = require("../database/REDIS/redis");
+const { InstantMatchDataController } = require("../../database/REDIS/redis");
 
 /**
  * Handles instant match socket connections

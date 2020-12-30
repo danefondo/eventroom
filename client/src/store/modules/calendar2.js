@@ -1,10 +1,12 @@
 import Vue from "vue";
 import { startOfISOWeek } from "date-fns";
+import api from "../../api/cofocusAPI";
 
 import {
   getLocationFromDatetime,
   getPositionInMatchPoolArray,
-  getSelectabilityIndices
+  getSelectabilityIndices,
+  addToMatchPoolArray
 } from "../../pages/BookingPages2/CalendarUtilities/utilities";
 
 const SLOT_INTERVAL_MINUTES = 15;
@@ -55,8 +57,8 @@ const state = {
   
   // maximumTime: "24:30",
 
-  currentUserData: "",  // TODO NEW complies with USER_SCHEMA
-  allUserMatches: {},   // TODO NEW elements comply with 
+  currentUserData: {metadata: {}}, 
+  allUserMatches: {},   /* 'null' if unmatched, undefined otherwise */ 
   allUserMatchDateTimes: [], // TODO NEW array of sorted datetimes. Allows for faster stuff to happen
 
   // Shows when last full database sync occurred
@@ -71,10 +73,11 @@ const state = {
 
 const getters = {
   /**
+   * @param dateTimeMS -- 
    * @return null if does not exist, otherwise USER_SCHEMA or EXTENDED_USER_SCHEMA
    */
-  getMatchedUserForDateTime: (state) => (dateTime) => {
-    return state.allUserMatches[dateTime];
+  getMatchedUserForDateTime: (state) => (dateTimeMS) => {
+    return state.allUserMatches[dateTimeMS];
   },
   /**
    * @return {Boolean} if in view, hasCurrentOrNextSession value for the slot at dateTime
@@ -95,7 +98,27 @@ const getters = {
     else {
       return null
     }
-  } 
+  },
+  /**
+   * @return the first match in matchPoolUsersForSlot list if exists, null otherwise
+   */
+  getBestMatchForDatetime: (state) => (dateTime) => {
+    const datetimeMS = dateTime.valueOf();
+    const location = getLocationFromDatetime(
+      state.week, 
+      state.currentSelectedDay,
+      state.currentWeekStart,
+      datetimeMS  
+    );
+    console.log("@getbestmatchfordatetime: ", datetimeMS);
+
+    if (location.success) {
+      let matchPoolUsersForSlot = state.calendarData[location.calendarIndex].hourRowDays[location.daysFromStart].matchPoolUsersForSlot;
+      console.log("@getbestmatchesfordatetime matchpoolusersforslot: ", matchPoolUsersForSlot);
+      if (matchPoolUsersForSlot.length) return matchPoolUsersForSlot[0];
+    }
+    return null;
+  }
 };
 
 const mutations = {
@@ -126,6 +149,10 @@ const mutations = {
 
   setCurrentSelectedDay(state, date) {
     state.currentSelectedDay = date;
+  },
+
+  setUserData(state, userData) {
+    state.currentUserData = userData;
   },
 
   setCurrentSelectedDayAsToday(state) {
@@ -163,21 +190,13 @@ const mutations = {
     /* iterates over all calendarData */
     console.log("@ucsa: ", data);
     for (let day=0; day<nrDays; day++) {
-      // console.log("********************")
-      // console.log("DAY: ", day);
       for (let slotIdx = 0; slotIdx < nrSlots; slotIdx++) {
-        // console.log("slotIdx: ", slotIdx, " currentIdx: ", currentIdx, " indices length: ", indices.length);
-        // console.log("currentStatus: ", state.calendarData[slotIdx].hourRowDays[day][field])
-        if (currentIdx < indices.length) {
-          // console.log("indices[currentIdx][0]: ", indices[currentIdx][0], slotIdx, indices[currentIdx][0]===slotIdx);
-          // console.log("indices[currentIdx][1]: ", indices[currentIdx][1], day, indices[currentIdx][1] === day);
-        }
         if (
           currentIdx < indices.length &&
           indices[currentIdx][0] === slotIdx && 
           indices[currentIdx][1] === day
         ) {
-          console.log("CHANGED TO FALSE", slotIdx, field);
+          // console.log("CHANGED TO FALSE", slotIdx, field);
           state.calendarData[slotIdx].hourRowDays[day][field] = false;
           currentIdx++;
         } else {
@@ -266,11 +285,23 @@ const mutations = {
    * state.calendarData[calendarIndex].hourRowDays[daysFromStart]
    */
   removeOneMatchPoolUserFromSlot(state, data) {
-    const calendarIndex = data.index.calendarIndex;
-    const daysFromStart = data.index.daysFromStart;
-    const position = data.index.position;
+    const calendarIndex = data.calendarIndex;
+    const daysFromStart = data.daysFromStart;
+    const position = data.position;
     // remove
+    // console.log("splicing at position, data: ", calendarIndex, daysFromStart, position);
+    console.log("before splice: ", state.calendarData[calendarIndex].hourRowDays[daysFromStart].matchPoolUsersForSlot)
     state.calendarData[calendarIndex].hourRowDays[daysFromStart].matchPoolUsersForSlot.splice(position, 1);
+    console.log("after splice: ", state.calendarData[calendarIndex].hourRowDays[daysFromStart].matchPoolUsersForSlot)
+  },
+
+  /**
+   * @param {Object} data key: dateTimes, value: {calendarIndex, daysFromStart, matchPoolUsersForSlot}
+   */
+  addAllMatchablePeople(state, dataToMutation) {
+    Object.values(dataToMutation).forEach(value => {
+      state.calendarData[value.calendarIndex].hourRowDays[value.daysFromStart].matchPoolUsersForSlot = value.matchPoolUsersForSlot;
+    });
   },
 
   /**
@@ -282,24 +313,42 @@ const mutations = {
    * } data session is the session data of the partner
    */
   setMatchForDatetime(state, data) {
-    Vue.set(state.allUserMatches, data.datetime, data.user);
+    // console.log("@setmatchfordatetime mutation, data: ", data);
+    Vue.set(state.allUserMatches, data.dateTime, data.user);
   },
 
   /**
    * Deletes match from users sessions object
    * @param {String} datetime -- slot datetime from which to remove match in MS
    */
-  removeMatchFromDatetime(state, datetime) {
-    Vue.delete(state.allUserMatches, datetime);
+  removeMatchFromDatetime(state, dateTime) {
+    // console.log("@removeMatchFromDatetime keys before: ", Object.keys(state.allUserMatches));
+    Vue.delete(state.allUserMatches, dateTime);
+    // console.log("@removeMatchFromDatetime keys after: ", Object.keys(state.allUserMatches));
+  },
+
+  /**
+   * Sets allUserMatches to new value (used after initial load)
+   * @param {Object} data key: dateTime, value: user who is matched for that datetime or falsy value otherwise 
+   */
+  setAllUserMatches(state, data) {
+    state.allUserMatches = data;
   },
   
+  clearMatchDateTimes(state) {
+    state.allUserMatchDateTimes = [];
+  },
   /**
    * Adds to its proper position such that the array remains sorted. 
    * @param {Number} datetime -- in MS 
    */
-  addMatchDatetime(state, datetime) {
-    if (!state.allUserMatchDateTimes[datetime]) {
+  addMatchDatetime(state, dateTime) {
+    console.log("adding to datetime: ", dateTime);
+    console.log("adding to datetime: ", !state.allUserMatches[dateTime]);
+    console.log("adding to datetime: ", state.allUserMatches[dateTime] !== null);
+    if (!state.allUserMatches[dateTime] && state.allUserMatches[dateTime] !== null) {
       /* if datetime does not exist already, add to correct place */
+      console.log("here!")
       let array = state.allUserMatchDateTimes
       let right = array.length;
       let left = 0;
@@ -307,15 +356,35 @@ const mutations = {
       // binary search
       while (left < right) {
         idx = Math.floor((right+left)/2);
-        if (array[idx] < datetime) {
+        if (array[idx] < dateTime) {
           left = idx+1;
         } else {
           right = idx;
         }
       }
-      state.allUserMatchDateTimes.splice(left, 0, datetime);
+      console.log("here2,left: ", left);
+      state.allUserMatchDateTimes.splice(left, 0, dateTime);
+    }
+    console.log("added to datetime,", new Date(dateTime));
+  },
+
+  /**
+   * removes dateTime from state.allUserMatchDateTimes array
+   * @param {String} dateTime -- in ms 
+   */
+  removeMatchDateTime(state, dateTime) {
+    console.log("removing datetime: ", dateTime);
+    console.log("allusermatchdatetimes length: ", state.allUserMatchDateTimes.length);
+    for (let i=0; i<state.allUserMatchDateTimes.length; i++) {
+      console.log(i, state.allUserMatchDateTimes[i], dateTime, state.allUserMatchDateTimes[i]===dateTime);
+      if (state.allUserMatchDateTimes[i] === dateTime) {
+        const deleted = state.allUserMatchDateTimes.splice(i, 1);
+        console.log("deleted: ", deleted, " target: ", dateTime);
+        break;
+      }
     }
   }
+  
 };
 
 const actions = {
@@ -330,11 +399,25 @@ const actions = {
     * } data session is the session data of the partner
     */
   setMatchForDatetime({ commit }, data) {
-    if (Number(data.datetime) >= (new Date()).valueOf()) {
+    console.log("@setmatchfordatetime, data: ", data);
+    if (Number(data.dateTime) >= Date.now()) {
+      console.log("@setmatchfordatetime here!");
+      commit("addMatchDatetime", data.dateTime);
       commit("setMatchForDatetime", data);
-      commit("addMatchDatetime", data.datetime);
     }
-    
+  },
+
+  /**
+   * Sets a match in allUserMatches array for the specific date
+   * @param {Number/String} dateTime session is the session data of the partner
+    */
+  removeMatchFromDateTime({ state, commit }, dateTime) {
+    console.log("@removeMatchForDateTime, data: ", dateTime);
+    const matchedUser = state.allUserMatches[dateTime];
+    commit("removeMatchFromDatetime", dateTime);
+    commit("removeMatchDateTime", Number(dateTime));
+    console.log("@removeMatchFromDateTime: removeduser: ", matchedUser);
+    return matchedUser;
   },
 
   /**
@@ -342,7 +425,7 @@ const actions = {
    * If preferences are suitable, adds to matchPoolUsersForSlot array
    * @param {
    *  user: USER_SCHEMA,
-   *  datetime: String or Number
+   *  dateTime: String or Number
    * } userData 
    * datetime must ms from Unix epoch either as String or Number 
    */
@@ -351,13 +434,14 @@ const actions = {
       state.week, 
       state.currentSelectedDay, 
       state.currentWeekStart, 
-      Number(userData.datetime),
+      Number(userData.dateTime),
     );
+    console.log("@ADDONEMATCHPOOL USER: !", userData);
     if (!index.success) {
       return { success: false };
     }
     let userArray = state.calendarData[index.calendarIndex].hourRowDays[index.daysFromStart].matchPoolUsersForSlot;
-    index.position = getPositionInMatchPoolArray(state.currentUserData, userArray, userData.user);
+    index.position = getPositionInMatchPoolArray(state.currentUserData, userArray, userData.user, SLOT_USER_LIMIT);
 
     if (index.position >= SLOT_USER_LIMIT) {
       // if worse than all in array, don't add
@@ -373,7 +457,7 @@ const actions = {
   /**
    * Finds the user with corresponding ID and then removes it from the list 
    * @param {
-   *  datetime: String or Number,
+   *  dateTime: String or Number,
    *  ID: String  
    * } removedUserData 
    * datetime must ms from Unix epoch either as String or Number
@@ -384,17 +468,20 @@ const actions = {
       state.week, 
       state.currentSelectedDay, 
       state.currentWeekStart, 
-      Number(removedUserData.datetime),
+      Number(removedUserData.dateTime),
     );
-
+  
     let userArray = state.calendarData[index.calendarIndex].hourRowDays[index.daysFromStart].matchPoolUsersForSlot;
     for (let i=0; i<userArray.length; i++) {
       if (userArray[i].metadata.ID === removedUserData.ID) {
         index.position = i;
+        console.log("@removeOneMatchPoolUserFromSlot found index position: ", i);
         break;
       }
     }
-    if (index.position) {
+    console.log("@removeOneMatchPoolUserFromSlot IDs: ", userArray, removedUserData);
+    console.log("@removeOneMatchPoolUserFromSlot index: ", index);
+    if (index.position !== "undefined") {
       commit("removeOneMatchPoolUserFromSlot", index);
       return removedUserData;
     }
@@ -418,11 +505,81 @@ const actions = {
     for (let i=0; i<data.userArray.length; i++) {
       returnArray.push(state.dispatch("addOneMatchPoolUser", {
         user: data.userArray[i],
-        datetime: data.datetimeArray[i]
+        dateTime: data.datetimeArray[i]
       }));
     }
     return returnArray;
   },
+
+
+
+  /**
+   * Adds to calendarData allMatchable people got from backend. Collects all data that needs to be set to 
+   * dataToMutation and then commits this change as a whole
+   * @param {Object} allMatchablePeople {user1ID: {user1Data: {}, dateTimes: []}, user2ID: {}...}
+   */
+  addAllMatchablePeople({state, commit}, allMatchablePeople) {
+    /* dataToMutation contains as keys dateTimes in MS and as values objects with 3 properties 
+      calendarIndex and daysFromStart -- position in calendarData
+      matchPoolArray -- Array to replace the old matchPoolArray with
+    */
+    let dataToMutation = {};
+    Object.values(allMatchablePeople).forEach(data => {
+      const dateTimes = data.dateTimes;
+      const userData = data.userData;
+      for (let i=0; i<dateTimes.length; i++) {
+        if (Object.prototype.hasOwnProperty.call(dataToMutation, dateTimes[i])) {
+          /* if already in dataToMutation */
+          dataToMutation[dateTimes[i]].matchPoolUsersForSlot = addToMatchPoolArray(
+            state.currentUserData, dataToMutation[dateTimes[i]].matchPoolUsersForSlot, userData, SLOT_USER_LIMIT
+          );
+        } else {
+          /* otherwise get current state matchpoolarray and start adding there */
+          const {success, calendarIndex, daysFromStart} = getLocationFromDatetime(
+            state.week, state.currentSelectedDay, state.currentWeekStart, dateTimes[i]
+          );
+          if (success) {
+            let currentMatchPoolArray = state.calendarData[calendarIndex].hourRowDays[daysFromStart].matchPoolUsersForSlot;
+            /* initialize dataToMutation */
+            dataToMutation[dateTimes[i]] = {
+              calendarIndex,
+              daysFromStart,
+              matchPoolUsersForSlot: addToMatchPoolArray(
+                state.currentUserData, currentMatchPoolArray, userData, SLOT_USER_LIMIT
+              )
+            };
+          }
+        }
+      }
+    });
+    console.log("@ADD ALL MATCHABLE PEOPLE Data: ", dataToMutation);
+    commit("addAllMatchablePeople", dataToMutation);
+  },
+
+  /**
+   * Adds all user matches to state
+   * @param {Object} data contains two values: 
+   * matched: key: ID, value: {userData: {}, dateTimes: []} 
+   * unmatched: [datetime1, datetime2, ...]
+   */
+  addAllMatches({commit}, data) {
+    let allMatches = {};
+    commit("clearMatchDateTimes");
+    const allUserMatches = data.matched;
+    const allUnmatched = data.unmatched;
+    for (let i=0; i<allUnmatched.length; i++) {
+      allMatches[allUnmatched[i]] = null;
+      commit("addMatchDatetime", allUnmatched[i]);
+    }
+    Object.values(allUserMatches).forEach(value => {
+      for (let i=0; i<value.dateTimes.length; i++) {
+        commit("addMatchDatetime", value.dateTimes[i]);
+        allMatches[value.dateTimes[i]] = value.userData;
+      }
+    });
+    commit("setAllUserMatches", allMatches);
+  },
+
 
   /**
    * Tries to add one user into several slots
@@ -432,13 +589,14 @@ const actions = {
    *  user: USER_SCHEMA,
    *  datetimes: [String]
    * } userData 
+   * @return {Array} Array of Promises
    */
-  addOneMultipleTimes({ dispatch }, userData) {
+  addOneUserMultipleTimes({ dispatch }, userData) {
     let returnArray = []; // not sure if necessary
     for (let i=0; i<userData.datetimes.length; i++) {
       returnArray.push(dispatch("addOneMatchPoolUser", {
         user: userData.user,
-        datetime: userData.datetimes[i]
+        dateTime: userData.datetimes[i]
       }));
     }
     return returnArray;
@@ -451,14 +609,14 @@ const actions = {
    * if 1, updates isAvailableForSelecting 
    */
   updateCalendarSlotAvailability({ state, rootState, commit }, updateType) {
-    console.log("@calendar.js: Update slot availability.", updateType);
+    // console.log("@calendar.js: Update slot availability.", updateType);
     const calendarStart = state.week ? state.currentWeekStart : state.currentSelectedDay;
     let indices = [];
     let field = "isAvailableForSelecting";
-    console.log("checkpoint: ", state.week, state.currentWeekStart, state.currentSelectedDay, calendarStart);
+    // console.log("checkpoint: ", state.week, state.currentWeekStart, state.currentSelectedDay, calendarStart);
     if (updateType == 0) {
       indices = getSelectabilityIndices(state.allUserMatchDateTimes, calendarStart);
-      console.log("@calendar.js indices 0:", indices);
+      // console.log("@calendar.js indices 0:", indices);
       field = "isAvailableForBooking";
     } else if (updateType == 1) {
       let dateTimes = [];
@@ -469,16 +627,16 @@ const actions = {
         dateTimes.push(Number(rootState.booking.selectedToBook[i]));
       }
       indices = getSelectabilityIndices(dateTimes, calendarStart);
-      console.log("@calendar.js indices 1:", indices);
+      // console.log("@calendar.js indices 1:", indices);
       field = "isAvailableForSelecting";
     }
-    console.log("@calendar.js: ", field)
-    console.log("@calendar.js: ", indices);
+    // console.log("@calendar.js: ", field)
+    // console.log("@calendar.js: ", indices);
     commit("updateCalendarSlotAvailability", {
       indices,
       field
     });
-    console.log("@calendar.js: Update slot availability: DONE: ", field, indices);
+    // console.log("@calendar.js: Update slot availability: DONE: ", field, indices);
   },
  
    /**
@@ -555,6 +713,24 @@ const actions = {
 
   setCurrentSelectedDayAsStartOfWeek(state) {
     state.commit("setCurrentSelectedDayAsStartOfWeek");
+  },
+
+  /**
+   * Gets userData (preferences etc) from Mongo
+   */
+  async setUserData({commit}) {
+    try {
+      const result = await api.REQUEST({
+        method: "get",
+        url: "/api/booking/getUserData",
+        withCredentials: true
+      })
+      if (result && result.data && result.data.success) {
+        commit("setUserData", result.data.userData);
+      }
+    } catch (error) {
+      console.log("@setUserData calendar.js error: ", error);
+    }
   },
 
   toggleWeekOrDay(state) {

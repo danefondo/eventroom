@@ -11,7 +11,9 @@ const state = {
   userId: "",
 };
 
-const getters = {};
+const getters = {
+  getUserID: (state) => state.user ? state.userId : null,
+};
 
 const mutations = {
   ready(state, isReady) {

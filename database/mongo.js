@@ -2,8 +2,8 @@ const { MongoClient } = require('mongodb');
 
 const DatabaseConfig = require("./config/DatabaseConfig");
 
-const createUpcomingSessionsCollection = require("./session/models/UpcomingSessions");
-const createPastSessionsCollection = require("./session/models/PastSessions");
+const createSessionsCollection = require("./session/models/Sessions");
+
 // https://stackoverflow.com/questions/24621940/how-to-properly-reuse-connection-to-mongodb-across-nodejs-application-and-module
 // const Users = require('./Users');
 
@@ -26,8 +26,7 @@ class Mongo {
 
     this.db = this.client.db(DatabaseConfig.DB_NAME);
 
-    this.PastSessionsController = await createPastSessionsCollection(this.db);
-    this.UpcomingSessionsController = await createUpcomingSessionsCollection(this.db);
+    this.SessionsController = await createSessionsCollection(this.db);
   }
 }
 

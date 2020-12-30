@@ -71,7 +71,7 @@
             />
             <UserSession
               v-if="
-                userHasSessionForSlot(eachHourRow, i) &&
+                userHasBookedSlot(eachHourRow, i) &&
                 !eachHourRow.hourRowDays[i].isCanceling
               "
               :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
@@ -84,6 +84,7 @@
               :sessionLink="joinSessionLink(eachHourRow, i)"
               :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
               :user="user"
+              :currentUserData="currentUserData"
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
             />
             <!-- Must only show if not selected -->
@@ -103,6 +104,7 @@
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
               v-if="eachHourRow.hourRowDays[i].isSelected"
               :user="user"
+              :currentUserData="currentUserData"
               :slotDateTime="eachHourRow.hourRowDays[i].dateTime"
               :boxHeight="getBoxHeights"
               :selectedToBook="selectedToBook"
@@ -114,6 +116,7 @@
               @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
               v-if="eachHourRow.hourRowDays[i].isCanceling"
               :user="user"
+              :currentUserData="currentUserData"
               :slotDateTime="eachHourRow.hourRowDays[i].dateTime"
               :boxHeight="getBoxHeights"
               :quickCancel="false"
@@ -169,6 +172,8 @@ export default {
   },
   props: [
     "user",
+    "currentUserData",
+    "allUserMatches",
     "selectedToBook",
     "currentlyBooking",
     "rowNumberForWeekOrDay",
@@ -227,7 +232,7 @@ export default {
         then that is why you do not here count this slot time start itself
         */
         for (let i = 0; i < this.selectedToBook.length; i++) {
-          let selectedStartTimeInMS = this.selectedToBook[i].dateTime.valueOf();
+          let selectedStartTimeInMS = this.selectedToBook[i].valueOf();
           if (
             selectedStartTimeInMS >= slotStartInMS - 3*FIFTEEN_MINUTES &&
             selectedStartTimeInMS < slotStartInMS
@@ -241,7 +246,7 @@ export default {
 
     joinSessionLink(eachHourRow, i) {
       const dateTimeMS = eachHourRow.hourRowDays[i].dateTime.valueOf();
-      const userValue = eachHourRow.hourRowDays[i][dateTimeMS];
+      const userValue = this.allUserMatches[dateTimeMS];
       if (userValue) {
         return "/session/" + userValue.sessionID;
       } 
@@ -269,15 +274,20 @@ export default {
       return isPastHour;
     },
 
-    userHasSessionForSlot(eachHourRow, i) {
-      return this.userIsMatchedForSlot(eachHourRow, i);
+    userHasBookedSlot(eachHourRow, i) {
+      const dateTimeMS = eachHourRow.hourRowDays[i].dateTime.valueOf();
+      const userValue = this.allUserMatches[dateTimeMS];
+      if (userValue || userValue === null) {
+        return true;
+      }
+      return false;
     },
     userHadMatchedSessionForSlot(eachHourRow, i) {
       return this.userIsMatchedForSlot(eachHourRow, i);
     },
     userIsMatchedForSlot(eachHourRow, i) {
       const dateTimeMS = eachHourRow.hourRowDays[i].dateTime.valueOf();
-      const userValue = eachHourRow.hourRowDays[i][dateTimeMS];
+      const userValue = this.allUserMatches[dateTimeMS];
       if (userValue) {
         return true;
       }
@@ -286,14 +296,14 @@ export default {
 
     matchedPartnerName(eachHourRow, i) {
       const dateTimeMS = eachHourRow.hourRowDays[i].dateTime.valueOf();
-      const userValue = eachHourRow.hourRowDays[i][dateTimeMS];
+      const userValue = this.allUserMatches[dateTimeMS];
       if (userValue) {
-        return userValue.metadata.displayName;
+        return userValue.metadata.username; // TODO change to displayname
       }
       return null;
     },
     bookedSessionTime(eachHourRow, i) {
-      if (this.userIsMatchedForSlot(eachHourRow, i)) {
+      if (this.userHasBookedSlot(eachHourRow, i)) {
         const sessionTime = eachHourRow.hourRowDays[i].dateTime;
         const sessionEndTime = addMinutes(sessionTime, this.interval);
         return format(sessionTime, "HH:mm")+"-"+format(sessionEndTime, "HH:mm");
@@ -312,7 +322,7 @@ export default {
     returnUnmatchedBookedPeople(eachHourRow, i, isNameOrImage) {
       if (this.matchablePeopleExist(eachHourRow, i)) {
         if (isNameOrImage == "name") {
-          return eachHourRow.hourRowDays[i].matchPoolUsersForSlot[0].metadata.displayName;
+          return eachHourRow.hourRowDays[i].matchPoolUsersForSlot[0].metadata.username; // TODO change to displayName
         } else if (isNameOrImage == "image") {
           return eachHourRow.hourRowDays[i].matchPoolUsersForSlot[0].metadata.profileImageUrl;
         } 

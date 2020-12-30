@@ -15,101 +15,64 @@
 </template>
 
 <script>
-import { requestWithAuthentication } from "../../../config/api";
+import { cancelOneSlot } from "../CalendarUtilities/calendarSocketHandlers";
 
 export default {
   name: "CancelSession",
   props: [
     "quickCancel",
+    "currentUserData",
     "calendarData",
     "user",
     "slotDateTime",
     "boxHeight",
     "sessionTime",
   ],
+  computed: {
+    matchedUserData() {
+      return this.$store.getters["calendar/getBestMatchForDatetime"](this.slotDateTime);
+    }
+  },
   methods: {
     async cancelSession() {
       let errors = {};
-      let localSession = this.$store.getters.getMatchedUserForDateTime(this.slotDateTime);
-
+      console.log("@cancelsession matchedUserData: ", this.matchedUserData);
 
       try {
-        let sendData = {
-          userId: this.user._id,
-          sessionId: localSession._id,
-        };
-        // console.log("@cancelSession, sendData: ", sendData);
-        const response = await requestWithAuthentication(
-          `post`,
-          `api/booking/cancelSession`,
-          sendData
-        );
-        // console.log("@cancelSession, response: ", response);
-        let session = response.data.result;
-        if (!session) {
-          errors.FailedToCancelSession = true;
+        const sendData = {
+          userData: this.currentUserData,
+          matchedUserData: this.matchedUserData,
+          dateTime: Number(this.slotDateTime)
+        }
+        console.log("@Cancelsession sendData: ", sendData);
+
+        const cancelResult = await cancelOneSlot(sendData);
+        if (cancelResult) {
+          this.handleSuccessfulCancel(sendData);
+        } else {
+          console.log("@cancelSession invalid response: ", cancelResult);
+          errors.FailedToCancelSessions = true;
           throw { errors: errors };
         }
-
-        if (response.data.success) {
-          this.handleSuccessfulCancel(session, localSession);
-        }
       } catch (error) {
-        console.log("@cancelSession, error: ", error);
+        console.log("errorBooking", error);
+        this.$store.dispatch("booking/setCurrentlyBooking", false);
       }
     },
 
-    // Remove from user sessions.
-    // If had a partner, add to people sessions
-
-    handleSuccessfulCancel(session, localSession) {
+    handleSuccessfulCancel(sendData) {
       this.$emit("refreshNextOrCurrentSession");
-
-      // For cancel receiver to quickly filter to the right session
-      let sessionIsEmpty = false;
-
-      let cancelData = {
-        sessionId: localSession._id,
-        sessionDateTime: localSession.dateTime,
-      };
-
-      if (session._id && session._id == localSession._id) {
-        cancelData.session = session;
-      } else if (session == 1) {
-        sessionIsEmpty = true;
-      }
-
-      this.exitIsCanceling();
-
-      this.updateCalendarDataAfterCancel(cancelData);
-
-      this.pushCancelUpdateToOthers(localSession, sessionIsEmpty, session);
-    },
-
-    updateCalendarDataAfterCancel(dataFromCancel) {
-      // TODO borken
-      /* ====== REMOVE AFFECTED USER SESSIONS ====== */
-      let removeInfo = {
-        sessionId: dataFromCancel.sessionId,
-        sessionDateTime: dataFromCancel.sessionDateTime,
-      };
-      this.$store.dispatch(
-        "calendar/removeInfoFromCalendarAfterCancel",
-        removeInfo
-      );
-
-      if (dataFromCancel.session) {
-        /* ====== ADD REMAINS TO OTHER PEOPLE SESSIONS ====== */
-        let pushInfo = { session: dataFromCancel.session };
-        this.$store.dispatch(
-          "calendar/pushInfoToCalendarAfterCancel",
-          pushInfo
-        );
-      }
-
-      this.$nextTick(function () {
-        this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
+      console.log("@handlesuccessfulcancel, data: ", sendData);
+      // not sure if needed/wanted
+      this.$store.dispatch("calendar/removeOneMatchPoolUserFromSlot", {
+        dateTime: sendData.dateTime,
+        ID: sendData.matchedUserData ? sendData.matchedUserData.metadata.ID : null
       });
+      this.$store.dispatch("calendar/removeMatchFromDateTime", sendData.dateTime);
+      console.log("match data removed!")
+      this.exitIsCanceling();
+      console.log("exited!")
+      this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
     },
 
     exitIsCanceling() {

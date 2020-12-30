@@ -144,12 +144,13 @@ async function start() {
 
   let INSTANT_MATCH_NAMESPACE = io.of("/instant_match");
   INSTANT_MATCH_NAMESPACE.on("connection", function (socket) {
-    require("./socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
+    require("./server/socket/InstantMatch")(INSTANT_MATCH_NAMESPACE, socket);
   });
 
   let CALENDAR_NAMESPACE = io.of("/calendar");
   CALENDAR_NAMESPACE.on("connection", function(socket) {
-    require("./socket/CalendarSocketController")(CALENDAR_NAMESPACE, socket);
+    const CSC = require("./server/socket/CalendarSocketController").CalendarSocketController;
+    CSC(CALENDAR_NAMESPACE, socket);
   })
 
   io.on("connection", function (socket) {
@@ -408,8 +409,8 @@ async function start() {
 
   console.log("REDIS TESTING GROUND!");
 
-  const CSC = require("./socket/CalendarSocketController");
-  CSC.tests();
+  // const CSC = require("./server/socket/CalendarSocketController");
+  // CSC.tests();
   /*
   const { InstantMatchDataController, CalendarMatchDataController } = require("./database/REDIS/redis");
 

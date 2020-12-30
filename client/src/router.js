@@ -45,7 +45,7 @@ const routes = [
   },
 
   {
-    path: "/dashboard/booking2",
+    path: "/", // TEMPORARY
     component: () => import("./pages/BookingPages2/BookingDashboard"),
     name: "BookingDashboard",
     meta: {
@@ -84,7 +84,7 @@ const routes = [
   /* ====== DASHBOARD ROUTES ====== */
 
   {
-    path: "/",
+    path: "/dashboard/booking2", // TEMPORARY
     component: () => import("./pages/LandingPages/LandingPage"),
     meta: { landingPage: true },
     name: "LandingPage",

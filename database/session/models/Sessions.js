@@ -2,7 +2,7 @@
  * MUST BE EXPORTED JUST ONCE from mongo.js AND FROM NOWHERE ELSE
  * 
  * 
- * This file contains definition and initialization for PastSessions collection. 
+ * This file contains definition and initialization for UpcomingSessions collection. 
  * 
  * Methods:
  * init() -- initialization. Ensures that proper indexes are set. Returns the controller
@@ -14,8 +14,8 @@
 /* This is not used (atm), just for reference */ 
 const SCHEMA = {
   
-  // REQUIRED FIELDS
-  datetime: String,
+  // REQUIRED and INDEXED FIELDS 
+  dateTime: Date,
 
   user1_ID: String,
   user2_ID: String,
@@ -43,34 +43,15 @@ const SCHEMA = {
 
   user1Timestamps: Array,
   user2Timestamps: Array,
-  user1Attendance: {
-    joinedOnce: Boolean, 
-    joinedDuringSession: Boolean,
-    wasLate: Boolean,
-    wasEarly: Boolean,
-    latenessInMS: Number,
-    earlinessInMS: Number,
-    attendanceSuccessful: Number, 
-  },
-
-  user2Attendance: {
-    joinedOnce: Boolean, 
-    joinedDuringSession: Boolean,
-    wasLate: Boolean,
-    wasEarly: Boolean,
-    latenessInMS: Number,
-    earlinessInMS: Number,
-    attendanceSuccessful: Number, 
-  },
 }
 
-
-const INDEXED_KEYS = [["datetime",1], ["user1_ID",1], ["user2_ID",1]];
+const INDEXED_KEYS = [["datetime",-1], ["user1_ID",1], ["user2_ID",1]];
 const INDEX_OPTIONS = [{ unique: false }, { unique: false }, { unique: false }];
-class PastSessions {
+
+class Sessions {
   constructor (db) {
-    this.collection = db.collection("pastsessions");
-    this.controller = require("../controllers/PastSessionsController")(this.collection);
+    this.collection = db.collection("sessions");
+    this.controller = require("../controllers/SessionsController")(this.collection);
   }
 
   async init() {
@@ -82,6 +63,7 @@ class PastSessions {
         if (indexes.length <= 1) {
           console.log("creating indexes....")
           for (let i=0; i<INDEXED_KEYS.length; i++) {
+            console.log("indexing: ", INDEXED_KEYS[i], INDEX_OPTIONS[i]);
             await self.collection.createIndex([INDEXED_KEYS[i]], INDEX_OPTIONS[i]);
           }
         }
@@ -89,7 +71,7 @@ class PastSessions {
         // console.log("indexes after: ", newIndexes);
         resolve(self.controller);
       } catch (error) {
-        console.log("Error at initialization of past session: ", error);
+        console.log("Error at initialization of upcoming session: ", error);
         reject();
       }
     })
@@ -98,9 +80,9 @@ class PastSessions {
   
 }
 
-function createPastSessionsCollection(db) {
-  let collection = new PastSessions(db);
+function createSessionsCollection(db) {
+  let collection = new Sessions(db);
   return collection.init();
 }
 
-module.exports = createPastSessionsCollection;
+module.exports = createSessionsCollection;

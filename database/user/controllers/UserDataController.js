@@ -169,9 +169,56 @@ const UserDataController = {
   },
   async getUserByVerificationToken(verificationToken) {
     return await User.findOne({ verificationToken }).exec();
+  },
+
+  async getOneUserData(userID) {
+    
+    const result = await User.findById(userID)
+      .select({
+        "username": 1,
+        "displayName": 1,
+        "profileImage.fileUrl": 1,
+      }).exec();
+    // formatting so that it fits with Redis
+    if (result) {
+      console.log("@getuserdata result: ", result);
+      return {
+        metadata: {
+          ID: userID,
+          username: result.username,
+          displayName: result.displayName,
+          profileImageUrl: result.profileImage.fileUrl,
+        }
+      }
+    }
+    // if (userID.match(/^[0-9a-fA-F]{24}$/)) {}
+    return null;
+  },
+
+  async getManyUserData(userIDArray) {
+    const result = await User.find({'_id': {$in: userIDArray}})
+      .select({
+        "_id": 1,
+        "username": 1,
+        "displayName": 1,
+        "profileImage.fileUrl": 1,
+      }).exec();
+    if (result) {
+      console.log("@getmanyuserdata result: ", result);
+      let returnArray = [];
+      for (let i=0; i<result.length; i++) {
+        returnArray.push({
+          metadata: {
+            ID: result[i]._id,
+            username: result[i].username,
+            displayName: result.displayName,
+            profileImageUrl: result.profileImage ? result.profileImage.fileUrl : null,
+          }
+        });
+      }
+      return returnArray;
+    }
   }
-
-
 }
 
 module.exports = UserDataController;

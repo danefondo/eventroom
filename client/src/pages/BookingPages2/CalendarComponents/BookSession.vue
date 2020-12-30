@@ -12,8 +12,7 @@
 </template>
 
 <script>
-import { bookSlots } from "../CalendarUtilities/calendarSocketHandlers";
-import { convertBookSession } from "../CalendarUtilities/dataconverter";
+import { bookOneSlot } from "../CalendarUtilities/calendarSocketHandlers";
 
 export default {
   name: "BookSession",
@@ -21,11 +20,17 @@ export default {
     "slotHasPerson",
     "slotPerson",
     "user",
+    "currentUserData",
     "slotDateTime",
     "boxHeight",
     "selectedToBook",
     "currentlyBooking",
   ],
+  computed: {
+    matchedUserData() {
+      return this.$store.getters["calendar/getBestMatchForDatetime"](this.slotDateTime);
+    }
+  },
 
   methods: {
     async bookSession() { // eslint-disable-line no-unused-vars
@@ -35,27 +40,20 @@ export default {
       if (this.selectedToBook.length < 1) return;
       try {
         this.$store.dispatch("booking/setCurrentlyBooking", true);
-        console.log("here");
+        console.log("STARTING BOOKING");
         const sendData = {
-          datetimes: this.slotDateTime.valueOf(),
-          ID: this.user._id,
-          preferences: null,
-          preferenceData: null,
-          metaData: {
-            profileImageUrl: this.user.profileImageUrl,
-            username: this.user.username,
-            displayName: this.user.displayName,
-          }
+          userData: this.currentUserData,
+          matchedUserData: this.matchedUserData,
+          dateTime: Number(this.slotDateTime)
         }
+        console.log("@BookSession sendData: ", sendData);
         
-        const sessions = await bookSlots(sendData);
-        console.log("@booksession received sessions: ", sessions);
-        if (sessions && sessions.length === 1) {
-          console.log("converted session: ", convertBookSession(sessions[0], this.user));
-          this.handleSuccessfulBooking(convertBookSession(sessions[0]));
-          return;
+        const bookingResult = await bookOneSlot(sendData);
+        console.log("@booksession bookingResult: ", bookingResult);
+        if (bookingResult) {
+          this.handleSuccessfulBooking(sendData);
         } else {
-          console.log("@booksession invalid response: ", sessions);
+          console.log("@booksession invalid response: ", bookingResult);
           errors.FailedToBookSession = true;
           throw { errors: errors };
         }
@@ -65,40 +63,22 @@ export default {
       }
     },
 
-    handleSuccessfulBooking(session) {
+    handleSuccessfulBooking(sendData) {
       this.$emit("refreshNextOrCurrentSession");
-      console.log("@handlesuccessfulbooking session: ", typeof(session), session);
-      let pushData = {
-        session,
-        userId: this.user._id,
-      };
 
       // Add to calendar after booking
-      this.$store.dispatch("calendar/pushOneCalendarSession", pushData);
+      this.$store.dispatch("calendar/setMatchForDatetime", {
+        user: sendData.matchedUserData,
+        dateTime: sendData.dateTime
+      });
 
       this.$store.dispatch("booking/setCurrentlyBooking", false);
 
       this.$nextTick(() => {
-        this.pushBookingUpdateToOthers(session); // TODO to remove since unnecessary and handled already
         this.$store.dispatch("calendar/updateCalendarSlotAvailability", 0);
-
         // Must be last or component is destroyed before
         this.cancelSlot();
       });
-    },
-
-    pushBookingUpdateToOthers(session) {
-      //   Prepare data for socket
-      let sessions = [];
-      sessions.push(session);
-
-      let sessionInfo = {
-        userId: this.user._id,
-        sessions: sessions,
-        roomType: "cofocus",
-      };
-
-      this.$socket.emit("pushSessionsToOthers", sessionInfo);
     },
 
     /* Clear single selection */

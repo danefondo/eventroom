@@ -2,6 +2,7 @@
   <div class="cofocus">
     <div class="wrapper">
       <div class="calendar-container">
+        <button @click="printRedis">print redis</button>
         <div class="calendar">
           <Switcher
             v-if="weekStartDay && weekEndDay && currentWeekStart"
@@ -18,6 +19,8 @@
           <Table
             v-if="weekDates && weekStartDay && weekEndDay"
             :user="user"
+            :currentUserData="currentUserData"
+            :allUserMatches="allUserMatches"
             :selectedToBook="selectedToBook"
             :currentlyBooking="currentlyBooking"
             :rowNumberForWeekOrDay="rowNumberForWeekOrDay"
@@ -66,7 +69,7 @@ Welcome to Cofocus.
 
  */
 
-import { requestWithAuthentication } from "../../config/api";
+import api from "../../api/cofocusAPI";
 import { mapState } from "vuex";
 import TimerManager from "../../components/TimerManager";
 import {
@@ -84,13 +87,13 @@ import {
   startOfISOWeek,
   endOfISOWeek,
   isSameWeek,
-  startOfDay,
 } from "date-fns";
 
-// import { 
-//   initializeSocket,
-//   closeSocket,
-// } from "./CalendarUtilities/calendarSocketHandlers";
+import { 
+  initializeSocket,
+  closeSocket,
+  printRedis,
+} from "./CalendarUtilities/calendarSocketHandlers";
 
 export default {
   name: "BookingDashboard",
@@ -113,6 +116,8 @@ export default {
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
       isVerified: (state) => state.auth.verificationStatus,
+      currentUserData: (state) => state.calendar.currentUserData,
+      allUserMatches: (state) => state.calendar.allUserMatches,
 
       calendarData: (state) => state.calendar.calendarData,                     // cleaned
       weekDates: (state) => state.calendar.weekDates,                           // cleaned
@@ -158,7 +163,8 @@ export default {
   created() {
     // console.log("@Step 1: Render calendar structure.");
     this.initWeekCalendar();
-
+    initializeSocket();
+    this.$store.dispatch("calendar/setUserData");
     // console.log("@Step 4: Setup cleaning for when you leave.");
     let globalThis = this;
     window.onbeforeunload = () => {
@@ -173,10 +179,13 @@ export default {
     );
   },
   methods: {
+    printRedis() {
+      printRedis();
+    },
     cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       this.sockets.unsubscribe("receivePushedSessions");
       this.sockets.unsubscribe("receiveCanceledSessions");
-      // closeSocket();
+      closeSocket();
       // this.resetData();
       clearInterval(this.databaseSyncTimer);
       if (fromBeforeLeave && next !== null) {
@@ -201,42 +210,45 @@ export default {
     async getAllBookedUsersForSpecificWeek(refresh = false, day = false) {
       try {
         if (!this.user || !this.user._id) {
-          return (window.location.href = "/");
+          return (window.location.href = "/"); // shouldnt we use router?
         }
         this.gettingAllBookedSessions = true;
 
-        let query = "getAllBookedUsersForSpecificWeek";
-        let dataToPass = { userId: this.user._id };
-
+        let upcomingStart, upcomingEnd;
         if (day) {
-          query = "getBookedSessionsForOneDay";
-          dataToPass.startOfDay = startOfDay(this.currentSelectedDay);
-          dataToPass.endOfDay = endOfDay(this.currentSelectedDay);
+          // to find late but still ongoing sessions if any subtract 50 min
+          upcomingStart = Math.max(Date.now()-50*60*1000, this.currentSelectedDay); 
+          upcomingEnd = endOfDay(this.currentSelectedDay).valueOf();
         } else {
-          let startOfWeekDate = this.currentWeekStart;
-          dataToPass.startOfWeekDate = startOfWeekDate;
-          let endOfWeekDate = new Date(this.currentWeekStart.valueOf());
-          dataToPass.endOfWeekDate = endOfISOWeek(endOfWeekDate);
+          upcomingStart = Math.max(Date.now()-50*60*1000, this.currentWeekStart);
+          upcomingEnd = endOfISOWeek(this.currentWeekStart).valueOf();
         }
-
-        const response = await requestWithAuthentication(
-          `post`,
-          `/api/booking/${query}`,
-          dataToPass
-        );
-
-        let allBookedSessions = response.data.result;
-        if (!allBookedSessions)
+        console.log("@getallbookedusers: ", upcomingStart, upcomingEnd, Date.now());
+        console.log("@getallbookedusers start: ", new Date(upcomingStart));
+        console.log("@getallbookedusers end: ", new Date(upcomingEnd));
+        const upcomingResponse = await api.REQUEST( {
+          method: "get",
+          url: "/api/booking/getUpcomingBookedSessionRange",
+          withCredentials: true,
+          params: {
+            start: upcomingStart, 
+            end: upcomingEnd
+          }
+        });
+        console.log("@getallbookedusers: response: ", upcomingResponse)
+        let result = upcomingResponse.data;
+        if (!result)
           throw new Error("Failed to fetch general sessions.");
 
         // console.log("sessionsALLBOOKEDPEOPLE", allBookedSessions);
 
-        if (response.data.success) {
+        if (result.success) {
           this.gettingAllBookedSessions = false;
           // console.log(refresh);
-
+          this.$store.dispatch("calendar/addAllMatches", {matched: result.matched, unmatched: result.unmatched});
+          this.$store.dispatch("calendar/addAllMatchablePeople", result.allMatchablePeople);
           if (refresh) {
-            this.iterativeRefreshCalendarSessions(allBookedSessions);
+            this.iterativeRefreshCalendarSessions(result);
           } else {
             console.log("response successful")
             // let updateData = {

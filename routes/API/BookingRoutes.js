@@ -1,5 +1,6 @@
 const Express = require("express");
 const BookingController = require("../../server/bookingCalendar/controllers/BookingController");
+const { AuthController } = require('../../server/auth/controllers/AuthController');
 
 const router = Express.Router();
 
@@ -17,6 +18,9 @@ router.post("/cancelCalendarSlot", BookingController.cancelCalendarSlot);
 /* Cancel a booked session */
 router.post("/cancelSession", BookingController.cancelSession);
 
+router.get("/getUpcomingBookedSessionRange", AuthController.confirmAuthentication, BookingController.getUpcomingBookedSessionRange);
+
+router.get("/getUserData", AuthController.confirmAuthentication, BookingController.returnUserData);
 /* Get all user's booked sessions */
 /* UNUSED */
 router.post(

@@ -10,6 +10,12 @@ const DATE_ACCURACY_MS = DATE_ACCURACY * 60000;
 const NOREMATCH = "_nore_";
 const NORE_LENGTH = NOREMATCH.length;
 
+const USER_IDENTIFIER = "user:";
+const USER_IDENTIFIER_LENGTH = USER_IDENTIFIER.length;
+
+/* ================================================================================ */
+/* MATCHING */
+
 /**
  * Accepts Javascript date object as string and returns date up to accuracy of DATE_ACCURACY minute. 
  * Maybe in future set it to accuracy of 1 minute or more idk idc
@@ -43,6 +49,15 @@ const unparseMatchedValue = (value) =>
   {rematchAllowed: false, ID: value.slice(NORE_LENGTH)} :
   {rematchAllowed: true, ID: value};
   
+/* ================================================================================ */
+/* User data cache */
+
+/* returns key from userID */
+const parseToUserKey = userID => USER_IDENTIFIER+userID;
+
+/* returns userID from key */
+const unparseUserKey = key => key.slice(USER_IDENTIFIER_LENGTH);
+
 
 module.exports = {
   parseToMatched,
@@ -50,5 +65,7 @@ module.exports = {
   unparseMatched,
   unparseUnmatched,
   parseToMatchedValue,
-  unparseMatchedValue
+  unparseMatchedValue,
+  parseToUserKey,
+  unparseUserKey,
 }

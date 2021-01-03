@@ -218,7 +218,7 @@ const actions = {
     let userArray = state.calendarData[dateTimeMS].matchPoolUsersForSlot;
     const position = getPositionInMatchPoolArray(state.currentUserData, userArray, userData, SLOT_USER_LIMIT);
 
-    if (index.position >= SLOT_USER_LIMIT) {
+    if (position >= SLOT_USER_LIMIT) {
       // if worse than all in array, don't add
       return null;
     }
@@ -261,10 +261,7 @@ const actions = {
    * @param {Object} allMatchablePeople {user1ID: {user1Data: {}, dateTimes: []}, user2ID: {}...}
    */
   addAllMatchablePeople({state, commit}, allMatchablePeople) {
-    /* dataToMutation contains as keys dateTimes in MS and as values objects with 3 properties 
-      calendarIndex and daysFromStart -- position in calendarData
-      matchPoolArray -- Array to replace the old matchPoolArray with
-    */
+
     let newMatchPool = {};
     Object.keys(allMatchablePeople).forEach(key => {
       const {userData, dateTimes} = allMatchablePeople[key];

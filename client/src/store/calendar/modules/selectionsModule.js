@@ -60,16 +60,6 @@ const actions = {
     state.commit("SET_CURRENTLY_BOOKING", newState);
   },
   /* Removes all selections in the past */
-  removeSelectionsInThePast({state, commit}) {
-    let firstIndexInFuture = 0;
-    for (let i=0; i<state.selectedToBook.length; i++) {
-      if (state.selectedToBook[i] > Date.now()) {
-        firstIndexInFuture = i;
-        break;
-      }
-    }
-    commit("SET_ALL_SELECTIONS", state.selectedToBook.slice(firstIndexInFuture));
-  },
   selectSlot(state, slotDateTimeMS) {
     state.commit("SELECT_SLOT_TO_BOOK", slotDateTimeMS);
   },

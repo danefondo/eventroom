@@ -51,8 +51,8 @@ export const generateCalendarData = (configurationData) => {
   console.log("calendarStartDate: ", new Date(calendarStartDateMS));
   console.log("calendarStartDateMS: ", calendarStartDateMS)
   for (let i=0; i<nrSlots; i++) {
-    const currentDate = calendarStartDateMS + i*SLOT_INTERVAL_MS;
-    calendarData[currentDate] = initialSlotData();
+    const currentDateMS = calendarStartDateMS + i*SLOT_INTERVAL_MS;
+    calendarData[currentDateMS] = initialSlotData();
   }
   console.log("@GENERATE CALENDAR: ", calendarData);
   return calendarData;

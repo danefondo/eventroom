@@ -43,8 +43,8 @@ function validateUpcomingRangeRequest(start, end) {
 
 /**
  * Gets matchable people in given range
- * @param {Number} start 
- * @param {Number} end 
+ * @param {Number} start - ms 
+ * @param {Number} end  - ms
  * @param {String} userID -- userID who requested the data
  * @return {
  *  allMatchablePeople -- {Object} key: userID, value {userData, dateTimes}

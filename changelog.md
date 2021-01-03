@@ -7,7 +7,7 @@ router.js
 - added require for verification & changed next calling flow
 
 auth.js store
-- added isVerified to vuex
+- added verificationStatus to vuex
 
 auth.js api
 - added verificationStatus to parseAuthenticationResponse function

@@ -17,22 +17,18 @@ const getDefaultState = () => {
     sessionHasStarted: null,
     sessionHasFinished: null,
     nextSessionIsTenMinToStart: false,
-    sessionStartedLessThanFiveMinAgo: false,
+    sessionStartedTwoMinAgo: false,
 
     /* User session status states */
-    userHasJoinedSessionOnceDuring: false,
-    userIsCurrentlyInSession: false,
-
-    /* Session partner status states */
-    sessionMatchIsPresent: false,
+    hasJoinedDuringSession: false,
+    isCurrentlyInSession: false,
 
     /* Status of checks done before session */
     didNextSessionOneMinCheck: false,
     didNextSessionTenMinCheck: false,
     didSessionFinishedCheck: false,
     didSessionStartedCheck: false,
-
-    didNextSessionLateCheck: false,
+    didTwoMinIntoSessionCheck: false,
 
     /* Times before and after session start time in MS (full datetime in MS) */
     oneMinToStartInMS: 0,

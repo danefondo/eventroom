@@ -28,3 +28,5 @@ npm run dev
 - chat icon: https://www.flaticon.com/free-icon/chat_876170
 - group icon: https://www.flaticon.com/premium-icon/group_3394785
 - down arrow: https://www.flaticon.com/premium-icon/down-arrow_2989989
+- refresh icon: https://www.flaticon.com/free-icon/refresh_545661
+- preferences icon: https://www.flaticon.com/premium-icon/settings_3185894

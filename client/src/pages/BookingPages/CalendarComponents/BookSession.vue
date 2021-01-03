@@ -51,6 +51,8 @@ export default {
         sendData.lastName = this.user.lastName;
         sendData.displayName = this.user.displayName;
         sendData.profileImageUrl = this.user.profileImageUrl;
+        
+        sendData.preferences = this.user.preferences;
         // console.log("@bookSession, sendData: ", sendData);
         const response = await requestWithAuthentication(
           `post`,
@@ -134,86 +136,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-.selected-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: absolute;
-  width: 100%;
-
-  z-index: 999;
-}
-
-.selected-info {
-  background-color: #eef1f3;
-  border-radius: 4px;
-  height: 95%;
-  width: 95%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-
-.unmatched-title {
-  position: absolute;
-  /* left: 40px; */
-  left: 45px;
-  font-size: 18px;
-  color: #343556;
-
-  z-index: 999;
-}
-
-.book-person {
-  top: 30px;
-  left: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  box-sizing: border-box;
-  width: 100px;
-  text-align: left;
-}
-
-.selected-book {
-  position: absolute;
-  left: 10px;
-  bottom: 5px;
-  padding: 2px 12px;
-  border-radius: 360px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background-color: #ebecfb;
-  color: #5600ff;
-  font-size: 17px;
-  outline: none;
-  border: none;
-}
-
-.selected-book:hover {
-  background-color: #b4b8b9;
-}
-
-.selected-close {
-  position: absolute;
-  right: 5px;
-  top: 5px;
-  width: 16px;
-  height: 16px;
-  border-radius: 360px;
-  display: flex;
-  box-sizing: border-box;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-align: center;
-}
-
-.selected-close:hover {
-  background-color: #dcdfe0;
-}
-</style>

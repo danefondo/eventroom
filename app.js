@@ -1,6 +1,7 @@
 /* ====== IMPORT MODULES ====== */
 
-const SessionModel = require("./database/booking/models/SessionModel");
+// const SessionModel = require("./database/booking/models/SessionModel");
+// const UserModel = require("./database/user/models/UserModel");
 
 const Express = require("express");
 const Mongoose = require("mongoose");
@@ -104,6 +105,86 @@ app.get("*", function (req, res) {
 
 // SessionModel.deleteMany({}).exec();
 
+// let preferences = {
+//   theme: "light",
+
+//   general: {
+//     directMatchRequests: false,
+//   },
+
+//   matchingPreferences: {
+//     workType: {
+//       preference: 0,
+//       priority: 0,
+//     },
+//     microphone: {
+//       preference: 0,
+//       priority: 1,
+//     },
+//     screenshare: {
+//       preference: 0,
+//       priority: 2,
+//     },
+//   },
+
+//   preferPeopleFromLists: false,
+//   preferPeopleFromGroups: false,
+//   preferSimilarActivity: false,
+
+//   calendarPreferences: {
+//     prefer24HourFormat: false,
+//     preferRealTimeUpdates: true,
+//     rematchingEnabled: true,
+//   },
+//   // Session preferences
+//   sessionNotifications: [
+//     {
+//       notificationSound: "default",
+//       // notificationInterval: String,
+//       // notificationMessage: String,
+//     },
+//   ],
+// };
+
+// function addPrefs() {
+//   // UserModel.update({}, { $set: { preferences: preferences } });
+
+//   UserModel.find()
+//     .then((allUsers) => {
+//       allUsers.forEach((user) => {
+//         //create two new fields in each schema
+//         user.preferences = preferences;
+//         //save the schema we updated
+//         user.save();
+//       });
+//     })
+//     .catch((errors) => {
+//       return res.status(400).json({ nomoviesfound: "could not find movies" });
+//     });
+// }
+
+// addPrefs();
+
+// function removeCrap() {
+//   // UserModel.update({}, { $set: { preferences: preferences } });
+
+//   UserModel.find()
+//     .then((allUsers) => {
+//       allUsers.forEach((user) => {
+//         //create two new fields in each schema
+//         user.sessions = undefined;
+//         user.lastTwentySessions = undefined;
+//         user.bookedSessionTimes = undefined;
+//         //save the schema we updated
+//         user.save();
+//       });
+//     })
+//     .catch((errors) => {
+//       return res.status(400).json({ nomoviesfound: "could not find movies" });
+//     });
+// }
+
+// removeCrap();
 
 /* ====== SERVER SETUP ====== */
 
@@ -122,12 +203,10 @@ var io = require("socket.io").listen(server);
 
 /* ====== SOCKET.IO FUNCTIONS ====== */
 
-
 let INSTANT_MATCH_NSP = io.of("/instant_match");
 INSTANT_MATCH_NSP.on("connection", function (socket) {
   require("./socket/InstantMatch")(INSTANT_MATCH_NSP, socket);
 });
-
 
 io.on("connection", function (socket) {
   console.log("this user is connected");

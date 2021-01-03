@@ -1,8 +1,9 @@
 <template>
   <div :class="$route.meta.landingPage ? 'landing-container' : 'app-container'">
     <Nav v-if="!$route.meta.hideNavigation" />
+    <Modal v-if="preferenceSettingsOpen" type="PreferenceSettings" />
     <!-- Do not show this timer in Calendar & Session pages -->
-    <InstantMatch />
+    <!-- <InstantMatch /> -->
 
     <!-- <TimerManager parentName="app" v-if="user && isAuthenticated && !$route.meta.customTimer" /> -->
     <div
@@ -18,14 +19,15 @@
 <script>
 import { mapState } from "vuex";
 import Nav from "./components/Nav";
-import InstantMatch from "./matching/InstantMatch.vue";
+// import InstantMatch from "./matching/InstantMatch.vue";
 // import TimerManager from "./components/TimerManager";
 
 export default {
   name: "App",
   components: {
     Nav,
-    InstantMatch,
+    Modal: () => import(/* webpackPrefetch: true */ "./components/Modal.vue"),
+    // InstantMatch,
     // TimerManager,
   },
   mounted() {
@@ -36,6 +38,9 @@ export default {
     ...mapState({
       user: (state) => state.auth.user,
       isAuthenticated: (state) => state.auth.authenticationStatus,
+
+      preferenceSettingsOpen: (state) =>
+        state.cofocusPreferences.preferenceSettingsOpen,
     }),
   },
 };

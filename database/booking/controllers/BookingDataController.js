@@ -205,6 +205,8 @@ const BookingDataController = {
           canceledSession.firstPartnerLastName = undefined;
           canceledSession.firstPartnerDisplayName = undefined;
           canceledSession.firstPartnerProfileImageUrl = undefined;
+
+          canceledSession.firstPartnerPreferences = undefined;
         } else if (canceledSession.secondPartnerId == userId) {
           canceledSession.secondPartnerId = undefined;
           canceledSession.secondPartnerUsername = undefined;
@@ -213,6 +215,8 @@ const BookingDataController = {
           canceledSession.secondPartnerLastName = undefined;
           canceledSession.secondPartnerDisplayName = undefined;
           canceledSession.secondPartnerProfileImageUrl = undefined;
+
+          canceledSession.secondPartnerPreferences = undefined;
         }
 
         await canceledSession.save();
@@ -377,6 +381,11 @@ const BookingDataController = {
             userId,
             username,
             partnerId,
+            firstName: sessionData.firstName,
+            lastName: sessionData.lastName,
+            displayName: sessionData.displayName,
+            profileImageUrl: sessionData.profileImageUrl,
+            preferences: sessionData.preferences,
           };
           returnSession = await BookingDataController.matchWithExistingSession(
             matchingData
@@ -421,6 +430,8 @@ const BookingDataController = {
     let profileImageUrl = requestData.profileImageUrl;
     let slotsToBookArray = requestData.slotsToBookArray;
     let slotsToBookTimesArray = requestData.slotsToBookTimesArray;
+
+    let preferences = requestData.preferences;
 
     // Prepare data arrays
     let matchedBookedSessions = [];
@@ -519,6 +530,11 @@ const BookingDataController = {
             slotsWithFoundMatches: slotsWithFoundMatches,
             userId: userId,
             username: username,
+            firstName: requestData.firstName,
+            lastName: requestData.lastName,
+            displayName: requestData.displayName,
+            profileImageUrl: requestData.profileImageUrl,
+            preferences: requestData.preferences,
           };
           // Match all sessions with found matches
           let matchingResult = await BookingDataController.matchManySessions(
@@ -558,6 +574,7 @@ const BookingDataController = {
           lastName,
           displayName,
           profileImageUrl,
+          preferences,
         };
         // Create new sessions for all slots remaining that did not find a match
         unmatchedBookedSessions = await BookingDataController.createAndBookManySessions(
@@ -595,6 +612,7 @@ const BookingDataController = {
   },
 
   async matchManySessions(matchingData) {
+    console.log("MATCHING DATA", matchingData);
     let returnData = {};
     let errors = {};
     let userId = matchingData.userId;
@@ -604,6 +622,9 @@ const BookingDataController = {
     let displayName = matchingData.displayName;
     let profileImageUrl = matchingData.profileImageUrl;
     let slotsWithFoundMatches = matchingData.slotsWithFoundMatches;
+
+    let preferences = matchingData.preferences;
+
     let sessionsNoLongerFoundIds = [];
     // let sessionsNoLongerFound = [];
     let slotsWithNoLongerFoundSession = [];
@@ -655,6 +676,8 @@ const BookingDataController = {
                   session.secondPartnerLastName = lastName;
                   session.secondPartnerDisplayName = displayName;
                   session.secondPartnerProfileImageUrl = profileImageUrl;
+
+                  session.secondPartnerPreferences = preferences;
                 } else if (session.secondPartnerId) {
                   session.firstPartnerId = userId;
                   session.firstPartnerUsername = username;
@@ -663,6 +686,8 @@ const BookingDataController = {
                   session.firstPartnerLastName = lastName;
                   session.firstPartnerDisplayName = displayName;
                   session.firstPartnerProfileImageUrl = profileImageUrl;
+
+                  session.firstPartnerPreferences = preferences;
                 }
                 await session.save();
                 matchedBookedSessions.push(session);
@@ -712,14 +737,18 @@ const BookingDataController = {
     let errors = {};
 
     try {
+      let sessionToMatch = matchingData.sessionToMatch;
       let userId = matchingData.userId;
       let username = matchingData.username;
+      let partnerId = matchingData.partnerId;
+
       let firstName = matchingData.firstName;
       let lastName = matchingData.lastName;
       let displayName = matchingData.displayName;
       let profileImageUrl = matchingData.profileImageUrl;
-      let partnerId = matchingData.partnerId;
-      let sessionToMatch = matchingData.sessionToMatch;
+
+      let preferences = matchingData.preferences;
+
       let sessionId = sessionToMatch._id;
       let query = { _id: sessionId };
 
@@ -740,6 +769,8 @@ const BookingDataController = {
         returnSession.secondPartnerLastName = lastName;
         returnSession.secondPartnerDisplayName = displayName;
         returnSession.secondPartnerProfileImageUrl = profileImageUrl;
+
+        returnSession.secondPartnerPreferences = preferences;
       } else if (returnSession.secondPartnerId == partnerId) {
         // Set yourself as the other partner;
         returnSession.firstPartnerId = userId;
@@ -749,6 +780,8 @@ const BookingDataController = {
         returnSession.firstPartnerLastName = lastName;
         returnSession.firstPartnerDisplayName = displayName;
         returnSession.firstPartnerProfileImageUrl = profileImageUrl;
+
+        returnSession.firstPartnerPreferences = preferences;
       } else {
         // Throw error and create new session instead
         returnSession = {
@@ -805,6 +838,9 @@ const BookingDataController = {
         firstPartnerLastName: lastName,
         firstPartnerDisplayName: displayName,
         firstPartnerProfileImageUrl: profileImageUrl,
+
+        firstPartnerPreferences: sessionData.preferences,
+
         sessionInterval: sessionData.sessionInterval,
         dateTime: sessionData.dateTime,
       });
@@ -860,6 +896,9 @@ const BookingDataController = {
           firstPartnerLastName: lastName,
           firstPartnerDisplayName: displayName,
           firstPartnerProfileImageUrl: profileImageUrl,
+
+          firstPartnerPreferences: userData.preferences,
+
           sessionInterval: slot.sessionInterval,
           dateTime: slot.dateTime,
         });

@@ -3,8 +3,7 @@ const UserModel = require("../../user/models/UserModel");
 
 const {
   setTotalTimeInSession,
-  setPartnerJoinedOnce,
-  setPartnerJoinedDuringSession,
+  setPartnerJoinedStates,
   setPartnerLateness,
   setPartnerEarliness,
   setSessionToFinished,
@@ -80,8 +79,6 @@ const SessionDataController = {
 
     /* 
     ====== FIELDS TO UPDATE ====== 
-    - partnerJoinedOnce
-    - partnerJoinedOnceDuringSession
     - partnerJoinedFiveMinFromStart
     - partnerWasLate
 
@@ -102,11 +99,45 @@ const SessionDataController = {
 
     let session = await SessionDataController.getSessionById(sessionId);
 
-    if (session.firstPartnerId == userId) {
-      session["firstPartnerSessionData"].partnerTimestamps.push(joinTimestamp);
-    } else if (session.secondPartnerId == userId) {
-      session["secondPartnerSessionData"].partnerTimestamps.push(joinTimestamp);
+    let timestampInMS = new Date(joinTimestamp.timestamp).valueOf();
+
+    let sessionStartInMS = new Date(session.dateTime).valueOf();
+    let tenBeforeStartInMS = sessionStartInMS - 10 * 60 * 1000;
+
+    let sessionIntervalInMS = session.sessionInterval * 60 * 1000;
+    let sessionEndInMS = sessionStartInMS + sessionIntervalInMS;
+
+    let joinedDuring = false;
+    let joinedBefore = false;
+
+    if (timestampInMS >= sessionStartInMS && timestampInMS < sessionEndInMS) {
+      joinedDuring = true;
+    } else if (
+      timestampInMS < sessionStartInMS &&
+      timestampInMS >= tenBeforeStartInMS
+    ) {
+      joinedBefore = true;
     }
+
+    let partner = "";
+    if (session.firstPartnerId == userId) {
+      partner = "firstPartnerSessionData";
+    } else if (session.secondPartnerId == userId) {
+      partner = "secondPartnerSessionData";
+    }
+
+    let partnerData = session[partner];
+    partnerData.partnerTimestamps.push(joinTimestamp);
+
+    if (!partnerData.hasJoinedDuringSession && joinedDuring) {
+      partnerData.hasJoinedDuringSession = true;
+    }
+
+    if (!partnerData.hasJoinedBeforeSession && joinedBefore) {
+      partnerData.hasJoinedBeforeSession = true;
+    }
+
+    partnerData.isCurrentlyInSession = true;
 
     await session.save();
 
@@ -119,13 +150,18 @@ const SessionDataController = {
 
     let session = await SessionDataController.getSessionById(sessionId);
 
+    let partner = "";
     if (session.firstPartnerId == userId) {
-      session["firstPartnerSessionData"].partnerTimestamps.push(leaveTimestamp);
+      partner = "firstPartnerSessionData";
     } else if (session.secondPartnerId == userId) {
-      session["secondPartnerSessionData"].partnerTimestamps.push(
-        leaveTimestamp
-      );
+      partner = "secondPartnerSessionData";
     }
+
+    let partnerData = session[partner];
+
+    partnerData.partnerTimestamps.push(leaveTimestamp);
+
+    partnerData.isCurrentlyInSession = false;
 
     await session.save();
 
@@ -191,9 +227,7 @@ const SessionDataController = {
     // Set timestamps
     let timestamps = session[partner].partnerTimestamps;
 
-    session = setPartnerJoinedOnce(timestamps, session, partner);
-
-    session = setPartnerJoinedDuringSession(timestamps, session, partner);
+    session = setPartnerJoinedStates(timestamps, session, partner);
 
     session = setTotalTimeInSession(timestamps, session, partner);
 
@@ -220,7 +254,7 @@ const SessionDataController = {
 
     await SessionDataController.updateAttendanceScore(userId, partner);
 
-    if (!session[partner].partnerJoinedDuringSession) {
+    if (!session[partner].hasJoinedDuringSession) {
       // Partner never joined, cancel their next 3 sessions
       await SessionDataController.cancelNextThreeUserSessions(userId);
     }

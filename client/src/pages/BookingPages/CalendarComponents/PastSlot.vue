@@ -1,6 +1,6 @@
 <template>
   <div class="relative">
-    <div class="past-container">
+    <div class="past-container" :style="getSlotHeight">
       <div @mousemove="showIsPast" class="past-inner tooltip">
         <span id="tooltip-span"> This hour has passed. </span>
       </div>
@@ -11,6 +11,17 @@
 <script>
 export default {
   name: "PastSlot",
+  props: ["slotLinePercentage"],
+  computed: {
+    getSlotHeight() {
+      let height = "height: calc(100px / 4);";
+      if (this.slotLinePercentage || this.slotLinePercentage === 0) {
+        let heightNum = (25 / 100) * this.slotLinePercentage;
+        height = `height: ${heightNum}px;`;
+      }
+      return height;
+    },
+  },
   methods: {
     showIsPast(e) {
       // if (!document.hidden) {
@@ -44,7 +55,7 @@ export default {
   justify-content: center;
   position: absolute;
   width: 100%;
-  height: calc(100px / 4);
+  /* height: calc(100px / 4); */
   z-index: unset;
   /* background: repeating-linear-gradient(
     -55deg,
@@ -79,23 +90,23 @@ export default {
 
 .past-inner {
   background-color: #eef1f3;
-  border-radius: 4px;
-  height: 95%;
+  border-radius: 1.8px;
+  height: 88%;
   width: 95%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin: 0 auto;
   position: relative;
   cursor: default;
-
   background: repeating-linear-gradient(
     -55deg,
-    transparent,
-    transparent 5px,
-    #f5f5f5 5px,
-    #f5f5f5 15px
+    white,
+    #ffffff 5px,
+    #f3f5f5 5px,
+    #f3f5f5 15px
   );
-  background-color: white;
+  box-shadow: 0px 1px 2px 0px #efefef;
 }
 
 .tooltip {

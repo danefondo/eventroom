@@ -23,9 +23,12 @@ const SessionSchema = new Schema({
   firstPartnerProfileImageUrlSmall: String,
   firstPartnerSessionCustomTitle: String,
 
+  firstPartnerPreferences: Schema.Types.Mixed,
+
   firstPartnerSessionData: {
-    partnerJoinedOnce: Boolean,
-    partnerJoinedDuringSession: Boolean,
+    hasJoinedDuringSession: Boolean,
+    hasJoinedBeforeSession: Boolean,
+    isCurrentlyInSession: Boolean,
     partnerWasLate: Boolean,
     partnerWasEarly: Boolean,
     partnerLatenessInMS: Number,
@@ -49,9 +52,12 @@ const SessionSchema = new Schema({
   secondPartnerProfileImageUrlSmall: String,
   secondPartnerSessionCustomTitle: String,
 
+  secondPartnerPreferences: Schema.Types.Mixed,
+
   secondPartnerSessionData: {
-    partnerJoinedOnce: Boolean,
-    partnerJoinedDuringSession: Boolean,
+    hasJoinedDuringSession: Boolean,
+    hasJoinedBeforeSession: Boolean,
+    isCurrentlyInSession: Boolean,
     partnerWasLate: Boolean,
     partnerWasEarly: Boolean,
     partnerLatenessInMS: Number,

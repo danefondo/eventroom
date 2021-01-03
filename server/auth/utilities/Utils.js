@@ -30,7 +30,12 @@ const userInJWT = function(user) {
   const returnUser = {
       username: user.username,
       _id: user._id,
+      verificationStatus: user.verificationStatus,
       displayName: user.displayName,
+      profileImageUrl: user.profileImage.fileUrl,
+      preferences: user.preferences,
+      blocked: user.blocked,
+      doNotMatchAgain: user.doNotMatchAgain,
   };
 
   return returnUser;

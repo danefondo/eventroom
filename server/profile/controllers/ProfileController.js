@@ -46,6 +46,17 @@ const ProfileController = {
     await processPostRequest(req, res, controller, options);
     return;
   },
+
+  async updatePreferences(req, res) {
+    const options = {
+      validate: ["userId", "preferences"],
+      funcToRun: "updatePreferences",
+      dataToPass: req.body,
+      selfComplete: true,
+    };
+    await processPostRequest(req, res, controller, options);
+    return;
+  },
 };
 
 // let requestInformation = {

@@ -41,6 +41,7 @@ const routes = [
       requireAuthentication: true,
       customTimer: true,
       calendar: true,
+      hideNavigation: true,
     },
   },
 
@@ -193,6 +194,11 @@ const routes = [
     path: "/account/passreset",
     component: () => import("./pages/AuthPages/PassResetPage"),
   },
+  {
+    path: "/account/verify",
+    component: () => import("./pages/AuthPages/VerifyPage"),
+    name: "VerifyPage",
+  },
 
   /* ====== PROFILE ROUTES ====== */
   {
@@ -290,31 +296,20 @@ router.beforeEach(async (to, from, next) => {
     }
   }
   if (to.meta || noReAuth.includes(to.name)) {
-    console.log("@router, need auth or noreauth")
     const authenticationStatus = store.state.auth.authenticationStatus;
-
-    let nextHasBeenCalled = false;
+    const verificationStatus = store.state.auth.verificationStatus;
 
     if (to.meta.requireAuthentication && !authenticationStatus) {
-      console.log("@router go login");
-      nextHasBeenCalled = true;
-      next({ name: "LoginPage" }); // TODO proper error page/error code or smth
-    }
-    if (
-      noReAuth.includes(to.name) &&
-      authenticationStatus &&
-      !nextHasBeenCalled
-    ) {
-      console.log("@router noreauth");
-      nextHasBeenCalled = true;
+      next({ name: "LoginPage" }); // TODO proper error page-message
+    } else if (to.meta.requireVerification && !verificationStatus) {
+      next({ name: "VerifyPage" });
+    } else if (noReAuth.includes(to.name) && authenticationStatus) {
       next("/");
-    }
-    if (!nextHasBeenCalled) {
-      console.log("@router nexted")
+    } else {
+      console.log("here fine too!");
       next();
     }
   } else {
-    console.log("@router else")
     next();
   }
 });

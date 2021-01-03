@@ -1,6 +1,24 @@
 <template>
   <table class="table">
-    <thead>
+    <div class="thead">
+      <div class="tr">
+        <div class="th empty"></div>
+        <div
+          class="th"
+          v-for="(eachDate, index) in weekDates"
+          :class="isItToday(eachDate.date)"
+          :key="index"
+          :data-index="index + 1"
+          :data-date="eachDate.dateNum"
+          :data-year="eachDate.yearNum"
+          :data-month="eachDate.monthNum"
+        >
+          <span class="day"> {{ eachDate.dayNameShort }}</span>
+          <span class="date">{{ eachDate.dateNum }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- <thead>
       <tr>
         <th class="empty"></th>
         <th
@@ -15,8 +33,8 @@
           ><br /><span class="date">{{ eachDate.dateNum }}</span>
         </th>
       </tr>
-    </thead>
-    <tbody>
+    </thead> -->
+    <tbody class="table-rows">
       <tr
         v-for="(eachHourRow, rowIndex) in calendarData"
         :key="rowIndex"
@@ -25,7 +43,7 @@
       >
         <td>
           <div v-if="isFullHour(eachHourRow.slotStartTime)" class="hour">
-            {{ eachHourRow.slotStartTime }}
+            {{ getRowHour(eachHourRow) }}
           </div>
         </td>
         <td
@@ -35,6 +53,13 @@
           :class="isPastHour(eachHourRow, i) ? 'past-day' : ''"
           :data-daynum="i"
         >
+          <CurrentHourLine
+            v-if="
+              isCurrentHourSlot(eachHourRow, i) ||
+              isCurrentHourSlot(eachHourRow, i) === 0
+            "
+            :slotLinePercentage="isCurrentHourSlot(eachHourRow, i)"
+          />
           <!-- TODO: Set 'attendedSuccessful/not in here too, to display 'MISSED' if necessary -->
           <PastSession
             v-if="
@@ -49,7 +74,10 @@
             :matchedPartnerName="matchedPartnerName(eachHourRow, i)"
             :user="user"
           />
-          <PastSlot v-if="isPastHour(eachHourRow, i)" />
+          <PastSlot
+            v-if="isPastHour(eachHourRow, i)"
+            :slotLinePercentage="isCurrentHourSlot(eachHourRow, i)"
+          />
           <div
             class="general-container"
             v-else-if="!isPastHour(eachHourRow, i)"
@@ -133,13 +161,16 @@
         :currentWeekStart="currentWeekStart"
         :currentSelectedDay="currentSelectedDay"
         :week="week"
+        :lastMinInMS="lastMinInMS"
       />
     </tbody>
+    <div class="last-line"></div>
+    <div class="table-bottom"></div>
   </table>
 </template>
 
 <script>
-import { format, addMinutes } from "date-fns";
+import { format, addMinutes, getMinutes, isToday } from "date-fns";
 
 import BookSession from "./BookSession";
 import CancelSession from "./CancelSession";
@@ -149,6 +180,7 @@ import UserSession from "./UserSession";
 import PastSlot from "./PastSlot";
 import PastSession from "./PastSession";
 import LastHourRows from "./LastHourRows";
+import CurrentHourLine from "./CurrentHourLine";
 
 export default {
   name: "Table",
@@ -169,12 +201,14 @@ export default {
     PastSlot,
     PastSession,
     LastHourRows,
+    CurrentHourLine,
   },
   props: [
     "user",
     "selectedToBook",
     "currentlyBooking",
     "selectedInterval",
+    "bookingInterval",
     "selectedSlotDateTime",
     "selectedSlotStartTime",
     "selectedSlotDateString",
@@ -190,6 +224,7 @@ export default {
     "currentWeekStart",
     "currentSelectedDay",
     "week",
+    "lastMinInMS",
   ],
   computed: {
     getHeights() {
@@ -226,6 +261,7 @@ export default {
         return false;
       }
     },
+
     nearByIsNotSelected(eachHourRow, i, exceptSelf = false) {
       let FIFTEEN_MINUTES = 900000; // milliseconds
       let hourRowDay = eachHourRow.hourRowDays[i];
@@ -291,13 +327,51 @@ export default {
     isPastHour(eachHourRow, i) {
       let slot = eachHourRow.hourRowDays[i];
 
-      let isPastHour = Date.now() > new Date(slot.dateTime).valueOf();
+      // lastMinInMS is a variable so that the timer could keep past slots
+      // up to date by updating it regularly
+      let now = this.lastMinInMS ? this.lastMinInMS : Date.now();
+      let isPastHour = now > new Date(slot.dateTime).valueOf();
 
+      // In the following cases, make exception to show a
+      // session with past start time as a present session
       if (slot.hasCurrentOrNextSession || slot.isSelected) {
         isPastHour = false;
       }
 
       return isPastHour;
+    },
+
+    isItToday(date) {
+      console.log(date);
+      let today = isToday(date);
+      return today ? "todayHead" : "";
+    },
+
+    isCurrentHourSlot(eachHourRow, i) {
+      let currentPercentage = false;
+      if (
+        eachHourRow &&
+        eachHourRow.hourRowDays &&
+        eachHourRow.hourRowDays.length &&
+        eachHourRow.hourRowDays[i]
+      ) {
+        let slot = eachHourRow.hourRowDays[i];
+        let time = new Date(slot.dateTime);
+        let slotStartInMS = time.valueOf();
+        let fifteenMinInMS = this.bookingInterval * 60 * 1000;
+        let slotEndInMS = slotStartInMS + fifteenMinInMS;
+        let nowInMS = this.lastMinInMS ? this.lastMinInMS : Date.now();
+
+        if (nowInMS >= slotStartInMS && nowInMS < slotEndInMS) {
+          let currentTime = new Date(nowInMS);
+          let minutes = getMinutes(currentTime);
+          let slotStartMinutes = getMinutes(time);
+          currentPercentage =
+            ((minutes - slotStartMinutes) / this.bookingInterval) * 100;
+        }
+      }
+
+      return currentPercentage;
     },
 
     userHasSessionForSlot(eachHourRow, i) {
@@ -309,8 +383,9 @@ export default {
         eachHourRow.hourRowDays[i]["userSessionsForSlot"] &&
         eachHourRow.hourRowDays[i]["userSessionsForSlot"].length
       ) {
-        let slot = eachHourRow.hourRowDays[i]["userSessionsForSlot"];
-        let session = slot[0];
+        let slot = eachHourRow.hourRowDays[i];
+
+        let session = slot["userSessionsForSlot"][0];
 
         if (session) {
           userHasSessionForSlot = true;
@@ -533,6 +608,17 @@ export default {
       // console.log("partnerUsername", partnerUsername);
       return partnerUsername;
     },
+
+    getRowHour(row) {
+      let userPrefers24HourFormat = this.user.preferences.calendarPreferences.prefer24HourFormat;
+      let time = row.slotStartAmPm;
+
+      if (userPrefers24HourFormat) {
+        time = row.slotStartTime;
+      }
+
+      return time;
+    },
     // getPersonBookedHereString(eachHourRow, i) {
     //   unmatchedSession = eachHourRow.hourRowDays[i]["userSessionsForSlot"][0];
     // },
@@ -540,6 +626,33 @@ export default {
 };
 </script>
 <style scoped>
+.last-line {
+  background-color: #f6f6f7;
+  height: 1px;
+  width: calc(100% - 105px);
+  margin-top: 0px;
+  margin-left: 81px;
+  margin-right: 22px;
+  z-index: 20019;
+  position: absolute;
+}
+
+.table-bottom {
+  box-sizing: border-box;
+  background-color: #f6f5f7;
+  height: 15px;
+  width: 100%;
+  margin-top: 0px;
+  /* margin-left: 80px; */
+  margin-right: 22px;
+  background-color: white;
+  z-index: 20000;
+  border: 1px solid #f5f6f7;
+  border-top: 0px;
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
 .each-day:hover .highlight-container {
   display: flex;
   /* z-index: 999; */
@@ -547,10 +660,13 @@ export default {
 
 .each-day {
   background-color: transparent;
+  position: relative;
 }
 
 .past-day {
-  background-color: #fbfbfb;
+  /* background-color: #f9f9f9; */
+  /* background-color: #f9fafa; */
+  background-color: #fff;
 }
 
 /* .calendar tbody td .highlight-container {
@@ -574,12 +690,23 @@ export default {
   pointer-events: auto;
 } */
 
+.todayHead {
+  background-color: #ffffff;
+  border: 1px solid #f7f7f78c !important;
+  border-bottom: 1px solid #e3e7ea !important;
+  box-shadow: 0px -4px 5px 0px #f7f7f7;
+  border-top: 0px;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+}
+
 .selected-close {
   position: absolute;
   right: 5px;
   top: 5px;
   width: 16px;
   height: 16px;
+  line-height: 17px;
   border-radius: 360px;
   display: flex;
   box-sizing: border-box;
@@ -599,6 +726,7 @@ export default {
   justify-content: center;
   position: absolute;
   width: 100%;
+  word-spacing: -1px;
 }
 
 .cancelSelectContainer {
@@ -637,5 +765,10 @@ table tr:nth-child(4n + 4) td {
   border-top-color: #f7f7f7;
   /* border-top-color: transparent; */
   /* border-bottom-style: dashed; */
+}
+
+table tr:first-child td:nth-child(2) {
+  border-collapse: separate;
+  border-top-left-radius: 10px;
 }
 </style>

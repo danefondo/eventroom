@@ -38,26 +38,23 @@ export default {
 }
 
 .booked-info {
-  background-color: #eef1f3;
-  border-radius: 4px;
+  background-color: #ffffff;
   height: 95%;
   width: 95%;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
-  flex-direction: column;
-  justify-content: space-around;
-  height: 88%;
-  /* background-color: #f7f7fb; */
-  background-color: #f7f7fbad;
-  background-color: #fafafc;
-  /* border: 1px solid #a3a3ff33; */
-  border: 1px solid #d8d8d833;
+  pointer-events: auto;
+  box-shadow: 0px 1px 3px 0px #f2f5f5;
+  border-radius: 2px;
+  color: #c8cece;
+  font-size: 16px;
+  /* border: 1px solid #f7f7f9; */
+  box-shadow: 0px 1px 2px 0px #d0d0d0;
 }
 
 .booked-time {
-  /* background-color: #dcdfe0; */
   padding: 1px 6px;
   /* padding-right: 22px; */
   border-radius: 360px;
@@ -65,9 +62,7 @@ export default {
   /* border-bottom-right-radius: 32px; */
   font-size: 13px !important;
   font-weight: bold;
-  /* color: #5600ff;
-  color: #310090cc; */
-  color: #b7b7ca;
+  color: #d3d6d6;
   margin-right: auto;
   /* margin-top: -5px; */
   font-weight: 800;
@@ -83,16 +78,21 @@ export default {
 .booked-title-unmatched {
   color: #343556de;
   position: absolute;
-  top: 23px;
+  top: 25px;
   left: 10px;
   /* color: #5600ff; */
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   text-transform: capitalize;
+  white-space: nowrap;
+  width: 110px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: left;
 }
 
 .booked-title-unmatched {
-  color: #343556bf;
+  color: #555a5e;
   text-transform: none;
   text-align: left;
 }
@@ -124,6 +124,7 @@ export default {
   top: 5px;
   width: 16px;
   height: 16px;
+  line-height: 17px;
   border-radius: 360px;
   display: flex;
   box-sizing: border-box;

@@ -14,7 +14,7 @@ import autolinker, { AUTOLINKER_NAME } from "vue-autolinker";
 import ImageKit from "imagekitio-vue";
 import { BASE_PATH } from "./constants";
 
-import pageTitleMixin from "./mixins/pageTitleMixin";
+import titleMixin from "./mixins/titleMixin";
 
 import { setGlobals } from "./config/axios";
 import router from "./router";
@@ -29,7 +29,7 @@ Vue.use(CKEditor);
 Vue.use(VueYoutube);
 Vue.use(VueCookies);
 Vue.use(VueHotkey);
-Vue.mixin(pageTitleMixin);
+Vue.mixin(titleMixin);
 
 Vue.use(ImageKit, {
   urlEndpoint: "https://ik.imagekit.io/elysiumone",

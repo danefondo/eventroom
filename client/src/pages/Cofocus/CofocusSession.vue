@@ -16,8 +16,7 @@ export default {
   },
   computed: {
     ...mapState({
-      user: (state) => state.auth.user,
-      isAuthenticated: (state) => state.auth.authenticationStatus,
+      hasJoinedDuringSession: (state) => state.cofocus.hasJoinedDuringSession,
     }),
   },
   mounted() {
@@ -36,6 +35,10 @@ export default {
         if (!session) throw new Error("Failed to update session.");
 
         if (response.data.success) {
+          if (!this.hasJoinedDuringSession) {
+            this.changeState("hasJoinedDuringSession", true);
+          }
+          this.changeState("isCurrentlyInSession", true);
           console.log("Added timestamp to:", session);
         }
       } catch (error) {
@@ -55,12 +58,18 @@ export default {
         if (!session) throw new Error("Failed to update session.");
 
         if (response.data.success) {
+          this.changeState("isCurrentlyInSession", false);
           console.log("Added leave timestamp to:", session);
         }
       } catch (error) {
         console.log("error: ", error);
         this.failedToAddTimeStamp = true;
       }
+    },
+
+    changeState(field, newValue) {
+      let dispatchObject = { field, newValue };
+      this.$store.dispatch("cofocus/changeSingleState", dispatchObject);
     },
   },
 };

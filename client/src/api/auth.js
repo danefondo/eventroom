@@ -43,6 +43,7 @@ authAPI.interceptors.response.use(function(response) {
 const parseAuthenticationResponse = function(response) {
   return {
     authenticationStatus: response.data.success,
+    verificationStatus: response.data.success ? response.data.user.verificationStatus : false,
     user: response.data.success ? response.data.user : null,
     userId: response.data.success ? response.data.user._id : null
   };
@@ -98,6 +99,7 @@ const auth = {
     console.log("@apilogout: ", response);
     store.commit("auth/updateAll", {
       authenticationStatus: false,
+      verificationStatus: false,
       user: null,
       userId: null
     })

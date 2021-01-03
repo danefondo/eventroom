@@ -56,7 +56,7 @@ export default {
       console.log("@isauth: data", response.data);
       if (response.data.success) {
         store.commit("auth/updateAuthenticationStatus", true);
-        store.commit('auth/updateVerificationStatus', response.data.user.isVerified);
+        store.commit('auth/updateVerificationStatus', response.data.user.verificationStatus);
         store.commit('auth/updateUser', response.data.user);
       } else {
         store.commit("auth/updateAuthenticationStatus", false);

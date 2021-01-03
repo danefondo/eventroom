@@ -7,6 +7,8 @@ const state = {
 
   authenticationStatus: false,
 
+  verificationStatus: false,
+
   // This userId can be both an anonymous user's id and an actual user's id
   userId: "",
 };
@@ -20,6 +22,9 @@ const mutations = {
   updateAuthenticationStatus(state, newStatus) {
     state.authenticationStatus = newStatus;
   },
+  updateVerificationStatus(state, newStatus) {
+    state.verificationStatus = newStatus;
+  },
   updateUser(state, newUser) {
     state.user = newUser;
     state.userId = newUser ? newUser._id : "";
@@ -29,10 +34,15 @@ const mutations = {
   },
   updateAll(state, data) {
     state.authenticationStatus = data.authenticationStatus;
+    state.verificationStatus = data.verificationStatus;
     state.user = data.user;
     state.userId = data.userId;
     state.ready = true;
-  }
+  },
+
+  updatePreferences(state, preferences) {
+    state.user.preferences = preferences;
+  },
 };
 
 const actions = {
@@ -40,6 +50,7 @@ const actions = {
     const response = await authAPI.authenticate();
     if (response && response.data && response.data.success) {
       commit("updateAuthenticationStatus", true);
+      commit("updateVerificationStatus", response.data.verificationStatus);
       commit("updateUser", response.data.user);
       commit("ready", true);
     } else {
@@ -49,6 +60,10 @@ const actions = {
     }
 
     return true;
+  },
+
+  updatePreferences(state, preferences) {
+    state.commit("updatePreferences", preferences);
   },
 };
 

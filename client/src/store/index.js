@@ -16,6 +16,7 @@ import preferences from "./modules/preferences";
 import booking from "./modules/booking";
 import cofocus from "./modules/cofocus";
 import calendar from "./modules/calendar";
+import cofocusPreferences from "./modules/cofocusPreferences";
 
 Vue.use(Vuex);
 
@@ -36,12 +37,13 @@ const store = new Vuex.Store({
     booking,
     cofocus,
     calendar,
+    cofocusPreferences,
   },
 
   // To ensure we get errors in dev (for better debugging) but not in production
   // If app is slow in testing, just comment this line out to see the real speed!
   // https://forum.vuejs.org/t/adding-many-objects-to-vuex-state-is-slow/10492/10
-  
+
   // strict: process.env.NODE_ENV !== "production",
 });
 

@@ -22,9 +22,9 @@ router.post(
 );
 
 // Remove profile image reference
-router.post(
-  "/deleteProfileImage",
-  ProfileController.deleteProfileImage
-);
+router.post("/deleteProfileImage", ProfileController.deleteProfileImage);
+
+// Update user Cofocus preferences
+router.post("/updatePreferences", ProfileController.updatePreferences);
 
 module.exports = router;

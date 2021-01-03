@@ -5,7 +5,12 @@
     :class="isAuthenticated ? 'authNav' : 'notAuthNav'"
   >
     <div class="navbar">
-      <router-link to="/" class="nav-logo">Eventroom.to</router-link>
+      <router-link v-if="!isCofocus" to="/" class="nav-logo"
+        >Eventroom.to</router-link
+      >
+      <router-link v-else-if="isCofocus" to="/" class="nav-logo"
+        >Cofocus</router-link
+      >
       <div v-if="isAuthenticated" class="flex">
         <div
           class="nav-button username"
@@ -51,6 +56,7 @@ import { requestWithAuthentication } from "../config/api";
 import lightDownArrow from "../assets/images/down-arrow-light-sharp.png";
 import darkDownArrow from "../assets/images/down-arrow-dark-sharp.png";
 import NavDropdown from "./NavDropdown";
+import { VUE_APP_COFOCUS } from "../../src/constants";
 
 export default {
   name: "Nav",
@@ -62,6 +68,9 @@ export default {
     }),
     profileLink: function () {
       return `/profile/${this.user.username}`;
+    },
+    isCofocus() {
+      return VUE_APP_COFOCUS ? true : false;
     },
   },
   components: {

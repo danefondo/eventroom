@@ -83,6 +83,14 @@ const ProfileDataController = {
     return profile;
   },
 
+  async updatePreferences(updateData) {
+    let preferences = updateData.preferences;
+    let query = { _id: updateData.userId };
+    let update = { $set: { preferences: preferences } };
+    let user = await User.findOneAndUpdate(query, update).exec();
+    return user;
+  },
+
   /**
    * Creates a room with given data.
    * @param {*} roomData

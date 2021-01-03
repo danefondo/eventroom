@@ -28,13 +28,24 @@ export default {
   name: "LastHourRows",
   data() {
     return {
-      lastRowHours: ["00:00", "00:15", "00:30"],
+      // Else, when midnight hits, monday column has two gaps (0:15, 0:30)
+      // whereas tuesday already shows 0:00 as past, e.g. a gap in experience
+      lastRowHours: ["00:00", "00:00", "00:00"],
+      // lastRowHours: ["00:00", "00:15", "00:30"],
     };
   },
-  props: ["rowNumberForWeekOrDay", "boxHeight", "week", "currentWeekStart", "currentSelectedDay"],
+  props: [
+    "rowNumberForWeekOrDay",
+    "boxHeight",
+    "week",
+    "currentWeekStart",
+    "currentSelectedDay",
+    "lastMinInMS",
+  ],
   components: {
     PastSlot,
   },
+  // set timer interval to update what's in the past and what's not
   methods: {
     isPastLastHour(hour, i) {
       let isPastLastHour = false;
@@ -63,7 +74,11 @@ export default {
 
       let dateInMS = date.valueOf();
 
-      if (dateInMS < Date.now()) {
+      // lastMinInMS is a variable so that the timer could keep past slots
+      // up to date by updating it regularly
+      let now = this.lastMinInMS ? this.lastMinInMS : Date.now();
+
+      if (now > dateInMS) {
         isPastLastHour = true;
       }
 
@@ -83,6 +98,8 @@ export default {
 }
 
 .past-day {
-  background-color: #fbfbfb;
+  /* background-color: #f9f9f9; */
+  /* background-color: #f9fafa; */
+  background-color: #fff;
 }
 </style>

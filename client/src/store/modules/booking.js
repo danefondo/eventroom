@@ -17,6 +17,7 @@ const getDefaultState = () => {
     selectedSlotDateTime: null,
 
     selectedInterval: 50,
+    bookingInterval: 15,
 
     currentlyBooking: false,
 

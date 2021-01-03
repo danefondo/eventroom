@@ -52,6 +52,7 @@ export const generateCalendarData = (configurationData) => {
     // for that specific hour
     let hourRowObject = {
       slotStartTime: format(slotStartTime, "HH:mm"),
+      slotStartAmPm: format(slotStartTime, "h a"),
       hourRowDays: [],
     };
 
@@ -144,8 +145,8 @@ function createDayObjectForTimeRow(
     // peopleMatchedSessionsForSlot: [],
 
     // matched or unmatched, show these to the user as available to match
-    // each user has array of user ids for who they ok with matching 
-    // each user also has 'locked in / not locked in' state for current session 
+    // each user has array of user ids for who they ok with matching
+    // each user also has 'locked in / not locked in' state for current session
     // (which could be a default)
     // (or locked in if already w/some preferred user or of higher preference priority)
     // if not locked in and user's id matches one of the ids in some user's list
@@ -172,7 +173,6 @@ function createDayObjectForTimeRow(
     isAvailableForBooking: true,
     isAvailableForSelecting: true,
 
-
     // isBooked: false,
 
     // If there is an active or current session, to make sure
@@ -186,6 +186,8 @@ function createDayObjectForTimeRow(
 
     // show diff. box on hover if true (e.g. a box to possibly match w/that person)
     hasUmatchedSessionMatchingPreferences: false,
+
+    isExpanded: false,
   };
   return dayObject;
 }
@@ -205,6 +207,7 @@ export const getWeekDates = (startOfWeek) => {
       monthNameShort: format(startOfWeek, "MMM"),
       monthNum: format(startOfWeek, "MM"),
       yearNum: format(startOfWeek, "yyyy"),
+      date: startOfWeek,
     },
   ];
   for (let i = 1; i < 7; i++) {
@@ -216,6 +219,7 @@ export const getWeekDates = (startOfWeek) => {
       monthNameShort: format(startOfWeek, "MMM"),
       monthNum: format(startOfWeek, "MM"),
       yearNum: format(startOfWeek, "yyyy"),
+      date: startOfWeek,
     });
   }
 

@@ -72,35 +72,27 @@ function setTotalTimeInSession(timestamps, session, partner) {
 
 // if no partner, handle leave through socket
 
-function setPartnerJoinedDuringSession(timestamps, session, partner) {
+function setPartnerJoinedStates(timestamps, session, partner) {
   let sessionStartTimeInMS = new Date(session.dateTime).valueOf();
+  let tenBeforeStartInMS = sessionStartTimeInMS - 10 * 60 * 1000;
+
   let sessionIntervalInMS = session.sessionInterval * 60 * 1000;
   let sessionEndTimeInMS = sessionStartTimeInMS + sessionIntervalInMS;
 
-  let joinedDuringSession = false;
-  // find one timestamp that is equal to or more than session start time
-  // AND equal to or less than session end time
   for (var i = 0; i < timestamps.length; i++) {
     let stamp = timestamps[i];
     let stampInMS = new Date(stamp.timestamp).valueOf();
+
+    if (stampInMS < sessionStartTimeInMS && stampInMS >= tenBeforeStartInMS) {
+      session[partner].hasJoinedBeforeSession = true
+    }
+
     if (stampInMS >= sessionStartTimeInMS && stampInMS <= sessionEndTimeInMS) {
-      joinedDuringSession = true;
+      session[partner].hasJoinedDuringSession = true;
       break;
     }
   }
-  session[partner].setPartnerJoinedDuringSession = joinedDuringSession;
 
-  return session;
-}
-
-function setPartnerJoinedOnce(timestamps, session, partner) {
-  // Check if participant ever joined (e.g. between 10min to start time and end time)
-  if (timestamps.length) {
-    // If user joined, set as true
-    session[partner].partnerJoinedOnce = true;
-  } else {
-    session[partner].partnerJoinedOnce = false;
-  }
   return session;
 }
 
@@ -221,8 +213,7 @@ function setSessionToFinished(session) {
 
 module.exports = {
   setTotalTimeInSession,
-  setPartnerJoinedDuringSession,
-  setPartnerJoinedOnce,
+  setPartnerJoinedStates,
   setPartnerLateness,
   setPartnerEarliness,
   sortTimestamps,

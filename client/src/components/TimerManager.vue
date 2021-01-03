@@ -3,10 +3,12 @@
     <SessionTimer
       v-if="doneLoadingTimes"
       ref="sessiontimer"
+      :nextSession="nextSession"
       :doneLoadingTimes="doneLoadingTimes"
       :sessionHasStarted="sessionHasStarted"
       :sessionHasFinished="sessionHasFinished"
-      :userIsCurrentlyInSession="userIsCurrentlyInSession"
+      :isCurrentlyInSession="isCurrentlyInSession"
+      :hasJoinedDuringSession="hasJoinedDuringSession"
       :nextSessionIsTenMinToStart="nextSessionIsTenMinToStart"
       :tenMinToStartInMS="tenMinToStartInMS"
       :didNextSessionTenMinCheck="didNextSessionTenMinCheck"
@@ -14,10 +16,13 @@
       :didNextSessionOneMinCheck="didNextSessionOneMinCheck"
       :nextSessionStartInMS="nextSessionStartInMS"
       :didSessionStartedCheck="didSessionStartedCheck"
+      :didTwoMinIntoSessionCheck="didTwoMinIntoSessionCheck"
+      :sessionStartedTwoMinAgo="sessionStartedTwoMinAgo"
       :nextSessionEndInMS="nextSessionEndInMS"
       :didSessionFinishedCheck="didSessionFinishedCheck"
       :nextSessionIntervalInMS="nextSessionIntervalInMS"
       @checkIfSessionStillThere="getUserNextSession"
+      :userId="user._id"
     />
   </div>
 </template>
@@ -32,8 +37,8 @@ import { isUserPartnerStillSame } from "../pages/BookingPages/CalendarUtilities/
 export default {
   name: "TimerManager",
   async mounted() {
-    await this.getUserNextSession();
-    // TODO: For some reason, when setting Vuex data her
+    this.getUserNextSession();
+    // TODO: For some reason, when setting Vuex data here
     // and even inside 'getUserNextSession' and then calling
     // getUserNextSession from parent BookingDashboard.vue
     // the Vuex data set here gets reset.
@@ -60,14 +65,11 @@ export default {
       sessionHasFinished: (state) => state.cofocus.sessionHasFinished,
       nextSessionIsTenMinToStart: (state) =>
         state.cofocus.nextSessionIsTenMinToStart,
-      sessionStartedLessThanFiveMinAgo: (state) =>
-        state.cofocus.sessionStartedLessThanFiveMinAgo,
+      sessionStartedTwoMinAgo: (state) => state.cofocus.sessionStartedTwoMinAgo,
 
       /* User session status states */
-      userHasJoinedSessionOnceDuring: (state) =>
-        state.cofocus.userHasJoinedSessionOnceDuring,
-      userIsCurrentlyInSession: (state) =>
-        state.cofocus.userIsCurrentlyInSession,
+      hasJoinedDuringSession: (state) => state.cofocus.hasJoinedDuringSession,
+      isCurrentlyInSession: (state) => state.cofocus.isCurrentlyInSession,
 
       /* Session partner status states */
       sessionMatchIsPresent: (state) => state.cofocus.sessionMatchIsPresent,
@@ -79,6 +81,8 @@ export default {
         state.cofocus.didNextSessionOneMinCheck,
       didSessionFinishedCheck: (state) => state.cofocus.didSessionFinishedCheck,
       didSessionStartedCheck: (state) => state.cofocus.didSessionStartedCheck,
+      didTwoMinIntoSessionCheck: (state) =>
+        state.cofocus.didTwoMinIntoSessionCheck,
 
       /* Times before and after session start time in MS (full datetime in MS) */
       oneMinToStartInMS: (state) => state.cofocus.oneMinToStartInMS,
@@ -227,16 +231,31 @@ export default {
         } else if (isCurrentSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", session);
+          this.setUserSessionStates(session);
           this.startCountdownToNextSession();
         } else if (isUpcomingSession) {
           this.changeState("nextSession", session);
           this.changeState("currentSession", null);
+          this.setUserSessionStates(session);
           this.startCountdownToNextSession();
         }
       } else {
         this.changeState("nextSession", null);
         this.changeState("currentSession", null);
       }
+    },
+
+    setUserSessionStates(session) {
+      let partner = "";
+      if (session.firstPartnerId == this.user._id) {
+        partner = "firstPartnerSessionData";
+      } else if (session.secondPartnerId == this.user._id) {
+        partner = "secondPartnerSessionData";
+      }
+
+      let data = session[partner];
+      this.changeState("hasJoinedDuringSession", data.hasJoinedDuringSession);
+      this.changeState("isCurrentlyInSession", data.isCurrentlyInSession);
     },
 
     startCountdownToNextSession() {

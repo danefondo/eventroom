@@ -26,7 +26,7 @@ export default {
     "slotData",
     "boxHeight",
     "sessionTime",
-    "nextSession"
+    "nextSession",
   ],
   methods: {
     async cancelSession() {
@@ -132,8 +132,8 @@ export default {
 
     pushCancelUpdateToOthers(localSession, sessionIsEmpty, session) {
       let updateCanceledSession = {
-        sessionId: localSession._id,
-        sessionDateTime: localSession.dateTime,
+        _id: localSession._id,
+        dateTime: localSession.dateTime,
         cancelerId: this.user._id,
         session: session,
       };
@@ -295,6 +295,7 @@ export default {
   top: 5px;
   width: 16px;
   height: 16px;
+  line-height: 17px;
   border-radius: 360px;
   display: flex;
   box-sizing: border-box;

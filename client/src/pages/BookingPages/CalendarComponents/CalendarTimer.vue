@@ -70,14 +70,17 @@ export default {
 
 <style scoped>
 .session-notifier {
-  background-color: #f7f7fb;
-  padding: 20px;
-  border-radius: 20px;
+  background-color: #f9f9fa;
+  padding: 25px 30px;
+  border-radius: 3px;
   font-weight: 700;
   color: #5600ff;
-  width: 275px;
+  width: 300px;
   font-size: 20px;
+  line-height: 23px;
   margin: 0px auto;
   box-sizing: border-box;
+  border: 1px solid #f1f1f1;
+  margin-top: 60px;
 }
 </style>

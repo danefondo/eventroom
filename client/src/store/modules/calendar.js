@@ -20,8 +20,13 @@ const state = {
 
   rowNumberForWeekOrDay: 7,
 
+  lastMinInMS: Date.now(),
+
   currentSelectedDay: new Date(),
   currentWeekStart: startOfISOWeek(new Date()),
+
+  // To track & decide whether week needs automatic changing
+  originalWeekStart: startOfISOWeek(new Date()),
 
   minimumTime: "00:00",
   maximumTime: "23:59",
@@ -105,6 +110,14 @@ const mutations = {
 
   setRowNumberForWeekOrDay(state, number) {
     state.rowNumberForWeekOrDay = number;
+  },
+
+  changeOriginalWeekStart(state) {
+    state.originalWeekStart = startOfISOWeek(new Date());
+  },
+
+  updateLastMinInMS(state) {
+    state.lastMinInMS = Date.now();
   },
 
   /* ====== HARD DATA REFRESH  ====== */
@@ -298,6 +311,38 @@ const mutations = {
         const slotStartInMS = new Date(slot.dateTime).valueOf();
         if (now > slotStartInMS) {
           slot.isSelected = false;
+        }
+      }
+    }
+  },
+
+  expandSlot(state, slotData) {
+    let initialExpandedState = slotData.isExpanded;
+    let selectedTimeInMS = new Date(slotData.dateTime).valueOf();
+
+    /** FUTURE: If user prefers to have multiple selections
+     * expanded, then check for the preference, and then
+     * do not always close all the other selections
+     * before expanding a selection.
+     */
+    let userPrefersNoCollapse = false;
+
+    for (var i = state.selectedToBook.length - 1; i > -1; i--) {
+      let slot = state.selectedToBook[i];
+      let slotStartTimeInMS = new Date(slot.dateTime).valueOf();
+      if (!userPrefersNoCollapse) {
+        slot.isExpanded = false;
+        if (selectedTimeInMS == slotStartTimeInMS && !initialExpandedState) {
+          slot.isExpanded = true;
+        }
+      } else {
+        if (selectedTimeInMS == slotStartTimeInMS && !initialExpandedState) {
+          slot.isExpanded = true;
+        } else if (
+          selectedTimeInMS == slotStartTimeInMS &&
+          initialExpandedState
+        ) {
+          slot.isExpanded = false;
         }
       }
     }
@@ -632,23 +677,23 @@ const mutations = {
   /* ====== UPDATE CALENDAR DATA POST BOOKING OR CANCEL RECEIVE ====== */
 
   updateCalendarAfterReceive(state, updateData) {
+    console.log("here I am to update stuff", updateData);
     let userId = updateData.userId;
     let sessions = updateData.sessions;
     sessions.forEach((session) => {
-      if (session.session) {
+      if (session.session && session.session !== 1) {
         session = session.session;
       }
       let updatedSession = JSON.parse(JSON.stringify(session)); // session.session???
       let isUserSession = isUserEitherPartnerInSession(session, userId);
+      console.log("yo");
       state.calendarData.forEach((hourRow) => {
         hourRow.hourRowDays.forEach((slot) => {
           let sessionDateTime = new Date(updatedSession.dateTime);
+          console.log("updatedSession", updatedSession, sessionDateTime);
           // Find slot that matches datetime
           if (slot.dateTime.valueOf() == sessionDateTime.valueOf()) {
-            // Remove any from existing sessions that exist in new
-            // Since it can only find one, the for loop index remove
-            // will work to splice & remove without worrying about
-            // messing up the indexes,
+            // Beware to not mess up indexes when removing w/for loop
 
             for (var i = slot.userSessionsForSlot.length - 1; i > -1; i--) {
               let userSession = slot.userSessionsForSlot[i];
@@ -670,7 +715,7 @@ const mutations = {
               }
             }
 
-            if (!isUserSession) {
+            if (!isUserSession && !updateData.cancel) {
               slot.peopleSessionsForSlot.push(updatedSession);
             }
           }
@@ -808,6 +853,14 @@ const actions = {
 
   setCurrentSelectedDayAsStartOfWeek(state) {
     state.commit("setCurrentSelectedDayAsStartOfWeek");
+  },
+
+  changeOriginalWeekStart(state) {
+    state.commit("changeOriginalWeekStart");
+  },
+
+  updateLastMinInMS(state) {
+    state.commit("updateLastMinInMS");
   },
 
   toggleWeekOrDay(state) {
@@ -992,6 +1045,10 @@ const actions = {
 
   removeSelectionsInThePast(state) {
     state.commit("removeSelectionsInThePast");
+  },
+
+  expandSlot(state, slot) {
+    state.commit("expandSlot", slot);
   },
 
   updateCalendarAfterReceive(state, updateData) {

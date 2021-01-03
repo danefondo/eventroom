@@ -15,6 +15,8 @@ export default {
     "didSessionStartedCheck",
     "nextSessionEndInMS",
     "didSessionFinishedCheck",
+    "sessionStartedTwoMinAgo",
+    "didTwoMinIntoSessionCheck",
   ],
   methods: {
     doTenMinCheck(nowInMS) {
@@ -48,6 +50,16 @@ export default {
       ) {
         this.changeState("sessionHasStarted", true);
         this.changeState("didSessionStartedCheck", true);
+
+        this.$emit("checkIfSessionStillThere");
+      }
+    },
+
+    doTwoMinIntoSessionCheck(nowInMS) {
+      let twoMinIntoSession = this.nextSessionStartInMS + 2 * 60 * 1000;
+      if (nowInMS > twoMinIntoSession && !this.didTwoMinIntoSessionCheck) {
+        this.changeState("sessionStartedTwoMinAgo", true);
+        this.changeState("didTwoMinIntoSessionCheck", true);
 
         this.$emit("checkIfSessionStillThere");
       }

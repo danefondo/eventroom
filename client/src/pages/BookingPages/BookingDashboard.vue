@@ -1,19 +1,26 @@
 <template>
   <div class="cofocus">
+    <Alert
+      :showAlert="showAlert"
+      :alertStyle="alertStyle"
+      :alertMessage="alertMessage"
+    />
     <div class="wrapper">
       <div class="calendar-container">
         <div class="calendar">
           <Switcher
             v-if="weekStartDay && weekEndDay && currentWeekStart"
+            ref="switcher"
             :weekStartDay="weekStartDay"
             :weekEndDay="weekEndDay"
             :currentWeekStart="currentWeekStart"
+            :originalWeekStart="originalWeekStart"
             :week="week"
             :currentSelectedDay="currentSelectedDay"
-            @toggleDayWeekView="toggleDayWeekView"
-            @switchWeek="switchWeek"
-            @switchDay="switchDay"
-            @setToToday="setToToday"
+            :currentlyRefreshingData="currentlyRefreshingData"
+            @initCalendar="initCalendar"
+            @scrollToCurrentHour="scrollToCurrentHour"
+            @refreshCalendarData="getAllBookedUsersForSpecificWeek(true, true)"
           />
           <Table
             v-if="weekDates && weekStartDay && weekEndDay"
@@ -21,6 +28,7 @@
             :selectedToBook="selectedToBook"
             :currentlyBooking="currentlyBooking"
             :selectedInterval="selectedInterval"
+            :bookingInterval="bookingInterval"
             :selectedSlotDateTime="selectedSlotDateTime"
             :selectedSlotStartTime="selectedSlotStartTime"
             :selectedSlotDateString="selectedSlotDateString"
@@ -36,23 +44,27 @@
             :currentWeekStart="currentWeekStart"
             :currentSelectedDay="currentSelectedDay"
             :week="week"
+            :lastMinInMS="lastMinInMS"
             @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
             @hardRefreshTimerAndNextSession="hardRefreshTimerAndNextSession"
           />
         </div>
         <div class="sidebar">
-          <TimerManager ref="timer" parentName="booking" />
-          <Booker
-            :user="user"
-            :allUserSessions="allUserSessions"
-            :selectedInterval="selectedInterval"
-            :selectedToBook="selectedToBook"
-            :currentlyBooking="currentlyBooking"
-            :selectedSlotName="selectedSlotName"
-            :selectedSlotStartTime="selectedSlotStartTime"
-            :selectedSlotDateString="selectedSlotDateString"
-            @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
-          />
+          <div class="widgets">
+            <TimerManager ref="timer" parentName="booking" />
+            <Booker
+              :user="user"
+              :allUserSessions="allUserSessions"
+              :calendarData="calendarData"
+              :selectedInterval="selectedInterval"
+              :selectedToBook="selectedToBook"
+              :currentlyBooking="currentlyBooking"
+              :selectedSlotName="selectedSlotName"
+              :selectedSlotStartTime="selectedSlotStartTime"
+              :selectedSlotDateString="selectedSlotDateString"
+              @refreshNextOrCurrentSession="refreshNextOrCurrentSession"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -81,6 +93,7 @@ Welcome to Cofocus.
 import { requestWithAuthentication } from "../../config/api";
 import { mapState } from "vuex";
 import TimerManager from "../../components/TimerManager";
+import Alert from "../../components/Alert";
 import {
   generateCalendarData,
   getWeekDates,
@@ -93,17 +106,25 @@ import Booker from "./CalendarComponents/Booker";
 
 import {
   endOfDay,
-  startOfISOWeek,
   endOfISOWeek,
   isSameWeek,
   startOfDay,
+  getHours,
+  getMinutes,
+  format,
 } from "date-fns";
 
 export default {
   name: "BookingDashboard",
   data() {
     return {
+      alertMessage: "",
+      alertStyle: "",
+      showAlert: false,
+
       databaseSyncTimer: "",
+
+      pastHourTimer: "",
 
       gettingBookedSessions: false,
       gettingBookedSessionsError: false,
@@ -113,6 +134,10 @@ export default {
       interval: 15,
 
       height: 100,
+
+      iterativeRefreshInterval: 2 * 60 * 1000,
+
+      currentlyRefreshingData: false,
     };
   },
   computed: {
@@ -127,10 +152,13 @@ export default {
       weekEndDay: (state) => state.calendar.weekEndDay,
       currentSelectedDay: (state) => state.calendar.currentSelectedDay,
       currentWeekStart: (state) => state.calendar.currentWeekStart,
+      originalWeekStart: (state) => state.calendar.originalWeekStart,
       rowNumberForWeekOrDay: (state) => state.calendar.rowNumberForWeekOrDay,
       week: (state) => state.calendar.week,
+      lastMinInMS: (state) => state.calendar.lastMinInMS,
 
       selectedInterval: (state) => state.booking.selectedInterval,
+      bookingInterval: (state) => state.booking.bookingInterval,
       currentlyBooking: (state) => state.booking.currentlyBooking,
       selectedToBook: (state) => state.calendar.selectedToBook,
 
@@ -162,20 +190,24 @@ export default {
     Switcher,
     Table,
     Booker,
+    Alert,
   },
   beforeRouteLeave(to, from, next) {
     this.cleanBeforeLeave(true, next);
   },
   async mounted() {
     // console.log("@Step 1: Render calendar structure.");
-    await this.initWeekCalendar();
+    await this.initCalendar();
+    this.scrollToCurrentHour();
 
     // console.log("@Step 2: Join Cofocus socket port.");
     this.$socket.emit("joinCofocusCalendar", "cofocus");
 
     // console.log("@Step 3: Start listening to pushes and cancels.");
-    this.startReceivingBookedSessions();
-    this.startReceivingCanceledSessions();
+    if (this.user.preferences.calendarPreferences.preferRealTimeUpdates) {
+      this.startReceivingBookedSessions();
+      this.startReceivingCanceledSessions();
+    }
     // Consider also listening to 'rematches'.
 
     // console.log("@Step 4: Setup cleaning for when you leave.");
@@ -184,35 +216,79 @@ export default {
       globalThis.cleanBeforeLeave();
     };
 
+    // ON TIMERS: https://stackoverflow.com/a/2553507
+
     // Sync calendar data with database
     // (make iterative check, to only update if change)
     this.databaseSyncTimer = setInterval(
       this.syncCalendarWithDatabase,
-      2 * 60 * 1000
+      this.iterativeRefreshInterval
     );
+
+    this.pastHourTimer = setInterval(this.updateLastMinInMS, 1 * 60 * 1000);
   },
   methods: {
-    cleanBeforeLeave(fromBeforeLeave = false, next = null) {
+    async cleanBeforeLeave(fromBeforeLeave = false, next = null) {
       this.sockets.unsubscribe("receivePushedSessions");
       this.sockets.unsubscribe("receiveCanceledSessions");
 
+      await this.$refs.timer.resetSessionAndTimer();
+
       // this.resetData();
       clearInterval(this.databaseSyncTimer);
+      clearInterval(this.pastHourTimer);
       if (fromBeforeLeave && next !== null) {
         next();
       }
     },
 
-    changeState(field, newValue) {
-      let dispatchObject = { field, newValue };
-      this.$store.dispatch("cofocus/changeSingleState", dispatchObject);
+    updateLastMinInMS() {
+      this.$store.dispatch("calendar/updateLastMinInMS");
+    },
+
+    scrollToCurrentHour() {
+      let now = new Date();
+      let hours = getHours(now);
+      let minutes = getMinutes(now);
+
+      if (minutes >= 0 && minutes < 15) {
+        minutes = "00";
+      } else if (minutes >= 15 && minutes < 30) {
+        minutes = "15";
+      } else if (minutes >= 30 && minutes < 45) {
+        minutes = "30";
+      } else if (minutes >= 45 && minutes < 60) {
+        minutes = "45";
+      }
+
+      let rowHour = new Date(null, null, null, hours, minutes);
+      rowHour = format(rowHour, "HH:mm");
+
+      let rowHourElement = document.querySelector(
+        `[data-rowhour="${rowHour}"]`
+      );
+
+      // rowHourElement.closest("tbody").scrollTop =
+      //   rowHourElement.offsetTop - 200;
+
+      var elementPosition = rowHourElement.getBoundingClientRect().top;
+      var offsetPosition = elementPosition - 300;
+
+      rowHourElement.closest("tbody").scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+
+      rowHourElement.closest("tbody").scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
     },
 
     async refreshNextOrCurrentSession() {
       if (this.currentlyRefreshingNextSession) {
         this.$store.dispatch("cofocus/pushToRefreshQueue");
       } else if (this.timerManagerHasMounted && this.initialFinalizeCompleted) {
-        console.log("Let's refresh IN BOOKING.");
         await this.$refs.timer.getUserNextSession();
       } else if (this.firstBookingForWeek) {
         // Bypass case of timer not having mounted yet
@@ -236,36 +312,64 @@ export default {
     startReceivingCanceledSessions() {
       this.sockets.subscribe("receiveCanceledSessions", (sessions) => {
         console.log("received canceled", sessions);
-        this.updateCalendarPostReceive(sessions);
+        this.updateCalendarPostReceive(sessions, true);
       });
     },
 
-    updateCalendarPostReceive(sessions) {
+    updateCalendarPostReceive(sessions, cancel = false) {
       if (sessions.length) {
         let updateData = {
           sessions,
           userId: this.user._id,
         };
 
+        if (cancel) {
+          updateData.cancel = true;
+        }
+
         this.$store.dispatch("calendar/updateCalendarAfterReceive", updateData);
       }
 
       this.$nextTick(() => {
+        console.log("will update availability");
         this.updateCalendarAvailability();
       });
     },
 
-    async getAllBookedUsersForSpecificWeek(refresh = false, day = false) {
+    displayAlert(messageNum) {
+      if (messageNum == 0) {
+        this.alertMessage = "Successfully refreshed calendar data!";
+        this.alertStyle =
+          "background-color: #e1fff8; color: #333; width: 350px;";
+      }
+      this.showAlert = true;
+
+      setTimeout(this.resetAlert, 3000);
+    },
+
+    resetAlert() {
+      this.showAlert = false;
+      this.alertMessage = "";
+      this.alertStyle = "";
+    },
+
+    async getAllBookedUsersForSpecificWeek(refresh = false, manual = false) {
       try {
         if (!this.user || !this.user._id) {
           return (window.location.href = "/");
         }
+        if (refresh && !this.currentlyRefreshingData) {
+          this.currentlyRefreshingData = true;
+        } else if (this.currentlyRefreshingData) {
+          return;
+        }
+
         this.gettingAllBookedSessions = true;
 
         let query = "getAllBookedUsersForSpecificWeek";
         let dataToPass = { userId: this.user._id };
 
-        if (day) {
+        if (!this.week) {
           query = "getBookedSessionsForOneDay";
           dataToPass.startOfDay = startOfDay(this.currentSelectedDay);
           dataToPass.endOfDay = endOfDay(this.currentSelectedDay);
@@ -293,7 +397,7 @@ export default {
           // console.log(refresh);
 
           if (refresh) {
-            this.iterativeRefreshCalendarSessions(allBookedSessions);
+            this.iterativeRefreshCalendarSessions(allBookedSessions, manual);
           } else {
             let updateData = {
               sessions: allBookedSessions,
@@ -335,7 +439,7 @@ export default {
 
     /* ====== ITERATIVE DATABASE SYNCING ====== */
 
-    iterativeRefreshCalendarSessions(sessions) {
+    iterativeRefreshCalendarSessions(sessions, manual = false) {
       let updateData = {
         updatedSessions: sessions,
         userId: this.user._id,
@@ -347,6 +451,10 @@ export default {
       );
 
       this.updateCalendarStates();
+      this.currentlyRefreshingData = false;
+      if (manual) {
+        this.displayAlert(0);
+      }
     },
 
     /* ====== CALENDAR RENDERING ====== */
@@ -380,37 +488,40 @@ export default {
     },
 
     async syncCalendarWithDatabase() {
+      await this.getAllBookedUsersForSpecificWeek(true);
+      this.updateCalendarStates();
+      this.$refs.switcher.changeWeekIfNecessary();
+    },
+
+    async initCalendar() {
       if (this.week) {
-        await this.getAllBookedUsersForSpecificWeek(true);
+        this.setWeekData();
       } else {
-        await this.getAllBookedUsersForSpecificWeek(true, true);
+        this.setDayData();
       }
-      this.updateCalendarStates();
-    },
-
-    async updateDayViewData() {
       this.renderCalendar();
-      await this.getAllBookedUsersForSpecificWeek(false, true);
+      await this.getAllBookedUsersForSpecificWeek();
       this.updateCalendarStates();
+
+      /**
+       * Does not currently work, because when returning to
+       * the current week and some scrolling has been done,
+       * the result will be incorrect.
+       */
+      // this.scrollToCurrentHourIfNecessary();
     },
 
-    async initWeekCalendar() {
+    async setWeekData() {
       let startOfPeriod = this.currentWeekStart;
       let newStartOfWeek = new Date(startOfPeriod.valueOf());
       let dates = getWeekDates(newStartOfWeek);
       this.$store.dispatch("calendar/setCalendarWeekDates", dates);
-      this.renderCalendar();
-      await this.getAllBookedUsersForSpecificWeek();
-      this.updateCalendarStates();
     },
 
-    async initDayCalendar() {
+    async setDayData() {
       let currentSelectedDay = new Date(this.currentSelectedDay.valueOf());
       let dates = getDayDate(currentSelectedDay);
       this.$store.dispatch("calendar/setCalendarDayDate", dates);
-      this.renderCalendar();
-      await this.getAllBookedUsersForSpecificWeek(false, true);
-      this.updateCalendarStates();
     },
 
     renderSavedSelectionsIfAny() {
@@ -444,335 +555,19 @@ export default {
 
     /* ====== CALENDAR NAVIGATION ====== */
 
-    async toggleDayWeekView() {
-      this.$store.dispatch("calendar/toggleWeekOrDay");
-      // If week == current week, set currentDay to today
-      this.setNewCurrentDay();
-      if (this.week) {
-        let number = 7;
-        this.$store.dispatch("calendar/setRowNumberForWeekOrDay", number);
-        await this.initWeekCalendar();
-      } else {
-        let number = 1;
-        this.$store.dispatch("calendar/setRowNumberForWeekOrDay", number);
-        await this.initDayCalendar();
-      }
-    },
-
-    setNewCurrentDay() {
-      // if new week start = current time week start
-      // --> then set today as selected day
-      // else if any other week, set start of week as day
-      let newWeekStart = this.currentWeekStart;
-      let todayWeekStart = startOfISOWeek(new Date());
-      let checkIfSameWeek = isSameWeek(newWeekStart, todayWeekStart);
-      if (checkIfSameWeek) {
-        this.$store.dispatch("calendar/setCurrentSelectedDayAsToday");
-      } else {
-        this.$store.dispatch("calendar/setCurrentSelectedDayAsStartOfWeek");
-      }
-    },
-
-    async switchWeek(newWeekStart) {
-      this.$store.dispatch("calendar/setCurrentWeekStart", newWeekStart);
-      this.setNewCurrentDay();
-      await this.initWeekCalendar();
-    },
-
-    async switchDay(newSelectedDay) {
-      this.$store.dispatch("calendar/setCurrentSelectedDay", newSelectedDay);
-      // In case week changes, set up current week to match day's week
-      let isoWeekStart = startOfISOWeek(this.currentSelectedDay);
-      isoWeekStart = new Date(isoWeekStart);
-      this.$store.dispatch("calendar/setCurrentWeekStart", isoWeekStart);
-      await this.initDayCalendar();
-    },
-
-    async setToToday() {
-      this.$store.dispatch("calendar/setCurrentWeekStartToThisWeekStart");
-      this.$store.dispatch("calendar/setCurrentSelectedDayAsToday");
-      if (this.week) {
-        await this.initWeekCalendar();
-      } else {
-        await this.initDayCalendar();
+    /**
+     * When user navigates between weeks
+     * and arrives at the current week
+     * which is the original week
+     * scroll their calendar to the current hour.
+     */
+    scrollToCurrentHourIfNecessary() {
+      let originalStart = this.originalWeekStart;
+      let selectedWeek = this.currentWeekStart;
+      if (isSameWeek(selectedWeek, originalStart)) {
+        this.scrollToCurrentHour();
       }
     },
   },
 };
 </script>
-
-<style>
-.wrapper {
-  display: flex;
-  justify-content: space-between;
-  flex-direction: column;
-  /* background-color: #f6f5f8; */
-}
-
-.cofocus {
-  width: 100%;
-}
-
-.calendar {
-  width: 78%;
-  margin: 0px 30px;
-}
-
-.calendar-container {
-  display: flex;
-}
-
-.sidebar {
-  width: 20%;
-  padding-top: 35px;
-}
-
-.calendar {
-  /* background-color: #f6f5f8; */
-}
-
-.calendar table {
-  width: 100%;
-  border-collapse: collapse;
-  box-sizing: border-box;
-}
-
-.calendar table thead {
-  background: #fff;
-}
-
-.calendar table thead th:first-of-type {
-  width: 60px;
-}
-
-.calendar table thead th {
-  padding: 16px 20px;
-  color: #bab9c6;
-  font-size: 20px;
-}
-
-.calendar table thead th .day {
-  font-size: 15px;
-  color: #807f97;
-}
-
-.calendar table thead th .date {
-  color: #b9b8c4;
-  font-size: 22px;
-}
-
-.calendar table thead tr {
-  border: 1px solid #e4e4e4;
-  border-bottom: 2px solid #efefef;
-}
-
-.calendar table tbody tr {
-  height: 70px;
-}
-
-.calendar table tbody td {
-  position: relative;
-  border: 1px solid #f1f1f3;
-  text-align: center;
-  background-color: white;
-  color: #7d7d93;
-  font-size: 14px;
-  font-weight: bold;
-}
-
-tbody::before {
-  content: "@";
-  display: block;
-  line-height: 10px;
-  text-indent: -99999px;
-}
-
-.calendar table tbody tr td:first-of-type {
-  border: none;
-  background: #fafafc;
-  border-left: 1px solid #f8f8fa;
-  vertical-align: baseline;
-}
-
-.calendar table tbody tr td:first-of-type {
-  border: none;
-  background: #fafafc;
-  border-left: 1px solid #f8f8fa;
-  vertical-align: baseline;
-  width: 80px;
-  background-color: transparent;
-}
-
-.calendar table tbody td {
-  border-bottom-color: transparent;
-}
-
-.calendar table tbody tr td:first-of-type div {
-  position: absolute;
-  top: -5px;
-  z-index: 9999;
-  color: #c9cad0;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.calendar-container {
-  height: calc(100vh - 76px);
-  overflow: hidden;
-}
-
-.calendar table thead {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-}
-
-tbody {
-  display: block;
-  overflow-y: auto;
-  overflow-x: hidden;
-  height: 650px;
-  width: 100%;
-  border-right: 1px solid #f1f1f3;
-  margin-top: 5px;
-  border-radius: 8px;
-}
-
-.calendar table tbody tr {
-  display: table;
-  width: 100%;
-  table-layout: fixed;
-}
-
-.calendar table thead th {
-  padding: 16px 20px;
-  color: #bab9c6;
-  font-size: 20px;
-  width: 164px;
-}
-
-.calendar table thead tr {
-  border: 1px solid #f1f1f1;
-  /* border-bottom: 1px solid #f5f5f5; */
-  border-radius: 8px;
-}
-
-thead tr {
-  display: block;
-  width: 100%;
-}
-
-/* .calendar table tbody tr:nth-of-type(1) td {
-  border-bottom-style: dashed;
-}
-.calendar table tbody tr:nth-of-type(2) td {
-  border-bottom-style: dashed;
-}
-.calendar table tbody tr:nth-of-type(3) td {
-  border-bottom-style: dashed;
-} */
-
-.calendar .event,
-.calendar .booked-session {
-  position: absolute;
-  z-index: 2;
-  width: calc(90%);
-  left: 5%;
-  border-radius: 10px;
-  background: #eff1f3;
-  color: #323554;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  font-size: 14px;
-  text-transform: capitalize;
-}
-
-.calendar .event img,
-.calendar .booked-session img {
-  width: 20px;
-  height: 20px;
-  border-radius: 100%;
-  margin: 0 5px;
-}
-
-/*
-Switcher styles
-*/
-
-.calendar .switcher {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 25px 20px;
-}
-
-.calendar .switcher .today {
-  background: #eef1f3;
-  border-radius: 360px;
-  padding: 8px 25px;
-  font-size: 18px;
-  color: #393954;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.1s ease;
-}
-
-.calendar .switcher .today:hover {
-  background-color: #b7bcc194;
-}
-
-.today:hover {
-  background-color: #b7bcc194;
-}
-
-.calendar .switcher .date-range {
-  display: flex;
-  align-items: center;
-}
-
-.calendar .switcher .date-range .arrow {
-  border-radius: 100%;
-  height: 40px;
-  width: 40px;
-  line-height: 40px;
-  text-align: center;
-  border: 1px solid #eae9ec;
-  cursor: pointer;
-  color: #737389;
-  font-weight: bold;
-}
-
-.calendar .switcher .date-range .current {
-  margin: 0 40px;
-  font-size: 20px;
-  color: #343556;
-  font-weight: bold;
-}
-
-.calendar .switcher .calendar-view {
-  display: flex;
-  font-weight: bold;
-}
-
-.calendar .switcher .calendar-view > div {
-  padding: 10px 25px;
-  border: 1px solid #e6e6e6;
-  border-left: none;
-  border-bottom-left-radius: unset;
-  border-top-left-radius: 0px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.calendar .switcher .calendar-view .active {
-  background: white;
-  color: #3e3d56;
-  border: none;
-  border-bottom-right-radius: 1px;
-  border-top-right-radius: 2px;
-  box-shadow: 1px 2px 1px 0px #efefef;
-}
-</style>

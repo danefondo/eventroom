@@ -850,15 +850,15 @@ export default {
         let person = peopleForSlot[i];
         let inMatchedSession = person.inMatchedSession;
         let matchScoreFromPersonView = person.matchScoreFromPersonView;
-        let matchScore = person.matchScore;
-        if (inMatchedSession && matchScore && matchScoreFromPersonView) {
-          if (matchScoreFromPersonView >= matchScore) {
+        let existingSessionMatchScore = person.existingSessionMatchScore;
+        if (inMatchedSession && existingSessionMatchScore && matchScoreFromPersonView) {
+          if (existingSessionMatchScore >= matchScoreFromPersonView) {
             peopleForSlot.splice(i, 1);
           }
         }
 
         // Safety check for when case of fudged.
-        if (inMatchedSession && (!matchScore || !matchScoreFromPersonView)) {
+        if (inMatchedSession && (!existingSessionMatchScore || !matchScoreFromPersonView)) {
           console.log("A properly bad pie has been baked.");
         }
       }

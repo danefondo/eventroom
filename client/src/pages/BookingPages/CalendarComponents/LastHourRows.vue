@@ -52,7 +52,10 @@ export default {
       let date = null;
       if (this.week) {
         // date-fns starts with sunday
-        if (i == 6) {
+        // 0 = sunday
+        // 1 = monday
+        // 6 = saturday
+        if (i === 6) {
           i = 0;
         } else {
           i = i + 1;

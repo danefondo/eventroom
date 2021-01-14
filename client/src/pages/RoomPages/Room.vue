@@ -180,17 +180,6 @@ export default {
      */
     console.log("@1 Begin Eventroom mount.");
 
-    // Check if first string after core path contains 'session'
-    // Pathname [0] returns empty string, [1] is the real first /path
-    const firstPath = window.location.pathname.split("/")[1];
-    if (firstPath == "session") {
-      // might be 'hackable', allowing access to anon users if tweaked
-      // by some savvy folk; though this is primarily for UX goals
-      // someone should look into covering this
-      globalThis.isCofocusSession = true;
-      console.log("cofocus", firstPath);
-    }
-
     console.log("@2 Check if user exists...");
     if (this.user && this.isAuthenticated) {
       console.log("@2.5 User exists, getting room.", this.user);

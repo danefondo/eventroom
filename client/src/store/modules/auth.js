@@ -61,6 +61,11 @@ const actions = {
 
     return true;
   },
+  
+  
+  updateUserId(state, userId) {
+    state.commit("updateUserId", userId);
+  },
 
   updatePreferences(state, preferences) {
     state.commit("updatePreferences", preferences);
